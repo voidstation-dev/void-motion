@@ -16,11 +16,11 @@ REMOVED    Feature intentionally removed (requires explicit approval).
 BLOCKED    Cannot proceed; dependency or unresolved decision. Note why.
 ```
 
-## Current state — after M00
+## Current state — after M05
 
 | Domain | Status | Types | Tests | Fixtures | Notes |
 |---|---|---:|---:|---:|---|
-| Project lifecycle | LOCKED | ✅ | ✅ | — | Legacy IndexedDB, no schemaVersion (KQ-003) |
+| Project lifecycle | ADAPTED | ✅ | ✅ | — | React UI → store → service → LegacyStorageAdapter → legacy IndexedDB. Persistence stays legacy (M32). |
 | Image layer | LOCKED | ✅ | ✅ | 01,02,03 | Transparency detection preserved |
 | Text layer | LOCKED | ✅ | ✅ | 04 | Font/size/align/color mapped |
 | Layer transform | LOCKED | ✅ | ✅ | — | x/y/w/h/rotation, resizePct |
@@ -63,3 +63,4 @@ BLOCKED    Cannot proceed; dependency or unresolved decision. Note why.
 - **M02** — Tailwind + shadcn/ui design foundation. Design tokens (HSL conversion of legacy palette) in `globals.css`, Tailwind v3 + PostCSS configured. 19 shadcn/ui primitives installed (Button, Input, Textarea, Label, Slider, Progress, Separator, Tabs, Select, Dialog, AlertDialog, Popover, DropdownMenu, ContextMenu, Tooltip, ScrollArea, Toggle, ToggleGroup, Sheet). Regions restyled with Tailwind tokens. UI primitive smoke tests (14) added. No feature logic migrated.
 - **M03** — Typed legacy runtime adapter. `InkplainerEngine` interface + `LegacyEngineAdapter` concrete facade in `src/engine/legacy/legacy-adapter.ts`, plus `legacy-events.ts` (event bus) + `legacy-types.ts` (CanvasHandles/PlaybackStatus). React feature code imports only the engine interface; no `src/app` module references `window.state`/`window.AnimationEngine`/`document.getElementById` directly. 17 adapter contract tests added. No legacy behavior changed.
 - **M04** — Zustand store foundation. 8 bounded domain stores (project, layer, canvas, selection, animation, playback, export, ui) using immer middleware; no non-serializable runtime objects. Selectors: selectCurrentProject, selectVisibleLayers, selectSelectedLayerId, selectAnimationSettings, selectCanvasDimensions, selectCanUndo, selectCanRedo. `hydrateStoresFromLegacyState` maps legacy state → stores (M04 exit criterion). 20 store unit tests added. No behavior changed.
+- **M05** — Project domain migration. `LegacyStorageAdapter` (typed boundary over legacy IndexedDB fns saveProject/loadProject/createNewProject/deleteProject/refreshProjectsList) in `src/engine/legacy/legacy-storage-adapter.ts`. `ProjectService` (create/rename/load/list/delete/autosave) in `src/app/services/project-service.ts`, coordinating the project store with the storage adapter (5000ms autosave debounce, legacy `generateRandomName` word lists, time-ago/size/save-time formatters). React project UI: `ProjectNameEditor` (click→edit, Enter commits / Escape cancels / blur commits / empty discarded — legacy `startRenaming`/`finishRenaming` parity), `ProjectsButton` + `ProjectsSheet` (sorted-by-modifiedAt list, New Project, confirm-delete), `SaveIndicator` (dirty/`HH:MM:SS` timestamp). Header hosts all three; `useProjectBoot` loads most-recent project at startup (legacy boot path parity). IndexedDB implementation NOT migrated (M32). 29 project tests added (22 service contract + 7 UI). No behavior changed.

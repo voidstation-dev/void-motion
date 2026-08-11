@@ -266,6 +266,36 @@ export interface LegacyAnimationEngineApi {
  * also attaches wrapped versions of `selectLayer`, `selectRatio`, etc. to
  * `window`; only the ones the adapter needs are declared here.
  */
+/**
+ * The legacy project record shape — what IndexedDB stores under the `projects`
+ * objectStore. Captured from `legacy/index.html:4660` (create) + `4284`
+ * (save). The `state` field holds the serializable project snapshot; the
+ * legacy app never sets `schemaVersion` (KQ-003).
+ */
+export interface LegacyProjectRecord {
+  /** IndexedDB auto-increment key. */
+  readonly id: number
+  readonly name: string
+  readonly createdAt: string
+  readonly modifiedAt: string
+  readonly state?: LegacySavedState
+}
+
+/**
+ * The serializable snapshot the legacy app persists inside a project record
+ * (`legacy/index.html:4284`). Modeled minimally — only the fields the M05
+ * project lifecycle needs to read (size summary + timestamp). The full
+ * layer/animation restoration round-trip is expanded in M08.
+ */
+export interface LegacySavedState {
+  readonly canvasW?: number
+  readonly canvasH?: number
+  readonly canvasBg?: LegacyCanvasBackground
+  readonly layers?: readonly unknown[]
+  readonly groups?: readonly unknown[]
+  readonly [key: string]: unknown
+}
+
 declare global {
   interface Window {
     state?: LegacyInkplainerState
@@ -278,5 +308,34 @@ declare global {
     restartAnim?: () => void
     togglePlay?: () => void
     _layerIdCounter?: number
+    // ── M05: legacy project-lifecycle globals (legacy/index.html:4272+) ──
+    /** Save the current project. Legacy `saveProject` (`legacy/index.html:4272`). */
+    saveProject?: (projectId?: number) => void
+    /** Load a project by IndexedDB key. Legacy `loadProject` (`legacy/index.html:4376`). */
+    loadProject?: (projectId: number) => void
+    /** Create + load a fresh project. Legacy `createNewProject` (`legacy/index.html:4639`). */
+    createNewProject?: () => Promise<void> | void
+    /** Delete a project by key. Legacy `deleteProject` (`legacy/index.html:4685`). */
+    deleteProject?: (projectId: number, event?: { stopPropagation: () => void }) => void
+    /** Rebuild the project list UI. Legacy `refreshProjectsList` (`legacy/index.html:4709`). */
+    refreshProjectsList?: () => void
+    /** Show the projects modal. Legacy `openProjectsModal` (`legacy/index.html:5210`). */
+    openProjectsModal?: () => void
+    /** Hide the projects modal. Legacy `closeProjectsModal` (`legacy/index.html:5215`). */
+    closeProjectsModal?: () => void
+    /** Begin inline rename. Legacy `startRenaming` (`legacy/index.html:4798`). */
+    startRenaming?: () => void
+    /** Commit inline rename. Legacy `finishRenaming` (`legacy/index.html:4809`). */
+    finishRenaming?: () => void
+    /** Update the project name display. Legacy `updateProjectNameDisplay` (`legacy/index.html:4848`). */
+    updateProjectNameDisplay?: (name: string) => void
+    /** Update the save indicator timestamp. Legacy `updateLastSaveTime` (`legacy/index.html:4862`). */
+    updateLastSaveTime?: (isoString: string) => void
+    /** Reschedule the 5s autosave timer. Legacy `scheduleAutoSave` (`legacy/index.html:4876`). */
+    scheduleAutoSave?: () => void
+    /** Show the inline toast. Legacy `showToast` (`legacy/index.html:5135`). */
+    showToast?: (msg: string, anchorEl?: unknown, durationMs?: number) => void
+    /** Current project IndexedDB key. Legacy `currentProjectId` (`legacy/index.html:4234`). */
+    currentProjectId?: number | null
   }
 }

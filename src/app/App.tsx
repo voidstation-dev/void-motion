@@ -1,14 +1,12 @@
 /**
- * Void Motion application shell (M02).
+ * Void Motion application shell (M05).
  *
  * Renders the four regions that mirror the legacy Inkplainer layout: Header,
- * Canvas, Sidebar, Bottom bar. These remain structural scaffolds — no behavior
- * is wired up yet — but are now styled with Tailwind tokens derived from the
- * legacy palette so the shell visually approximates the legacy frame.
- *
- * Layout matches legacy/index.html: a top header (52px), a main area split
- * into canvas (left/center) and sidebar (right ~280px), and a bottom bar
- * spanning the width.
+ * Canvas, Sidebar, Bottom bar. M05 wires the project lifecycle: the Header
+ * hosts the project name editor + Projects button + save indicator, the
+ * `ProjectsSheet` mounts here, and `useProjectBoot` loads the most-recent
+ * project (or creates one) at startup — mirroring the legacy boot path
+ * (legacy/index.html:5277).
  */
 import type { ReactElement } from 'react'
 import { Providers } from './providers'
@@ -16,8 +14,14 @@ import { Header } from './regions/Header'
 import { CanvasRegion } from './regions/CanvasRegion'
 import { Sidebar } from './regions/Sidebar'
 import { BottomBar } from './regions/BottomBar'
+import { ProjectsSheet } from './components/project/ProjectsSheet'
+import { useProjectBoot } from './hooks/useProjectBoot'
 
 export function App(): ReactElement {
+  // Load the most-recent project (or create one) on mount. No-op until the
+  // legacy storage adapter has booted, so this is safe in tests / SSR.
+  useProjectBoot()
+
   return (
     <Providers>
       <div className="flex h-full flex-col bg-background text-foreground">
@@ -28,6 +32,7 @@ export function App(): ReactElement {
         </div>
         <BottomBar />
       </div>
+      <ProjectsSheet />
     </Providers>
   )
 }

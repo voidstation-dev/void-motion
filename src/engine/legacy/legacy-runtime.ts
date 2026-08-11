@@ -31,3 +31,4 @@ export {
 export * from './legacy-enum-mapping'
 export * from './legacy-id'
 export * from './legacy-types'
+export * from './legacy-storage-adapter'
