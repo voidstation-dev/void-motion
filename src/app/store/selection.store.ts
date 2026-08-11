@@ -11,8 +11,8 @@ import type { LayerId } from '@/types/brand'
 /** Editor interaction mode. Legacy `state.mode` is 'image' | 'text'. */
 export type EditorMode = 'image' | 'text' | 'crop' | 'slicer'
 
-/** Active slicer sub-mode (legacy `state.slicerMode`). */
-export type SlicerMode = 'grid' | 'rectangle' | 'freehand' | null
+/** Active slicer sub-mode (legacy `_slicerMode` = `'grid' | 'rect' | 'freehand'`). */
+export type SlicerMode = 'grid' | 'rect' | 'freehand' | null
 
 export interface SelectionState {
   readonly selectedLayerId: LayerId | null

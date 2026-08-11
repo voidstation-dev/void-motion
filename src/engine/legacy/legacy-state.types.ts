@@ -409,5 +409,12 @@ declare global {
     cancelCrop?: () => void
     /** Reset the crop rect to the layer bounds. Legacy `resetCropRect` (`legacy/index.html:9491`). */
     resetCropRect?: () => void
+    // ── M12: slicer tool globals (legacy/index.html:9738+) ──
+    /** Open the slicer modal for the selected layer. Legacy `openSlicerModal` (`legacy/index.html:9738`). */
+    openSlicerModal?: () => void
+    /** Close the slicer modal (no mutation). Legacy `closeSlicerModal` (`legacy/index.html:9751`). */
+    closeSlicerModal?: () => void
+    /** Apply the slices (rasterize + replace + redraw + autosave). Legacy `applySlices` (`legacy/index.html:10122`). */
+    applySlices?: () => void
   }
 }
