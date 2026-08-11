@@ -400,5 +400,14 @@ declare global {
     dissolveGroup?: (gid: number) => void
     /** Assign a layer to a group. Legacy `assignLayerToGroup` (`legacy/index.html:6536`). */
     assignLayerToGroup?: (layerId: number, gidStr: string) => void
+    // ── M11: crop tool globals (legacy/index.html:9436+) ──
+    /** Enter crop mode for the selected layer. Legacy `activateCropTool` (`legacy/index.html:9446`). */
+    activateCropTool?: () => void
+    /** Apply the crop rect to the selected layer (rasterize + redraw). Legacy `confirmCrop` (`legacy/index.html:9504`). */
+    confirmCrop?: () => void
+    /** Exit crop mode without applying. Legacy `cancelCrop` (`legacy/index.html:9482`). */
+    cancelCrop?: () => void
+    /** Reset the crop rect to the layer bounds. Legacy `resetCropRect` (`legacy/index.html:9491`). */
+    resetCropRect?: () => void
   }
 }

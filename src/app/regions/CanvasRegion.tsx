@@ -25,16 +25,18 @@
  *   - `time-display` (3846): `${round(progress*100)}%`.
  */
 import type { ReactElement, MouseEvent } from 'react'
-import { Play, Pause, RotateCcw } from 'lucide-react'
+import { Play, Pause, RotateCcw, Crop } from 'lucide-react'
 import { Button } from '@/app/components/ui/button'
 import { CanvasViewport } from '@/app/components/canvas/CanvasViewport'
 import { CanvasStage } from '@/app/components/canvas/CanvasStage'
 import { CanvasOverlay } from '@/app/components/canvas/CanvasOverlay'
 import { useCanvasHost } from '@/app/hooks/useCanvasHost'
 import { useCanvasInteraction } from '@/app/hooks/useCanvasInteraction'
+import { CropFeature } from '@/app/features/crop/CropFeature'
+import { cropService } from '@/app/services/crop-service'
 import { playbackService } from '@/app/services/playback-service'
 import { usePlaybackStore, selectIsPlaying, selectProgress } from '@/app/store'
-import { useLayerStore } from '@/app/store'
+import { useLayerStore, useSelectionStore } from '@/app/store'
 
 export function CanvasRegion(): ReactElement {
   const refs = useCanvasHost()
@@ -43,10 +45,13 @@ export function CanvasRegion(): ReactElement {
   const isPlaying = usePlaybackStore(selectIsPlaying)
   const status = usePlaybackStore((s) => s.status)
   const progress = usePlaybackStore(selectProgress)
+  const editorMode = useSelectionStore((s) => s.editorMode)
+  const cropActive = editorMode === 'crop'
   const canPlay = hasLayers && playbackService.canPlay()
 
   const onPlayPause = () => playbackService.playPause()
   const onRestart = () => playbackService.restart()
+  const onActivateCrop = () => cropService.activate()
 
   const onSeek = (e: MouseEvent<HTMLDivElement>) => {
     const track = e.currentTarget
@@ -64,9 +69,22 @@ export function CanvasRegion(): ReactElement {
       <CanvasViewport viewportRef={refs.viewport}>
         <CanvasStage mainRef={refs.main} handRef={refs.hand} />
         <CanvasOverlay selectionRef={refs.selection} outlineOverlayRef={refs.outlineOverlay} />
+        {cropActive && <CropFeature />}
         <span className="relative text-lg text-muted-foreground">Canvas</span>
       </CanvasViewport>
       <div className="flex items-center justify-center gap-2">
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={onActivateCrop}
+          disabled={!hasLayers || cropActive}
+          aria-label="Crop"
+          title="Crop selected layer"
+          data-testid="crop-activate-btn"
+        >
+          <Crop className="h-4 w-4" />
+          Crop
+        </Button>
         <Button
           variant="outline"
           size="sm"
