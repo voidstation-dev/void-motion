@@ -1,0 +1,49 @@
+{
+  "schemaVersion": 1,
+  "name": "04-text",
+  "canvas": {
+    "size": { "width": 1280, "height": 720 },
+    "background": { "type": "solid", "val": "white" }
+  },
+  "layerCount": 1,
+  "layers": [
+    {
+      "type": "text",
+      "name": "Caption",
+      "visible": true,
+      "opacity": 1,
+      "transform": { "x": 100, "y": 300, "width": 1000, "height": 120, "rotation": 0 },
+      "animationOrder": 1,
+      "textStyle": {
+        "text": "Hello world",
+        "fontFamily": "Patrick Hand",
+        "fontSize": 96,
+        "bold": true,
+        "italic": false,
+        "align": "center",
+        "color": "#ff0000"
+      },
+      "animation": {
+        "animationStyle": "chunk-jump",
+        "handStyle": "hand-1",
+        "zigzag": true,
+        "drawDirection": "left-to-right",
+        "textDrawStyle": "reveal",
+        "speed": 40,
+        "handSpeed": 6,
+        "chunks": 30
+      }
+    }
+  ],
+  "animation": {
+    "animationStyle": "chunk-jump",
+    "handStyle": "hand-1",
+    "zigzag": true,
+    "drawDirection": "left-to-right",
+    "coloringStyle": "filled",
+    "detectionAlgorithm": "classic",
+    "strokeStyle": "default",
+    "outlineDetect": 50,
+    "color": "#1a1a1a"
+  }
+}

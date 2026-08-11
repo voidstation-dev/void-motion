@@ -1,0 +1,282 @@
+/**
+ * Legacy Inkplainer state types.
+ *
+ * These model the ACTUAL shape of the legacy global `state` object
+ * (`legacy/index.html:5570`) and the legacy `AnimationEngine` API
+ * (`legacy/animations.js:3533`), NOT the new domain model. They exist so the
+ * legacy adapter (`legacy-state.adapter.ts`) can read/write the legacy app
+ * through a typed boundary instead of bare `any`.
+ *
+ * Per MIGRATION_00 §15 ("Legacy state typing"), we model the MINIMUM needed
+ * for adapter correctness — not the entire 10k-line runtime. Fields that are
+ * too tangled or engine-internal are typed `unknown` and narrowed at the
+ * adapter boundary (Rule 5: no `any` as migration shortcut).
+ *
+ * The legacy `state` object mixes serializable settings with runtime objects
+ * (`HTMLImageElement`, `HTMLCanvasElement`, `MediaRecorder`); that coupling
+ * is exactly what the new domain model eliminates, but we must represent it
+ * faithfully here.
+ */
+
+// ─── Legacy enum string values (verbatim from legacy code) ──────────────────
+
+/**
+ * Legacy animation style raw values. See `legacy/index.html:3348, 3410, 5573`.
+ * Includes BOTH the Animation-tab values and the Drawing-tab values, because
+ * the legacy `state.animStyle` field holds values from both sets in one
+ * string field.
+ */
+export type LegacyAnimationStyle =
+  | 'scanner'
+  | 'contour'
+  | 'outlinechunks'
+  | 'chunkjump'
+  | 'spec-human'
+  | 'spec-animal'
+  | 'spec-portrait'
+  | 'spec-vehicle'
+  | 'spec-building'
+  | 'spec-landscape'
+  | 'spec-spiral'
+  | 'outlinefill'
+  | 'illustfill'
+  | 'outlineonly'
+  | 'spec-text'
+  // Dead branches (no UI path) — kept for completeness of the legacy type.
+  | 'scribble'
+  | 'nervous'
+  | 'top-anchor'
+  | 'gesture'
+  | 'spec-nature'
+
+/** Legacy hand style raw values. See `legacy/index.html:3859, 3688, 5573`. */
+export type LegacyHandStyle = 'ghost' | 'custom1' | 'custom2' | 'custom3' | 'custom4'
+
+/** Legacy draw direction raw values. See `legacy/index.html:3634`. */
+export type LegacyDrawDirection = 'ltr' | 'rtl' | 'ttb' | 'btt'
+
+/** Legacy text draw style raw values. See `legacy/index.html:5573`. */
+export type LegacyTextDrawStyle = 'reveal' | 'outline' | 'outline-fill'
+
+/** Legacy stroke style raw values. See `legacy/index.html:3422`. */
+export type LegacyStrokeStyle = 'default' | 'charcoal' | 'multipass' | 'fountain' | 'blueprint'
+
+/** Legacy detection algorithm raw values. See `legacy/index.html:3468`. */
+export type LegacyDetectionAlgorithm = 'classic' | 'adaptive' | 'morph-shell' | 'canny2'
+
+/** Legacy coloring style raw values. See `legacy/index.html:3444`. */
+export type LegacyColoringStyle = 'sparse' | 'filled' | 'watercolor'
+
+/** Legacy reveal style raw values. See `legacy/index.html:3504`. */
+export type LegacyRevealStyle =
+  'instant' | 'fade' | 'dissolve' | 'wipe-right' | 'iris' | 'scan-lines'
+
+/** Legacy export format raw values. See `legacy/index.html:9000`. */
+export type LegacyExportFormat = 'webm' | 'mp4'
+
+/** Legacy export quality raw values. See `legacy/index.html:8971`. */
+export type LegacyExportQuality = 'high' | 'medium' | 'low'
+
+/** Legacy canvas background shape. See `legacy/index.html:5572`. */
+export interface LegacyCanvasBackground {
+  readonly type: 'solid' | 'gradient' | 'custom'
+  readonly val: string
+  readonly key?: string
+}
+
+// ─── Legacy layer ────────────────────────────────────────────────────────────
+
+/**
+ * A legacy layer. The legacy app uses a single object shape for both image
+ * and text layers, distinguished by `kind === 'text'`. `img` is a runtime
+ * `HTMLImageElement` — the new domain model replaces this with an `AssetId`.
+ *
+ * See `legacy/index.html:5814` (image) and `:8325` (text).
+ */
+export interface LegacyLayer {
+  readonly id: number
+  readonly name: string
+  /** Runtime image — NOT serializable. */
+  img: HTMLImageElement
+  x: number
+  y: number
+  w: number
+  h: number
+  baseW: number
+  baseH: number
+  resizePct: number
+  animStyle: LegacyAnimationStyle
+  hand: LegacyHandStyle
+  /** `null` = follow visual stack order. */
+  animOrder: number | null
+  opacity: number
+  visible: boolean
+  groupId: number | null
+  speed: number
+  handSpeed: number
+  chunks: number
+  specChunks: number
+  hasPngAlpha: boolean
+  // Optional per-layer overrides (undefined unless set).
+  readonly zigzag?: boolean
+  readonly outlineDetect?: number
+  readonly outlineAlgorithm?: LegacyDetectionAlgorithm
+  readonly outlineStrokeStyle?: LegacyStrokeStyle
+  readonly colorStyle?: LegacyColoringStyle
+  readonly outlineColor?: string
+  readonly outlineThickness?: number
+  readonly textAnimDir?: LegacyDrawDirection
+  readonly textDrawStyle?: LegacyTextDrawStyle
+  // Text-layer metadata (present iff kind === 'text').
+  readonly kind?: 'text'
+  readonly _textContent?: string
+  readonly _textFont?: string
+  readonly _textSize?: number
+  readonly _textBold?: boolean
+  readonly _textItalic?: boolean
+  readonly _textAlign?: 'left' | 'center' | 'right'
+  readonly _textColor?: string
+  readonly _textLineHeight?: number
+  readonly _textSpacing?: number
+  /** Serialization-only; always null at runtime for in-app-created layers. */
+  readonly textProps?: unknown
+  // Non-destructive crop source retention.
+  readonly _origImg?: HTMLImageElement
+  readonly _origX?: number
+  readonly _origY?: number
+  readonly _origW?: number
+  readonly _origH?: number
+}
+
+/** A legacy layer group. See `legacy/index.html:6461`. */
+export interface LegacyLayerGroup {
+  readonly id: number
+  readonly name: string
+  collapsed: boolean
+  visible: boolean
+  layerIds: number[]
+}
+
+// ─── Legacy global state ─────────────────────────────────────────────────────
+
+/**
+ * The minimum legacy `state` shape the adapter needs.
+ *
+ * Per MIGRATION_00 §15, this is expanded only when a migration feature needs
+ * additional fields. The full legacy `state` has ~60 fields plus runtime
+ * slot state (`_SLOT_KEYS`, `legacy/animations.js:1781`); we model the
+ * serializable + adapter-relevant subset and leave the rest as `unknown`
+ * internals.
+ *
+ * See `legacy/index.html:5570` for the declaration.
+ */
+export interface LegacyInkplainerState {
+  // Editor mode
+  mode: 'image' | 'text'
+  canvasBg: LegacyCanvasBackground
+  color: string
+  hand: LegacyHandStyle
+  animStyle: LegacyAnimationStyle
+  zigzag: boolean
+  textAnimDir: LegacyDrawDirection
+  textDrawStyle: LegacyTextDrawStyle
+  outlineDetect: number
+  outlineAlgorithm: LegacyDetectionAlgorithm
+  colorStyle: LegacyColoringStyle
+  canvasW: number
+  canvasH: number
+
+  // Playback
+  playing: boolean
+  animFrame: number | null
+  done: boolean
+
+  // Layers & groups
+  layers: LegacyLayer[]
+  selectedLayerId: number | null
+  activeLayerIndex: number
+  groups: LegacyLayerGroup[]
+
+  // Presets
+  activePresetId: string | null
+
+  // Export (runtime-assigned, not in the declaration literal).
+  exportFormat?: LegacyExportFormat
+  exportQuality?: LegacyExportQuality
+  exportPNG?: boolean
+
+  // Export recording runtime state.
+  recording: boolean
+  mediaRecorder: MediaRecorder | null
+  chunks: Blob[]
+
+  // Per-style runtime tick state (slot-swapped). Typed `unknown` because the
+  // legacy engine swaps ~60 of these keys in/out per slot and most are
+  // engine-internal; the adapter does not read them directly.
+  [key: string]: unknown
+}
+
+// ─── Legacy AnimationEngine API ─────────────────────────────────────────────
+
+/**
+ * The legacy `window.AnimationEngine` API surface, as attached by
+ * `legacy/animations.js:3533`. Only the methods the adapter may call are
+ * declared; the rest are typed `unknown`.
+ *
+ * See `legacy/animations.js:3533` for the object literal.
+ */
+export interface LegacyAnimationEngineApi {
+  // Setup (per style)
+  setupScanner?: () => void
+  setupContour?: () => void
+  setupOutlineChunks?: () => void
+  setupOutlineFill?: () => void
+  setupIllustFill?: () => void
+  setupChunkJump?: () => void
+  setupScribble?: () => void
+  setupSpecText?: () => void
+  setupSpecialized?: () => void
+  // Tick (per style)
+  tickScanner?: (speed: number) => void
+  tickContour?: (speed: number) => void
+  tickOutlineChunks?: (speed: number) => void
+  tickOutlineFill?: (speed: number) => void
+  tickIllustFill?: (speed: number) => void
+  tickOutlineOnly?: (speed: number) => void
+  tickChunkJump?: (speed: number) => void
+  tickScribble?: (speed: number) => void
+  tickSpecText?: (speed: number) => void
+  tickSpecialized?: (speed: number) => void
+  // Slot system (parallel animation)
+  _SLOT_KEYS?: readonly string[]
+  _slotIn?: (slot: unknown) => void
+  _slotOut?: (slot: unknown) => void
+  _tickSlot?: (slot: unknown) => void
+  _tickAllSlots?: () => void
+  [key: string]: unknown
+}
+
+// ─── Window globals ──────────────────────────────────────────────────────────
+
+/**
+ * Typed `window` augmentation for the legacy globals the adapter may touch.
+ *
+ * Per MIGRATION_00 §17, legacy globals are typed explicitly and accessed
+ * through runtime guards (never bare non-null assertions). The legacy app
+ * also attaches wrapped versions of `selectLayer`, `selectRatio`, etc. to
+ * `window`; only the ones the adapter needs are declared here.
+ */
+declare global {
+  interface Window {
+    state?: LegacyInkplainerState
+    AnimationEngine?: LegacyAnimationEngineApi
+    selectLayer?: (id: number) => void
+    selectAnim?: (style: string) => void
+    selectHand?: (style: string) => void
+    selectRatio?: (ratio: string) => void
+    selectRes?: (res: number) => void
+    restartAnim?: () => void
+    togglePlay?: () => void
+    _layerIdCounter?: number
+  }
+}

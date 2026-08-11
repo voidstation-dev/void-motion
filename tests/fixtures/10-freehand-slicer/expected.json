@@ -1,0 +1,60 @@
+{
+  "schemaVersion": 1,
+  "name": "10-freehand-slicer",
+  "canvas": {
+    "size": { "width": 1280, "height": 720 },
+    "background": { "type": "solid", "val": "white" }
+  },
+  "layerCount": 2,
+  "layers": [
+    {
+      "type": "image",
+      "name": "Freehand 1",
+      "visible": true,
+      "opacity": 1,
+      "transform": { "x": 0, "y": 0, "width": 640, "height": 720, "rotation": 0 },
+      "resizePct": 100,
+      "sourceMetadata": { "naturalWidth": 640, "naturalHeight": 720, "hasPngAlpha": true },
+      "animationOrder": 1,
+      "animation": {
+        "animationStyle": "chunk-jump",
+        "handStyle": "hand-1",
+        "zigzag": true,
+        "drawDirection": "left-to-right",
+        "speed": 40,
+        "handSpeed": 6,
+        "chunks": 30
+      }
+    },
+    {
+      "type": "image",
+      "name": "Freehand 2",
+      "visible": true,
+      "opacity": 1,
+      "transform": { "x": 640, "y": 0, "width": 640, "height": 720, "rotation": 0 },
+      "resizePct": 100,
+      "sourceMetadata": { "naturalWidth": 640, "naturalHeight": 720, "hasPngAlpha": true },
+      "animationOrder": 2,
+      "animation": {
+        "animationStyle": "chunk-jump",
+        "handStyle": "hand-1",
+        "zigzag": true,
+        "drawDirection": "left-to-right",
+        "speed": 40,
+        "handSpeed": 6,
+        "chunks": 30
+      }
+    }
+  ],
+  "animation": {
+    "animationStyle": "chunk-jump",
+    "handStyle": "hand-1",
+    "zigzag": true,
+    "drawDirection": "left-to-right",
+    "coloringStyle": "filled",
+    "detectionAlgorithm": "classic",
+    "strokeStyle": "default",
+    "outlineDetect": 50,
+    "color": "#1a1a1a"
+  }
+}

@@ -1,0 +1,42 @@
+{
+  "schemaVersion": 1,
+  "name": "07-crop",
+  "canvas": {
+    "size": { "width": 1280, "height": 720 },
+    "background": { "type": "solid", "val": "white" }
+  },
+  "layerCount": 1,
+  "layers": [
+    {
+      "type": "image",
+      "name": "Cropped",
+      "visible": true,
+      "opacity": 1,
+      "transform": { "x": 0, "y": 0, "width": 400, "height": 300, "rotation": 0 },
+      "resizePct": 100,
+      "sourceMetadata": { "naturalWidth": 1200, "naturalHeight": 900, "hasPngAlpha": false },
+      "cropSource": { "x": 200, "y": 150, "width": 400, "height": 300 },
+      "animationOrder": 1,
+      "animation": {
+        "animationStyle": "chunk-jump",
+        "handStyle": "hand-1",
+        "zigzag": true,
+        "drawDirection": "left-to-right",
+        "speed": 40,
+        "handSpeed": 6,
+        "chunks": 30
+      }
+    }
+  ],
+  "animation": {
+    "animationStyle": "chunk-jump",
+    "handStyle": "hand-1",
+    "zigzag": true,
+    "drawDirection": "left-to-right",
+    "coloringStyle": "filled",
+    "detectionAlgorithm": "classic",
+    "strokeStyle": "default",
+    "outlineDetect": 50,
+    "color": "#1a1a1a"
+  }
+}

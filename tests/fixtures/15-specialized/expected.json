@@ -1,0 +1,164 @@
+{
+  "schemaVersion": 1,
+  "name": "15-specialized",
+  "canvas": {
+    "size": { "width": 1280, "height": 720 },
+    "background": { "type": "solid", "val": "white" }
+  },
+  "layerCount": 7,
+  "layers": [
+    {
+      "type": "image",
+      "name": "Human",
+      "visible": true,
+      "opacity": 1,
+      "transform": { "x": 0, "y": 0, "width": 400, "height": 600, "rotation": 0 },
+      "resizePct": 100,
+      "sourceMetadata": { "naturalWidth": 400, "naturalHeight": 600, "hasPngAlpha": false },
+      "animationOrder": 1,
+      "animation": {
+        "animationStyle": "specialized-human",
+        "handStyle": "hand-1",
+        "zigzag": true,
+        "drawDirection": "left-to-right",
+        "speed": 40,
+        "handSpeed": 6,
+        "chunks": 30
+      }
+    },
+    {
+      "type": "image",
+      "name": "Animal",
+      "visible": true,
+      "opacity": 1,
+      "transform": { "x": 440, "y": 0, "width": 400, "height": 600, "rotation": 0 },
+      "resizePct": 100,
+      "sourceMetadata": { "naturalWidth": 400, "naturalHeight": 600, "hasPngAlpha": false },
+      "animationOrder": 2,
+      "animation": {
+        "animationStyle": "specialized-animal",
+        "handStyle": "hand-1",
+        "zigzag": true,
+        "drawDirection": "left-to-right",
+        "speed": 40,
+        "handSpeed": 6,
+        "chunks": 30
+      }
+    },
+    {
+      "type": "image",
+      "name": "Portrait",
+      "visible": true,
+      "opacity": 1,
+      "transform": { "x": 880, "y": 0, "width": 400, "height": 600, "rotation": 0 },
+      "resizePct": 100,
+      "sourceMetadata": { "naturalWidth": 400, "naturalHeight": 600, "hasPngAlpha": false },
+      "animationOrder": 3,
+      "animation": {
+        "animationStyle": "specialized-portrait",
+        "handStyle": "hand-1",
+        "zigzag": true,
+        "drawDirection": "left-to-right",
+        "speed": 40,
+        "handSpeed": 6,
+        "chunks": 30
+      }
+    },
+    {
+      "type": "image",
+      "name": "Vehicle",
+      "visible": true,
+      "opacity": 1,
+      "transform": { "x": 0, "y": 360, "width": 600, "height": 360, "rotation": 0 },
+      "resizePct": 100,
+      "sourceMetadata": { "naturalWidth": 600, "naturalHeight": 360, "hasPngAlpha": false },
+      "animationOrder": 4,
+      "animation": {
+        "animationStyle": "specialized-vehicle",
+        "handStyle": "hand-1",
+        "zigzag": true,
+        "drawDirection": "left-to-right",
+        "speed": 40,
+        "handSpeed": 6,
+        "chunks": 30
+      }
+    },
+    {
+      "type": "image",
+      "name": "Building",
+      "visible": true,
+      "opacity": 1,
+      "transform": { "x": 340, "y": 360, "width": 600, "height": 360, "rotation": 0 },
+      "resizePct": 100,
+      "sourceMetadata": { "naturalWidth": 600, "naturalHeight": 360, "hasPngAlpha": false },
+      "animationOrder": 5,
+      "animation": {
+        "animationStyle": "specialized-building",
+        "handStyle": "hand-1",
+        "zigzag": true,
+        "drawDirection": "left-to-right",
+        "speed": 40,
+        "handSpeed": 6,
+        "chunks": 30
+      }
+    },
+    {
+      "type": "image",
+      "name": "Landscape",
+      "visible": true,
+      "opacity": 1,
+      "transform": { "x": 680, "y": 360, "width": 600, "height": 360, "rotation": 0 },
+      "resizePct": 100,
+      "sourceMetadata": { "naturalWidth": 600, "naturalHeight": 360, "hasPngAlpha": false },
+      "animationOrder": 6,
+      "animation": {
+        "animationStyle": "specialized-landscape",
+        "handStyle": "hand-1",
+        "zigzag": true,
+        "drawDirection": "left-to-right",
+        "speed": 40,
+        "handSpeed": 6,
+        "chunks": 30
+      }
+    },
+    {
+      "type": "image",
+      "name": "Spiral",
+      "visible": true,
+      "opacity": 1,
+      "transform": { "x": 540, "y": 160, "width": 400, "height": 400, "rotation": 0 },
+      "resizePct": 100,
+      "sourceMetadata": { "naturalWidth": 400, "naturalHeight": 400, "hasPngAlpha": false },
+      "animationOrder": 7,
+      "animation": {
+        "animationStyle": "specialized-spiral",
+        "handStyle": "hand-1",
+        "zigzag": true,
+        "drawDirection": "left-to-right",
+        "speed": 40,
+        "handSpeed": 6,
+        "chunks": 30
+      }
+    }
+  ],
+  "animation": {
+    "animationStyle": "chunk-jump",
+    "handStyle": "hand-1",
+    "zigzag": true,
+    "drawDirection": "left-to-right",
+    "coloringStyle": "filled",
+    "detectionAlgorithm": "classic",
+    "strokeStyle": "default",
+    "outlineDetect": 50,
+    "color": "#1a1a1a"
+  },
+  "specializedRoundTrip": {
+    "spec-human": "specialized-human",
+    "spec-animal": "specialized-animal",
+    "spec-portrait": "specialized-portrait",
+    "spec-vehicle": "specialized-vehicle",
+    "spec-building": "specialized-building",
+    "spec-landscape": "specialized-landscape",
+    "spec-spiral": "specialized-spiral"
+  }
+}

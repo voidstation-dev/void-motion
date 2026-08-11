@@ -1,0 +1,44 @@
+{
+  "schemaVersion": 1,
+  "name": "14-illustration-fill",
+  "canvas": {
+    "size": { "width": 1280, "height": 720 },
+    "background": { "type": "solid", "val": "white" }
+  },
+  "layerCount": 1,
+  "layers": [
+    {
+      "type": "image",
+      "name": "Illust fill target",
+      "visible": true,
+      "opacity": 1,
+      "transform": { "x": 0, "y": 0, "width": 800, "height": 600, "rotation": 0 },
+      "resizePct": 100,
+      "sourceMetadata": { "naturalWidth": 800, "naturalHeight": 600, "hasPngAlpha": false },
+      "animationOrder": 1,
+      "animation": {
+        "animationStyle": "chunk-jump",
+        "handStyle": "hand-1",
+        "zigzag": true,
+        "drawDirection": "left-to-right",
+        "speed": 40,
+        "handSpeed": 6,
+        "chunks": 30
+      }
+    }
+  ],
+  "animation": {
+    "animationStyle": "chunk-jump",
+    "handStyle": "hand-1",
+    "zigzag": true,
+    "drawDirection": "left-to-right",
+    "coloringStyle": "filled",
+    "detectionAlgorithm": "classic",
+    "strokeStyle": "default",
+    "outlineDetect": 50,
+    "color": "#1a1a1a"
+  },
+  "drawingModeClassification": {
+    "illustfill": { "kind": "drawing", "value": "illust-fill" }
+  }
+}

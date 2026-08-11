@@ -1,0 +1,79 @@
+{
+  "schemaVersion": 1,
+  "name": "06-parallel-order",
+  "canvas": {
+    "size": { "width": 1280, "height": 720 },
+    "background": { "type": "solid", "val": "white" }
+  },
+  "layerCount": 3,
+  "layers": [
+    {
+      "type": "image",
+      "name": "Parallel A",
+      "visible": true,
+      "opacity": 1,
+      "transform": { "x": 0, "y": 0, "width": 400, "height": 300, "rotation": 0 },
+      "resizePct": 100,
+      "sourceMetadata": { "naturalWidth": 400, "naturalHeight": 300, "hasPngAlpha": false },
+      "animationOrder": 1,
+      "animation": {
+        "animationStyle": "chunk-jump",
+        "handStyle": "hand-1",
+        "zigzag": true,
+        "drawDirection": "left-to-right",
+        "speed": 40,
+        "handSpeed": 6,
+        "chunks": 30
+      }
+    },
+    {
+      "type": "image",
+      "name": "Parallel B",
+      "visible": true,
+      "opacity": 1,
+      "transform": { "x": 400, "y": 0, "width": 400, "height": 300, "rotation": 0 },
+      "resizePct": 100,
+      "sourceMetadata": { "naturalWidth": 400, "naturalHeight": 300, "hasPngAlpha": false },
+      "animationOrder": 1,
+      "animation": {
+        "animationStyle": "chunk-jump",
+        "handStyle": "hand-1",
+        "zigzag": true,
+        "drawDirection": "left-to-right",
+        "speed": 40,
+        "handSpeed": 6,
+        "chunks": 30
+      }
+    },
+    {
+      "type": "image",
+      "name": "Parallel C",
+      "visible": true,
+      "opacity": 1,
+      "transform": { "x": 800, "y": 0, "width": 400, "height": 300, "rotation": 0 },
+      "resizePct": 100,
+      "sourceMetadata": { "naturalWidth": 400, "naturalHeight": 300, "hasPngAlpha": false },
+      "animationOrder": 1,
+      "animation": {
+        "animationStyle": "chunk-jump",
+        "handStyle": "hand-1",
+        "zigzag": true,
+        "drawDirection": "left-to-right",
+        "speed": 40,
+        "handSpeed": 6,
+        "chunks": 30
+      }
+    }
+  ],
+  "animation": {
+    "animationStyle": "chunk-jump",
+    "handStyle": "hand-1",
+    "zigzag": true,
+    "drawDirection": "left-to-right",
+    "coloringStyle": "filled",
+    "detectionAlgorithm": "classic",
+    "strokeStyle": "default",
+    "outlineDetect": 50,
+    "color": "#1a1a1a"
+  }
+}

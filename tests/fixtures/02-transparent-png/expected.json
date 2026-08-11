@@ -1,0 +1,41 @@
+{
+  "schemaVersion": 1,
+  "name": "02-transparent-png",
+  "canvas": {
+    "size": { "width": 1280, "height": 720 },
+    "background": { "type": "solid", "val": "white" }
+  },
+  "layerCount": 1,
+  "layers": [
+    {
+      "type": "image",
+      "name": "Transparent PNG",
+      "visible": true,
+      "opacity": 1,
+      "transform": { "x": 0, "y": 0, "width": 640, "height": 480, "rotation": 0 },
+      "resizePct": 100,
+      "sourceMetadata": { "naturalWidth": 640, "naturalHeight": 480, "hasPngAlpha": true },
+      "animationOrder": 1,
+      "animation": {
+        "animationStyle": "chunk-jump",
+        "handStyle": "hand-1",
+        "zigzag": true,
+        "drawDirection": "left-to-right",
+        "speed": 40,
+        "handSpeed": 6,
+        "chunks": 30
+      }
+    }
+  ],
+  "animation": {
+    "animationStyle": "chunk-jump",
+    "handStyle": "hand-1",
+    "zigzag": true,
+    "drawDirection": "left-to-right",
+    "coloringStyle": "filled",
+    "detectionAlgorithm": "classic",
+    "strokeStyle": "default",
+    "outlineDetect": 50,
+    "color": "#1a1a1a"
+  }
+}
