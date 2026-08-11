@@ -1,23 +1,32 @@
 /**
- * Global keyboard shortcuts hook (M06).
+ * Global keyboard shortcuts hook (M06/M07).
  *
  * Wires the legacy `document.addEventListener('keydown', …)` handler
- * (legacy/index.html:5167) into the React shell. Per the M06 plan:
- * "shortcuts match legacy". M06 owns the undo/redo shortcuts; Space
- * (play/pause) and Delete (remove layer) are no-ops here and land in M07
- * (playback) and M10 (selection) respectively — but the handler structure
- * mirrors the legacy one so later migrations fill in the branches.
+ * (legacy/index.html:5167) into the React shell. Per the migration plan:
+ * "shortcuts match legacy".
+ *
+ * M06 owns the undo/redo shortcuts. M07 wires the Space (play/pause) branch
+ * and restores the legacy "block undo while playing" guard (legacy 5197):
+ * Ctrl/Cmd+Z is a no-op (legacy toasts "Pause playback to undo") when the
+ * animation is playing. Delete/Backspace (remove selected layer) remains a
+ * no-op here and lands in M10 (selection) — but the branch structure mirrors
+ * the legacy one so later migrations fill it in.
  *
  * Legacy behavior (legacy/index.html:5167):
  *   - Ignore when typing in an INPUT/TEXTAREA.
- *   - Ctrl/Cmd+Z           → undo (block while playing, toast "Pause playback")
- *   - Ctrl/Cmd+Shift+Z | Y → redo
+ *   - Escape → cancel text placement / close editor (M_text, later migration).
+ *   - Space (no modifier, not typing) → togglePlay.
+ *   - Delete/Backspace (no modifier, not typing) → remove selected layer.
+ *   - Ctrl/Cmd+Z → undo, BLOCKED while playing (toast "Pause playback to undo").
+ *   - Ctrl/Cmd+Shift+Z | Y → redo.
  *
  * The hook installs one `keydown` listener on mount and removes it on
  * unmount. It is mounted once at the App root.
  */
 import { useEffect } from 'react'
 import { globalControlsService } from '@/app/services/global-controls-service'
+import { playbackService } from '@/app/services/playback-service'
+import { usePlaybackStore } from '@/app/store'
 
 export function useGlobalShortcuts(): void {
   useEffect(() => {
@@ -30,10 +39,22 @@ export function useGlobalShortcuts(): void {
       const typing = tag === 'INPUT' || tag === 'TEXTAREA'
       const mod = e.ctrlKey || e.metaKey
 
-      // Undo / Redo — only when not typing + a modifier is held.
+      // Space — play / pause (no modifier, not typing). Legacy uses
+      // `e.code === 'Space'` (legacy/index.html:5174).
+      if (e.code === 'Space' && !mod && !typing) {
+        e.preventDefault()
+        playbackService.playPause()
+        return
+      }
+
+      // Modifier shortcuts (Ctrl/Cmd). Legacy returns early on `!mod`.
       if (!mod || typing) return
 
       if (e.key === 'z' && !e.shiftKey) {
+        // Legacy blocks undo while playing and toasts "Pause playback to undo"
+        // (legacy/index.html:5199). We preserve the block; the toast is a
+        // legacy-only side-effect (no-op in the React shell).
+        if (usePlaybackStore.getState().status === 'playing') return
         e.preventDefault()
         globalControlsService.undo()
         return
@@ -43,8 +64,8 @@ export function useGlobalShortcuts(): void {
         globalControlsService.redo()
         return
       }
-      // Intentionally no-op for other keys here — Space/Delete land in
-      // M07/M10. Keep the branch structure to ease those migrations.
+      // Intentionally no-op for other keys here — Delete/Backspace (remove
+      // layer) lands in M10. Keep the branch structure to ease that migration.
     }
 
     window.addEventListener('keydown', onKeyDown)

@@ -16,7 +16,7 @@ REMOVED    Feature intentionally removed (requires explicit approval).
 BLOCKED    Cannot proceed; dependency or unresolved decision. Note why.
 ```
 
-## Current state — after M06
+## Current state — after M07
 
 | Domain | Status | Types | Tests | Fixtures | Notes |
 |---|---|---:|---:|---:|---|
@@ -25,7 +25,7 @@ BLOCKED    Cannot proceed; dependency or unresolved decision. Note why.
 | Text layer | LOCKED | ✅ | ✅ | 04 | Font/size/align/color mapped |
 | Layer transform | LOCKED | ✅ | ✅ | — | x/y/w/h/rotation, resizePct |
 | Layer ordering | LOCKED | ✅ | ✅ | 06 | Numbered + blank + parallel semantics |
-| Canvas | LOCKED | ✅ | ✅ | — | Resolution presets, aspect ratios, backgrounds |
+| Canvas | ADAPTED | ✅ | ✅ | — | React UI → canvas-controls service → legacy selectRatio/selectRes. Bitmap rendering stays legacy (M09). |
 | Crop | LOCKED | ✅ | ✅ | 07 | Non-destructive source (KQ-006) |
 | Slicer (grid) | LOCKED | ✅ | ✅ | 08 | Original removed after slicing |
 | Slicer (rectangle) | LOCKED | ✅ | ✅ | 09 | |
@@ -39,11 +39,11 @@ BLOCKED    Cannot proceed; dependency or unresolved decision. Note why.
 | Drawing: illust-fill | LOCKED | ✅ | ✅ | 14 | |
 | Drawing: outline-only | LOCKED | ✅ | ✅ | 13 | |
 | Drawing: text-draw | LOCKED | ✅ | ✅ | 04 | |
-| Hand styles | LOCKED | ✅ | ✅ | — | 5 hands, image-file based |
+| Hand styles | ADAPTED | ✅ | ✅ | — | React UI → canvas-controls service → legacy selectHand (domain→legacy mapped). Image-file hands stay legacy (M49). |
 | Stroke style | LOCKED | ✅ | ✅ | — | 5 styles |
 | Detection algorithm | LOCKED | ✅ | ✅ | — | 4 algorithms |
 | Coloring style | LOCKED | ✅ | ✅ | — | 3 styles |
-| Playback | LOCKED | ✅ | ✅ | — | Parallel slot system (KQ-005) |
+| Playback | ADAPTED | ✅ | ✅ | — | React UI → playback service → legacy togglePlay/restartAnim/setProgress. rAF loop + slot system stay legacy (M17+). |
 | Export: WebM | LOCKED | ✅ | ✅ | — | MediaRecorder, 30fps, real-time (KQ-001) |
 | Export: MP4 | LOCKED | ✅ | ✅ | — | mp4-muxer from CDN (KQ-002) |
 | Export: PNG | LOCKED | ✅ | ✅ | — | toBlob |
@@ -65,3 +65,4 @@ BLOCKED    Cannot proceed; dependency or unresolved decision. Note why.
 - **M04** — Zustand store foundation. 8 bounded domain stores (project, layer, canvas, selection, animation, playback, export, ui) using immer middleware; no non-serializable runtime objects. Selectors: selectCurrentProject, selectVisibleLayers, selectSelectedLayerId, selectAnimationSettings, selectCanvasDimensions, selectCanUndo, selectCanRedo. `hydrateStoresFromLegacyState` maps legacy state → stores (M04 exit criterion). 20 store unit tests added. No behavior changed.
 - **M05** — Project domain migration. `LegacyStorageAdapter` (typed boundary over legacy IndexedDB fns saveProject/loadProject/createNewProject/deleteProject/refreshProjectsList) in `src/engine/legacy/legacy-storage-adapter.ts`. `ProjectService` (create/rename/load/list/delete/autosave) in `src/app/services/project-service.ts`, coordinating the project store with the storage adapter (5000ms autosave debounce, legacy `generateRandomName` word lists, time-ago/size/save-time formatters). React project UI: `ProjectNameEditor` (click→edit, Enter commits / Escape cancels / blur commits / empty discarded — legacy `startRenaming`/`finishRenaming` parity), `ProjectsButton` + `ProjectsSheet` (sorted-by-modifiedAt list, New Project, confirm-delete), `SaveIndicator` (dirty/`HH:MM:SS` timestamp). Header hosts all three; `useProjectBoot` loads most-recent project at startup (legacy boot path parity). IndexedDB implementation NOT migrated (M32). 29 project tests added (22 service contract + 7 UI). No behavior changed.
 - **M06** — Header + global editor controls. `globalControlsService` in `src/app/services/global-controls-service.ts` delegates undo/redo/export to the legacy `window.undo`/`window.redo`/`window.openExportBanner` through guarded `window.*` calls and mirrors stack depth into the typed layer store (badge counts) + export store (job status). `useGlobalShortcuts` hook mounts the legacy keydown handler (legacy/index.html:5167) at the App root: Ctrl/Cmd+Z = undo, Ctrl/Cmd+Shift+Z | Y = redo; ignores INPUT/TEXTAREA via `document.activeElement` check (legacy parity). Space (play/pause) + Delete (remove layer) branches stubbed for M07/M10. Header undo/redo/export buttons promoted from disabled placeholders to wired controls with depth badges + dynamic titles (`Undo (N steps) — Ctrl+Z`); center status readout (canvas size + active animation label) wired to canvas + animation stores. Window globals typed for undo/redo/openExportBanner/closeExportBanner/generate. 12 global-controls + shortcuts tests added. No behavior changed.
+- **M07** — Playback + hand + global speed controls. `playbackService` in `src/app/services/playback-service.ts` delegates play/pause/restart/generate/seek to the legacy `window.togglePlay`/`window.restartAnim`/`window.generate`/`window.setProgress` through guarded `window.*` calls and mirrors `state.playing`/`state.done`/`state._animProgress` into the typed playback store (mapping to the domain `PlaybackStatus` union: done→completed, playing→playing, else→idle). `canvasControlsService` in `src/app/services/canvas-controls-service.ts` delegates hand/ratio/res to the legacy `window.selectHand`/`selectRatio`/`selectRes` via a `LegacyControlElement` stub carrying the **legacy raw** dataset values (domain→legacy mapped through `legacy-enum-mapping` — `hand-1`→`custom1`, `pen`→`custom4`; ratio strings unchanged; res `1080p`→`1080`), and mirrors the derived pixel size into the canvas store via `CANVAS_SIZE_TABLE`; reveal/hand speed sliders mirror into the playback store (legacy rAF stays authoritative for actual speed). `CanvasRegion` transport wired: Play/Pause (icon + label from status, disabled until a layer exists), Restart, progress track (click-ratio seek), `${round(progress*100)}%` time display. `BottomBar` wired: 5 hand pills (Ghost/Hand 1-3/Pen), Reveal (1-100, val 40) + Hand (1-20, val 6) speed sliders, 3 ratio + 3 res buttons with `aria-pressed` active state. `useGlobalShortcuts` Space branch wired (legacy `e.code === 'Space'`, no modifier, not typing → `playbackService.playPause`); restored the legacy "block undo while playing" guard (legacy/index.html:5199 — Ctrl+Z is a no-op when status is playing). Window globals typed for selectHand/selectRatio/selectRes/seekAnim/setProgress + `LegacyControlElement` interface. 46 M07 tests added (29 service contract + 12 region wiring + 5 shortcuts). No behavior changed.

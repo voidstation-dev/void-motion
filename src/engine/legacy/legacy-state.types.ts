@@ -296,17 +296,38 @@ export interface LegacySavedState {
   readonly [key: string]: unknown
 }
 
+/**
+ * A minimal stub of the legacy element-based controls. The legacy
+ * `selectHand`/`selectRatio`/`selectRes`/`selectAnim` functions take a DOM
+ * element and read `el.dataset.<key>` (+ mutate `el.classList`). The new
+ * service does not have the real legacy DOM elements, so it passes a stub
+ * carrying just the `dataset` value. The legacy functions' classList
+ * mutations are no-ops against empty NodeLists in the React document.
+ */
+export interface LegacyControlElement {
+  readonly dataset: Record<string, string>
+  readonly classList: {
+    add(...tokens: string[]): void
+    remove(...tokens: string[]): void
+    toggle(token: string, force?: boolean): void
+  }
+}
+
 declare global {
   interface Window {
     state?: LegacyInkplainerState
     AnimationEngine?: LegacyAnimationEngineApi
     selectLayer?: (id: number) => void
-    selectAnim?: (style: string) => void
-    selectHand?: (style: string) => void
-    selectRatio?: (ratio: string) => void
-    selectRes?: (res: number) => void
+    selectAnim?: (el: LegacyControlElement | string) => void
+    selectHand?: (el: LegacyControlElement) => void
+    selectRatio?: (el: LegacyControlElement) => void
+    selectRes?: (el: LegacyControlElement) => void
     restartAnim?: () => void
     togglePlay?: () => void
+    /** Seek the animation by ratio. Legacy `seekAnim` (`legacy/index.html:8803`). */
+    seekAnim?: (e: { offsetX: number; currentTarget: { clientWidth: number } }) => void
+    /** Set animation progress 0..1. Legacy `setProgress` (`legacy/index.html:8571`). */
+    setProgress?: (ratio: number) => void
     _layerIdCounter?: number
     // ── M05: legacy project-lifecycle globals (legacy/index.html:4272+) ──
     /** Save the current project. Legacy `saveProject` (`legacy/index.html:4272`). */
