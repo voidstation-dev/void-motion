@@ -337,5 +337,16 @@ declare global {
     showToast?: (msg: string, anchorEl?: unknown, durationMs?: number) => void
     /** Current project IndexedDB key. Legacy `currentProjectId` (`legacy/index.html:4234`). */
     currentProjectId?: number | null
+    // ── M06: global editor controls (legacy/index.html:5110+) ──
+    /** Undo the last change. Legacy `undo` (`legacy/index.html:5110`). */
+    undo?: () => void
+    /** Redo. Legacy `redo` (`legacy/index.html:5118`). */
+    redo?: () => void
+    /** Open the export banner. Legacy `openExportBanner` (`legacy/index.html:8974`). */
+    openExportBanner?: () => void
+    /** Close the export banner. Legacy `closeExportBanner` (`legacy/index.html:9022`). */
+    closeExportBanner?: () => void
+    /** Regenerate the animation. Legacy `generate` (`legacy/index.html:5977`). */
+    generate?: () => void
   }
 }

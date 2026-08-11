@@ -7,3 +7,4 @@
 export * from './project-service'
 export * from './project-name'
 export * from './time-ago'
+export * from './global-controls-service'

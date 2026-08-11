@@ -16,11 +16,14 @@ import { Sidebar } from './regions/Sidebar'
 import { BottomBar } from './regions/BottomBar'
 import { ProjectsSheet } from './components/project/ProjectsSheet'
 import { useProjectBoot } from './hooks/useProjectBoot'
+import { useGlobalShortcuts } from './hooks/useGlobalShortcuts'
 
 export function App(): ReactElement {
   // Load the most-recent project (or create one) on mount. No-op until the
   // legacy storage adapter has booted, so this is safe in tests / SSR.
   useProjectBoot()
+  // Global keyboard shortcuts (Ctrl/Cmd+Z, Ctrl/Cmd+Shift+Z). Mounted once.
+  useGlobalShortcuts()
 
   return (
     <Providers>
