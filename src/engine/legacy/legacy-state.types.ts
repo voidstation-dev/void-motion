@@ -369,5 +369,36 @@ declare global {
     closeExportBanner?: () => void
     /** Regenerate the animation. Legacy `generate` (`legacy/index.html:5977`). */
     generate?: () => void
+    // ── M08: legacy layer-panel globals (legacy/index.html:5793+) ──
+    /** Rebuild the layer list DOM. Legacy `renderLayerList` (`legacy/index.html:6222`). */
+    renderLayerList?: () => void
+    /** Remove a layer by id. Legacy `removeLayer` (`legacy/index.html:5841`). */
+    removeLayer?: (id: number) => void
+    /** Toggle a layer's visibility. Legacy `toggleLayerVisibility` (`legacy/index.html:6452`). */
+    toggleLayerVisibility?: (id: number) => void
+    /** Set a layer's animation order. Legacy `setLayerOrder` (`legacy/index.html:6384`). */
+    setLayerOrder?: (id: number, val: string | number) => void
+    /** Set a layer's opacity [0,1]. Legacy `setLayerOpacity` (`legacy/index.html:6391`). */
+    setLayerOpacity?: (id: number, val: number) => void
+    /** Set a layer's resize percentage. Legacy `setLayerResize` (`legacy/index.html:6416`). */
+    setLayerResize?: (id: number, pct: number) => void
+    /** Set a layer's position/size property. Legacy `setLayerPos` (`legacy/index.html:6401`). */
+    setLayerPos?: (id: number, prop: 'x' | 'y' | 'w' | 'h', val: number) => void
+    /** Begin inline layer rename. Legacy `startLayerRename` (`legacy/index.html:6492`). */
+    startLayerRename?: (id: number, nameEl: unknown) => void
+    /** Switch the input tab. Legacy `switchTab` (`legacy/index.html:6809`). */
+    switchTab?: (m: 'image' | 'text') => void
+    /** Create a group from the selected layer. Legacy `createGroupFromSelected` (`legacy/index.html:6474`). */
+    createGroupFromSelected?: () => void
+    /** Toggle a group's collapsed state. Legacy `toggleGroupCollapse` (`legacy/index.html:6481`). */
+    toggleGroupCollapse?: (gid: number) => void
+    /** Rename a group. Legacy `renameGroup` (`legacy/index.html:6487`). */
+    renameGroup?: (gid: number, name: string) => void
+    /** Toggle a group's visibility. Legacy `toggleGroupVisibility` (`legacy/index.html:6520`). */
+    toggleGroupVisibility?: (gid: number) => void
+    /** Dissolve a group. Legacy `dissolveGroup` (`legacy/index.html:6529`). */
+    dissolveGroup?: (gid: number) => void
+    /** Assign a layer to a group. Legacy `assignLayerToGroup` (`legacy/index.html:6536`). */
+    assignLayerToGroup?: (layerId: number, gidStr: string) => void
   }
 }

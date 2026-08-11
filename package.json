@@ -1,6 +1,6 @@
 {
   "name": "void-motion",
-  "version": "0.0.0-m07",
+  "version": "0.0.0-m08",
   "private": true,
   "type": "module",
   "description": "Void Motion — behavior-preserving modernization of Inkplainer-OS. M00 establishes the TypeScript foundation and behavior lock.",
