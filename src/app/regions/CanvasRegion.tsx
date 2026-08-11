@@ -31,12 +31,14 @@ import { CanvasViewport } from '@/app/components/canvas/CanvasViewport'
 import { CanvasStage } from '@/app/components/canvas/CanvasStage'
 import { CanvasOverlay } from '@/app/components/canvas/CanvasOverlay'
 import { useCanvasHost } from '@/app/hooks/useCanvasHost'
+import { useCanvasInteraction } from '@/app/hooks/useCanvasInteraction'
 import { playbackService } from '@/app/services/playback-service'
 import { usePlaybackStore, selectIsPlaying, selectProgress } from '@/app/store'
 import { useLayerStore } from '@/app/store'
 
 export function CanvasRegion(): ReactElement {
   const refs = useCanvasHost()
+  useCanvasInteraction(refs.selection, refs.viewport)
   const hasLayers = useLayerStore((s) => s.layers.length > 0)
   const isPlaying = usePlaybackStore(selectIsPlaying)
   const status = usePlaybackStore((s) => s.status)

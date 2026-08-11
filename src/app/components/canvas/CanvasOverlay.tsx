@@ -1,12 +1,17 @@
 /**
- * Canvas overlay (M09).
+ * Canvas overlay (M09/M10).
  *
  * The selection/transform overlay (`select-canvas`, legacy/index.html:3810)
  * and the outline-only draw overlay (`outline-overlay`,
- * legacy/index.html:3823). Both are absolutely positioned, full-size,
- * pointer-events-none (they are drawn over, not interacted with directly —
- * pointer interaction lands in M10). React owns the `<canvas>` elements;
- * the engine draws into them via the refs handed over by `useCanvasHost`.
+ * legacy/index.html:3823). Both are absolutely positioned, full-size, and
+ * stacked over the main canvas. React owns the `<canvas>` elements; the
+ * engine draws into them via the refs handed over by `useCanvasHost`.
+ *
+ * M10: the selection overlay receives pointer events (it is the interaction
+ * surface — legacy re-enables `selectCanvas.style.pointerEvents = 'auto'` at
+ * `legacy/index.html:6691`). The outline overlay stays `pointer-events-none`
+ * (drawn over, never interacted with). Pointer interaction is wired by
+ * `useCanvasInteraction` in `CanvasRegion`.
  *
  * Per M09: no canvas element is looked up globally by ID from new code. The
  * `id` attributes are retained purely for legacy-DOM co-hosting parity
@@ -29,7 +34,7 @@ export function CanvasOverlay({
         ref={selectionRef}
         id="select-canvas"
         data-testid="select-canvas"
-        className="pointer-events-none absolute left-0 top-0 h-full w-full"
+        className="absolute left-0 top-0 h-full w-full"
       />
       <canvas
         ref={outlineOverlayRef}
