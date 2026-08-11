@@ -41,6 +41,15 @@ export interface InkplainerEngine {
   /** Render the current static frame (no animation). Equivalent to `fillBg` + draw layers. */
   renderStatic(): void
 
+  /**
+   * Resize the attached canvases to the given CSS display size (M09). The
+   * legacy runtime derives internal bitmap size from `state.canvasW`/
+   * `state.canvasH`; this applies the display-size scaling the legacy
+   * `fitCanvas` does (legacy/index.html ~5660). No-op until canvases are
+   * attached. The actual draw is wired in M19 (renderer migration).
+   */
+  resize(displayWidth: number, displayHeight: number): void
+
   /** Start/resume playback. Mirrors legacy `togglePlay` when `state.done` is false. */
   play(): void
 
@@ -59,8 +68,22 @@ export interface InkplainerEngine {
   /** Subscribe to legacy runtime events. Returns an unsubscribe function. */
   subscribe(listener: LegacyEngineListener): () => void
 
-  /** Release any held references / listeners. Idempotent. */
+  /**
+   * Hard teardown: release all held references and mark the adapter
+   * permanently dead. Subsequent calls throw via {@link assertAlive}. Use
+   * only when the engine singleton will never be used again.
+   */
   destroy(): void
+
+  /**
+   * Soft teardown (M09). Release canvas refs and event listeners but keep
+   * the adapter reusable — the React canvas host calls this on unmount so
+   * the shared engine singleton can be re-attached on the next mount
+   * (StrictMode double-invoke, test re-renders). Idempotent. Does NOT mark
+   * the adapter destroyed; {@link attachCanvases} / {@link resize} / etc.
+   * remain callable afterward.
+   */
+  dispose(): void
 }
 
 /**
@@ -119,6 +142,17 @@ export class LegacyEngineAdapter implements InkplainerEngine {
     }
   }
 
+  resize(displayWidth: number, displayHeight: number): void {
+    this.assertAlive()
+    // No-op until canvases are attached (M09 contract honesty). The legacy
+    // `fitCanvas` (legacy/index.html ~5660) scales the canvas-wrapper to the
+    // viewport while keeping the internal bitmap at state.canvasW/H; the
+    // concrete resize is wired in M19 (renderer migration).
+    if (this.canvases === null) return
+    void displayWidth
+    void displayHeight
+  }
+
   play(): void {
     this.assertAlive()
     const legacy = requireLegacyState()
@@ -174,6 +208,16 @@ export class LegacyEngineAdapter implements InkplainerEngine {
     this.events.clear()
     this.canvases = null
     this.destroyed = true
+  }
+
+  /**
+   * Soft teardown (M09). Releases canvas refs but keeps the adapter reusable
+   * so the shared engine singleton survives React unmount/remount. Unlike
+   * {@link destroy}, this does NOT set `destroyed` — `attachCanvases` and
+   * subsequent calls remain valid.
+   */
+  dispose(): void {
+    this.canvases = null
   }
 
   private assertAlive(): void {

@@ -1,17 +1,19 @@
 /**
- * Canvas region (M07).
+ * Canvas region (M07/M09).
  *
  * Mirrors the legacy canvas area (legacy/index.html ~line 3680): the main
- * drawing surface and the play/restart transport. The transport controls
- * (Restart / Play-Pause / progress bar) are wired in M07 to the playback
- * service, which delegates to the legacy `togglePlay`/`restartAnim`/
- * `setProgress` globals and mirrors status into the typed playback store.
+ * drawing surface and the play/restart transport.
  *
- * The actual `<canvas>` elements mount in M09 (Canvas Host); until then the
- * surface is a placeholder. The transport UI is fully wired so the React
- * shell reflects playback state from the store, and user actions route
- * through the service → legacy adapter (no-ops until the legacy runtime is
- * co-hosted).
+ * M07 wires the transport controls (Restart / Play-Pause / progress bar) to
+ * the playback service, which delegates to the legacy `togglePlay`/
+ * `restartAnim`/`setProgress` globals and mirrors status into the typed
+ * playback store.
+ *
+ * M09 moves the canvas lifecycle into React: the `CanvasViewport` hosts the
+ * stacked `CanvasStage` (main + hand) and `CanvasOverlay` (selection +
+ * outline) `<canvas>` elements, owned by React refs and attached to the
+ * engine via `useCanvasHost`. The engine owns rendering (no-op until the
+ * legacy runtime is co-hosted in M16 + the renderer is migrated in M19).
  *
  * Legacy behavior parity:
  *   - `play-pause-btn` (3836): `onclick="togglePlay()"`, disabled until a
@@ -25,11 +27,16 @@
 import type { ReactElement, MouseEvent } from 'react'
 import { Play, Pause, RotateCcw } from 'lucide-react'
 import { Button } from '@/app/components/ui/button'
+import { CanvasViewport } from '@/app/components/canvas/CanvasViewport'
+import { CanvasStage } from '@/app/components/canvas/CanvasStage'
+import { CanvasOverlay } from '@/app/components/canvas/CanvasOverlay'
+import { useCanvasHost } from '@/app/hooks/useCanvasHost'
 import { playbackService } from '@/app/services/playback-service'
 import { usePlaybackStore, selectIsPlaying, selectProgress } from '@/app/store'
 import { useLayerStore } from '@/app/store'
 
 export function CanvasRegion(): ReactElement {
+  const refs = useCanvasHost()
   const hasLayers = useLayerStore((s) => s.layers.length > 0)
   const isPlaying = usePlaybackStore(selectIsPlaying)
   const status = usePlaybackStore((s) => s.status)
@@ -52,12 +59,11 @@ export function CanvasRegion(): ReactElement {
 
   return (
     <main data-region="canvas" className="flex min-w-0 flex-1 flex-col gap-3 p-4">
-      <div
-        aria-label="Canvas surface"
-        className="flex flex-1 items-center justify-center rounded-md border border-border bg-card min-h-0"
-      >
-        <span className="text-lg text-muted-foreground">Canvas</span>
-      </div>
+      <CanvasViewport viewportRef={refs.viewport}>
+        <CanvasStage mainRef={refs.main} handRef={refs.hand} />
+        <CanvasOverlay selectionRef={refs.selection} outlineOverlayRef={refs.outlineOverlay} />
+        <span className="relative text-lg text-muted-foreground">Canvas</span>
+      </CanvasViewport>
       <div className="flex items-center justify-center gap-2">
         <Button
           variant="outline"
