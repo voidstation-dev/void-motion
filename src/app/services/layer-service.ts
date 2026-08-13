@@ -182,6 +182,10 @@ export const layerService = {
   renameLayer(id: LayerId, name: string): void {
     const trimmed = name.trim()
     if (!trimmed) return // legacy discards empty names (keeps the old name)
+    if (typeof window !== 'undefined' && window.state) {
+      const legacyLayer = window.state.layers.find((layer) => layer.id === layerIdToLegacyNum(id))
+      if (legacyLayer) Reflect.set(legacyLayer, 'name', trimmed)
+    }
     useLayerStore.getState().updateLayer(id, { name: trimmed })
     if (typeof window !== 'undefined' && typeof window.scheduleAutoSave === 'function') {
       window.scheduleAutoSave()

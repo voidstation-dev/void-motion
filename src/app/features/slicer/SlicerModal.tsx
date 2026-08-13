@@ -33,6 +33,7 @@ import { slicerService } from '@/app/services/slicer-service'
 import { useSelectionStore } from '@/app/store'
 import { useSlicerPreview } from './useSlicerPreview'
 import { SLICE_COLORS, SLICER_GRID_MIN, SLICER_GRID_MAX } from '@/engine/image-processing/slicer'
+import { useTranslation } from 'react-i18next'
 
 /** Safe slice-color lookup (noUncheckedIndexedAccess guards the tuple). */
 function sliceColor(i: number): string {
@@ -40,6 +41,7 @@ function sliceColor(i: number): string {
 }
 
 export function SlicerModal(): ReactElement {
+  const { t } = useTranslation(['tools', 'common'])
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const editorMode = useSelectionStore((s) => s.editorMode)
   const slicerMode = useSelectionStore((s) => s.slicerMode)
@@ -59,7 +61,16 @@ export function SlicerModal(): ReactElement {
   const rects = session?.rects ?? []
   const freehandPaths = session?.freehandPaths ?? []
   const canApply = slicerService.canApply()
-  const footerText = slicerService.footerText()
+  const footerText =
+    mode === 'grid'
+      ? t('slicer.footer.grid', { ns: 'tools', count: gridCols * gridRows })
+      : mode === 'rect'
+        ? rects.length > 0
+          ? t('slicer.footer.rect', { ns: 'tools', count: rects.length })
+          : t('slicer.footer.rectEmpty', { ns: 'tools' })
+        : freehandPaths.length > 0
+          ? t('slicer.footer.freehand', { ns: 'tools', count: freehandPaths.length })
+          : t('slicer.footer.freehandEmpty', { ns: 'tools' })
 
   const onOpenChange = (next: boolean): void => {
     if (!next) slicerService.cancel()
@@ -109,23 +120,23 @@ export function SlicerModal(): ReactElement {
         <DialogHeader className="border-b p-4">
           <DialogTitle className="flex items-center gap-2 text-base">
             <Scissors className="h-4 w-4" />
-            Image Slicer
+            {t('slicer.title', { ns: 'tools' })}
           </DialogTitle>
           <DialogDescription className="sr-only">
-            Slice the selected image into multiple layers.
+            {t('slicer.description', { ns: 'tools' })}
           </DialogDescription>
         </DialogHeader>
 
         <Tabs value={mode} onValueChange={onModeChange} className="px-4 pt-3">
           <TabsList className="grid w-full grid-cols-3">
             <TabsTrigger value="grid" data-testid="slicer-tab-grid">
-              Grid
+              {t('slicer.grid', { ns: 'tools' })}
             </TabsTrigger>
             <TabsTrigger value="rect" data-testid="slicer-tab-rect">
-              Rectangles
+              {t('slicer.rectangles', { ns: 'tools' })}
             </TabsTrigger>
             <TabsTrigger value="freehand" data-testid="slicer-tab-freehand">
-              Freehand
+              {t('slicer.freehand', { ns: 'tools' })}
             </TabsTrigger>
           </TabsList>
         </Tabs>
@@ -151,7 +162,8 @@ export function SlicerModal(): ReactElement {
               <div className="space-y-4" data-testid="slicer-pane-grid">
                 <div>
                   <div className="mb-1 text-xs font-medium text-muted-foreground">
-                    Columns: <span data-testid="slicer-cols-val">{gridCols}</span>
+                    {t('slicer.columns', { ns: 'tools' })}:{' '}
+                    <span data-testid="slicer-cols-val">{gridCols}</span>
                   </div>
                   <Slider
                     value={[gridCols]}
@@ -164,7 +176,8 @@ export function SlicerModal(): ReactElement {
                 </div>
                 <div>
                   <div className="mb-1 text-xs font-medium text-muted-foreground">
-                    Rows: <span data-testid="slicer-rows-val">{gridRows}</span>
+                    {t('slicer.rows', { ns: 'tools' })}:{' '}
+                    <span data-testid="slicer-rows-val">{gridRows}</span>
                   </div>
                   <Slider
                     value={[gridRows]}
@@ -176,7 +189,7 @@ export function SlicerModal(): ReactElement {
                   />
                 </div>
                 <p className="text-[10px] leading-relaxed text-muted-foreground">
-                  Divides the image into a uniform grid. Each cell becomes its own layer.
+                  {t('slicer.gridHelp', { ns: 'tools' })}
                 </p>
               </div>
             )}
@@ -184,11 +197,10 @@ export function SlicerModal(): ReactElement {
             {mode === 'rect' && (
               <div className="space-y-2" data-testid="slicer-pane-rect">
                 <p className="text-[10px] leading-relaxed text-muted-foreground">
-                  Draw rectangles on the preview to define slice regions. Each rectangle becomes a
-                  layer.
+                  {t('slicer.rectHelp', { ns: 'tools' })}
                 </p>
                 <div className="text-xs font-medium text-muted-foreground">
-                  Slices ({rects.length})
+                  {t('slicer.slices', { ns: 'tools', count: rects.length })}
                 </div>
                 <div className="space-y-1" data-testid="slicer-rect-list">
                   {rects.map((r, i) => (
@@ -207,7 +219,7 @@ export function SlicerModal(): ReactElement {
                       <button
                         className="text-muted-foreground hover:text-foreground"
                         onClick={() => onRemoveRect(i)}
-                        aria-label={`Remove slice ${i + 1}`}
+                        aria-label={t('slicer.removeSlice', { ns: 'tools', number: i + 1 })}
                         data-testid={`slicer-rect-del-${i}`}
                       >
                         ✕
@@ -223,7 +235,7 @@ export function SlicerModal(): ReactElement {
                   disabled={rects.length === 0}
                   data-testid="slicer-rect-clear"
                 >
-                  Clear All
+                  {t('slicer.clearAll', { ns: 'tools' })}
                 </Button>
               </div>
             )}
@@ -231,10 +243,10 @@ export function SlicerModal(): ReactElement {
             {mode === 'freehand' && (
               <div className="space-y-2" data-testid="slicer-pane-freehand">
                 <p className="text-[10px] leading-relaxed text-muted-foreground">
-                  Draw a freehand lasso region. The bounding box of your drawing becomes a slice.
+                  {t('slicer.freehandHelp', { ns: 'tools' })}
                 </p>
                 <div className="text-xs font-medium text-muted-foreground">
-                  Slices ({freehandPaths.length})
+                  {t('slicer.slices', { ns: 'tools', count: freehandPaths.length })}
                 </div>
                 <div className="space-y-1" data-testid="slicer-fh-list">
                   {freehandPaths.map((p, i) => (
@@ -253,7 +265,7 @@ export function SlicerModal(): ReactElement {
                       <button
                         className="text-muted-foreground hover:text-foreground"
                         onClick={() => onRemoveFreehand(i)}
-                        aria-label={`Remove region ${i + 1}`}
+                        aria-label={t('slicer.removeRegion', { ns: 'tools', number: i + 1 })}
                         data-testid={`slicer-fh-del-${i}`}
                       >
                         ✕
@@ -269,7 +281,7 @@ export function SlicerModal(): ReactElement {
                   disabled={freehandPaths.length === 0}
                   data-testid="slicer-fh-clear"
                 >
-                  Clear All
+                  {t('slicer.clearAll', { ns: 'tools' })}
                 </Button>
               </div>
             )}
@@ -283,10 +295,10 @@ export function SlicerModal(): ReactElement {
           </span>
           <div className="flex gap-2">
             <Button variant="outline" size="sm" onClick={onCancel} data-testid="slicer-cancel-btn">
-              Cancel
+              {t('actions.cancel', { ns: 'common' })}
             </Button>
             <Button size="sm" onClick={onApply} disabled={!canApply} data-testid="slicer-apply-btn">
-              Apply Slices
+              {t('slicer.apply', { ns: 'tools' })}
             </Button>
           </div>
         </div>

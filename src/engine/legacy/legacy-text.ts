@@ -4,7 +4,7 @@ import type { LegacyInkplainerState, LegacyLayer } from './legacy-state.types'
 /**
  * Renders and commits text as a legacy layer. Ported from `legacy/index.html`
  * `_commitTextLayer` for M16 co-hosting.
- * 
+ *
  * @param text The text to render
  * @param style Text styling parameters
  * @param sessionState Canvas placement state
@@ -26,9 +26,11 @@ export function commitLegacyTextLayer(
     editingId: number | null
     canvasX: number
     canvasY: number
-  }
+  },
 ): boolean {
-  if (typeof document === 'undefined') return false
+  if (typeof document === 'undefined' || typeof window === 'undefined' || !window.state) {
+    return false
+  }
 
   try {
     const state = requireLegacyState() as LegacyInkplainerState & { _layerIdCounter?: number }
@@ -51,7 +53,10 @@ export function commitLegacyTextLayer(
     const fontStr = `${style.italic ? 'italic ' : ''} ${style.bold ? 'bold ' : ''} ${style.size}px '${style.font}'`
     pctx.font = fontStr
     pctx.letterSpacing = style.spacing + 'px'
-    const maxW = Math.min(state.canvasW, Math.max(...lines.map((l) => pctx.measureText(l).width)) + style.size * 0.4)
+    const maxW = Math.min(
+      state.canvasW,
+      Math.max(...lines.map((l) => pctx.measureText(l).width)) + style.size * 0.4,
+    )
     const lineH = style.size * style.lineHeight
     const totalH = lines.length * lineH + style.size * 0.3
 
@@ -72,7 +77,8 @@ export function commitLegacyTextLayer(
     const _editingId = sessionState.editingId
     const _placeX = sessionState.canvasX
     const _placeY = sessionState.canvasY
-    const _oldLayer = _editingId !== null ? state.layers.find((l) => l && l.id === _editingId) || null : null
+    const _oldLayer =
+      _editingId !== null ? state.layers.find((l) => l && l.id === _editingId) || null : null
 
     const img = new Image()
     img.onload = () => {
@@ -108,8 +114,8 @@ export function commitLegacyTextLayer(
         baseW: Math.ceil(maxW),
         baseH: Math.ceil(totalH),
         resizePct: 100,
-        animStyle: _oldLayer ? _oldLayer.animStyle : (state.animStyle || 'spec-text'),
-        hand: _oldLayer ? _oldLayer.hand : (state.hand || 'custom1'),
+        animStyle: _oldLayer ? _oldLayer.animStyle : state.animStyle || 'spec-text',
+        hand: _oldLayer ? _oldLayer.hand : state.hand || 'custom1',
         animOrder: _oldLayer ? _oldLayer.animOrder : null,
         opacity: _oldLayer ? _oldLayer.opacity : 1,
         visible: _oldLayer ? _oldLayer.visible : true,
@@ -131,7 +137,7 @@ export function commitLegacyTextLayer(
         _textSpacing: style.spacing,
       } as unknown as LegacyLayer
 
-      const phIdx = state.layers.findIndex((l) => l === null as unknown as LegacyLayer)
+      const phIdx = state.layers.findIndex((l) => l === (null as unknown as LegacyLayer))
       if (phIdx !== -1) {
         state.layers[phIdx] = layer
       } else {

@@ -54,6 +54,7 @@ import {
   type SliceDescriptor,
   type SlicerInheritance,
 } from '@/engine/image-processing/slicer'
+import { callLegacyRuntime, getLegacyRuntimeWindow } from '@/engine/legacy/legacy-runtime-bridge'
 
 /** Guarded legacy `applySlices` (rasterize + replace + redraw + autosave). */
 function legacyApplySlices(): boolean {
@@ -471,6 +472,22 @@ export const slicerService = {
     const descriptors = this.buildDescriptors(session, layer)
     if (descriptors.length === 0) return false
 
+    if (getLegacyRuntimeWindow()) {
+      callLegacyRuntime('applyMigrationSlices', {
+        layerId: legacyLayerId(session.layerId),
+        slices: descriptors.map((descriptor) => ({
+          bounds: { ...descriptor.bounds },
+          clipPts: descriptor.clipPts?.map((point) => ({ ...point })) ?? null,
+          label: descriptor.label,
+        })),
+      })
+      this.session = null
+      useSelectionStore.getState().setEditorMode('image')
+      useSelectionStore.getState().setSlicerMode(null)
+      notify()
+      return true
+    }
+
     // Push an undo snapshot before mutating (legacy 10124).
     useLayerStore.getState().pushUndo()
 
@@ -627,4 +644,9 @@ export const slicerService = {
       } as ImageLayer
     })
   },
+}
+
+function legacyLayerId(id: LayerId): number {
+  const match = String(id).match(/(\d+)$/)
+  return match ? Number(match[1]) : Number(id)
 }

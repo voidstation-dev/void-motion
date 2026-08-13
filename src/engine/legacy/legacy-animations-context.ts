@@ -12,7 +12,7 @@ export interface DrawHandInput {
 
 /**
  * AnimationContext (M17)
- * 
+ *
  * Provides global state and DOM replacements to the legacy animation algorithms,
  * isolating them from the real browser environment so they can be securely hosted
  * by the React shell.

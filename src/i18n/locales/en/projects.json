@@ -1,0 +1,14 @@
+{
+  "title": "My Projects",
+  "description": "Open, create, or delete projects.",
+  "new": "New Project",
+  "empty": "No projects yet",
+  "emptyHint": "Create your first project to get started",
+  "open": "Open project {{name}}",
+  "delete": "Delete project {{name}}",
+  "confirmTitle": "Delete {{name}}?",
+  "confirmDescription": "This project and its saved animation data will be permanently deleted. This action cannot be undone.",
+  "confirmAction": "Delete project",
+  "layerCount_one": "{{count}} layer",
+  "layerCount_other": "{{count}} layers"
+}

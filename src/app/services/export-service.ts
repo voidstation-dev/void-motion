@@ -13,7 +13,8 @@ export const exportService = {
   /** Open the export dialog (M15 React UI). */
   openDialog(): void {
     // Sync the initial format support based on browser
-    const hasWebCodecs = typeof (window as any).VideoEncoder !== 'undefined'
+    const hasWebCodecs =
+      typeof (window as unknown as { VideoEncoder?: unknown }).VideoEncoder !== 'undefined'
     const config = useExportStore.getState().config
     if (!hasWebCodecs && config.format === 'mp4') {
       useExportStore.getState().setFormat('webm')
@@ -47,7 +48,11 @@ export const exportService = {
    */
   async startExport(): Promise<void> {
     const state = useExportStore.getState()
-    if (state.jobStatus !== 'idle' && state.jobStatus !== 'failed' && state.jobStatus !== 'cancelled') {
+    if (
+      state.jobStatus !== 'idle' &&
+      state.jobStatus !== 'failed' &&
+      state.jobStatus !== 'cancelled'
+    ) {
       return
     }
 
@@ -59,7 +64,7 @@ export const exportService = {
       await engine.exportVideo(state.config, {
         onProgress: (progress: number, label: string) => {
           useExportStore.getState().setJobProgress(progress)
-          
+
           if (label === 'Finalizing...' || label.includes('Muxing')) {
             useExportStore.getState().setJobStatus('finalizing')
           } else if (label.includes('Encoding')) {

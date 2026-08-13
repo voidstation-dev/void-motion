@@ -24,17 +24,33 @@ describe('animationService (M14)', () => {
     scheduleAutoSaveSpy = vi.fn()
 
     const state = buildLegacyState()
-    
+
     // Add layers for testing zigzag/outlineDetect overrides
     state.layers.push({
       id: 1,
       kind: 'image',
       name: 'Layer 1',
-      x: 0, y: 0, w: 100, h: 100, baseW: 100, baseH: 100, hasPngAlpha: false,
-      visible: true, opacity: 1, animOrder: 0, resizePct: 1,
-      animStyle: 'scanner', hand: 'ghost', zigzag: false,
-      speed: 40, handSpeed: 6, chunks: 1, specChunks: 1,
-      outlineDetect: 50, outlineColor: '#000', outlineThickness: 2,
+      x: 0,
+      y: 0,
+      w: 100,
+      h: 100,
+      baseW: 100,
+      baseH: 100,
+      hasPngAlpha: false,
+      visible: true,
+      opacity: 1,
+      animOrder: 0,
+      resizePct: 1,
+      animStyle: 'scanner',
+      hand: 'ghost',
+      zigzag: false,
+      speed: 40,
+      handSpeed: 6,
+      chunks: 1,
+      specChunks: 1,
+      outlineDetect: 50,
+      outlineColor: '#000',
+      outlineThickness: 2,
     } as any)
     state.selectedLayerId = 1
 
@@ -59,28 +75,28 @@ describe('animationService (M14)', () => {
 
   it('setAnimationStyle sets state and delegates to legacy', () => {
     animationService.setAnimationStyle('contour')
-    
+
     expect(useAnimationStore.getState().defaults.animationStyle).toBe('contour')
     expect(useAnimationStore.getState().activeMode).toBe('contour')
-    
+
     expect(selectAnimSpy).toHaveBeenCalledOnce()
     expect(selectAnimSpy.mock.calls[0]![0].dataset.anim).toBe('contour')
   })
 
   it('setDrawingMode sets state and delegates to legacy', () => {
     animationService.setDrawingMode('outline-fill')
-    
+
     // Store activeMode updates but defaults.animationStyle does not change
     expect(useAnimationStore.getState().activeMode).toBe('outline-fill')
     expect(useAnimationStore.getState().defaults.animationStyle).toBe('chunk-jump') // default
-    
+
     expect(selectAnimSpy).toHaveBeenCalledOnce()
     expect(selectAnimSpy.mock.calls[0]![0].dataset.anim).toBe('outlinefill')
   })
 
   it('setZigzag mutates legacy state directly and selected layer', () => {
     animationService.setZigzag(true)
-    
+
     expect(useAnimationStore.getState().defaults.zigzag).toBe(true)
     expect(window.state!.zigzag).toBe(true)
     expect(window.state!.layers[0]!.zigzag).toBe(true)
@@ -89,7 +105,7 @@ describe('animationService (M14)', () => {
 
   it('setOutlineDetect mutates legacy state directly and selected layer', () => {
     animationService.setOutlineDetect(75)
-    
+
     expect(useAnimationStore.getState().defaults.outlineDetect).toBe(75)
     expect(window.state!.outlineDetect).toBe(75)
     expect(window.state!.layers[0]!.outlineDetect).toBe(75)
@@ -98,7 +114,7 @@ describe('animationService (M14)', () => {
 
   it('setColor mutates legacy state color and selected layer outlineColor', () => {
     animationService.setColor('#ff0000')
-    
+
     expect(useAnimationStore.getState().defaults.color).toBe('#ff0000')
     expect(window.state!.color).toBe('#ff0000')
     expect(window.state!.layers[0]!.outlineColor).toBe('#ff0000')

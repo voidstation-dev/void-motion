@@ -1,0 +1,17 @@
+{
+  "name": "Void Motion",
+  "short_name": "Void Motion",
+  "description": "Create hand-drawn whiteboard animations from images and text in your browser.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#e2e3de",
+  "theme_color": "#171918",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

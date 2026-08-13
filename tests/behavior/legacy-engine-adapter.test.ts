@@ -45,14 +45,16 @@ afterEach(() => {
   delete (window as unknown as { state?: unknown }).state
   delete (window as unknown as { togglePlay?: unknown }).togglePlay
   delete (window as unknown as { restartAnim?: unknown }).restartAnim
-  delete (window as unknown as { createLegacyAnimationEngine?: unknown }).createLegacyAnimationEngine
+  delete (window as unknown as { createLegacyAnimationEngine?: unknown })
+    .createLegacyAnimationEngine
 })
 
 beforeEach(() => {
   // Mock the M17 context factory injected by legacy/animations.js
-  ;(window as unknown as { createLegacyAnimationEngine: unknown }).createLegacyAnimationEngine = () => ({
-    // Mock the engine exports returned by the factory
-  })
+  ;(window as unknown as { createLegacyAnimationEngine: unknown }).createLegacyAnimationEngine =
+    () => ({
+      // Mock the engine exports returned by the factory
+    })
 })
 
 describe('M03 LegacyEngineAdapter — transport delegation', () => {

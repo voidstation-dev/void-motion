@@ -1,0 +1,14 @@
+{
+  "title": "Dự án của tôi",
+  "description": "Mở, tạo hoặc xóa dự án.",
+  "new": "Dự án mới",
+  "empty": "Chưa có dự án",
+  "emptyHint": "Tạo dự án đầu tiên để bắt đầu",
+  "open": "Mở dự án {{name}}",
+  "delete": "Xóa dự án {{name}}",
+  "confirmTitle": "Xóa {{name}}?",
+  "confirmDescription": "Dự án và dữ liệu chuyển động đã lưu sẽ bị xóa vĩnh viễn. Không thể hoàn tác thao tác này.",
+  "confirmAction": "Xóa dự án",
+  "layerCount_one": "{{count}} lớp",
+  "layerCount_other": "{{count}} lớp"
+}

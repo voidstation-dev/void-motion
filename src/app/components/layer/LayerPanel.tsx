@@ -33,8 +33,10 @@ import { layerService } from '@/app/services/layer-service'
 import { useLayerStore, useSelectionStore } from '@/app/store'
 import type { Layer, ImageLayer } from '@/types/layer'
 import type { LayerId } from '@/types/brand'
+import { useTranslation } from 'react-i18next'
 
-export function LayerPanel(): ReactElement {
+export function LayerPanel({ showHeader = true }: { readonly showHeader?: boolean }): ReactElement {
+  const { t } = useTranslation('layers')
   const layers = useLayerStore((s) => s.layers)
   const selectedId = useSelectionStore((s) => s.selectedLayerId)
   const [renamingId, setRenamingId] = useState<LayerId | null>(null)
@@ -65,21 +67,23 @@ export function LayerPanel(): ReactElement {
   }
 
   return (
-    <section aria-label="Layers" className="flex flex-col gap-2">
-      <div className="flex items-center justify-between">
-        <h2 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-          Layers
-        </h2>
-        <span className="text-xs tabular-nums text-muted-foreground">
-          {layers.length} layer{layers.length !== 1 ? 's' : ''}
-        </span>
-      </div>
+    <section aria-label={t('title')} className="flex flex-col gap-2">
+      {showHeader && (
+        <div className="flex items-center justify-between">
+          <h2 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+            {t('title')}
+          </h2>
+          <span className="text-xs tabular-nums text-muted-foreground">
+            {t('count', { count: layers.length })}
+          </span>
+        </div>
+      )}
       {layers.length === 0 ? (
         <div className="rounded-md border border-dashed border-border bg-surface-1 px-3 py-3 text-sm text-muted-foreground">
-          No layers
+          {t('empty')}
         </div>
       ) : (
-        <ul className="flex flex-col gap-1" aria-label="Layer list">
+        <ul className="flex flex-col gap-1" aria-label={t('list')}>
           {reversed.map((layer) => {
             const isSelected = layer.id === selectedId
             const isRenaming = renamingId === layer.id
@@ -88,7 +92,7 @@ export function LayerPanel(): ReactElement {
               <li
                 key={layer.id}
                 data-layer-id={layer.id}
-                aria-label={`Layer ${layer.name}`}
+                aria-label={t('layer', { name: layer.name })}
                 className={
                   'rounded-md border bg-surface-1 transition-colors ' +
                   (isSelected ? 'border-primary' : 'border-border') +
@@ -110,8 +114,8 @@ export function LayerPanel(): ReactElement {
                   <GripVertical className="h-3.5 w-3.5 shrink-0 cursor-grab text-muted-foreground" />
                   <button
                     type="button"
-                    aria-label={layer.visible ? 'Hide layer' : 'Show layer'}
-                    title={layer.visible ? 'Hide layer' : 'Show layer'}
+                    aria-label={layer.visible ? t('hide') : t('show')}
+                    title={layer.visible ? t('hide') : t('show')}
                     onClick={(e) => {
                       e.stopPropagation()
                       layerService.toggleVisibility(layer.id)
@@ -153,14 +157,14 @@ export function LayerPanel(): ReactElement {
                     className="flex flex-col items-center gap-0.5"
                     onClick={(e) => e.stopPropagation()}
                   >
-                    <span className="text-[9px] text-muted-foreground">Order</span>
+                    <span className="text-[9px] text-muted-foreground">{t('order')}</span>
                     <input
                       type="number"
                       min={1}
                       max={99}
                       value={orderVal}
                       placeholder="—"
-                      title="Animation order"
+                      title={t('animationOrder')}
                       onChange={(e) => layerService.setOrder(layer.id, e.target.value)}
                       className="w-9 rounded border border-border bg-background px-1 py-0.5 text-center text-[11px] text-foreground outline-none focus:border-primary"
                       data-testid={`layer-order-${layer.id}`}
@@ -168,8 +172,8 @@ export function LayerPanel(): ReactElement {
                   </div>
                   <button
                     type="button"
-                    aria-label="Remove layer"
-                    title="Remove layer"
+                    aria-label={t('remove')}
+                    title={t('remove')}
                     onClick={(e) => {
                       e.stopPropagation()
                       layerService.removeLayer(layer.id)
@@ -198,16 +202,17 @@ export function LayerPanel(): ReactElement {
 
 /** The expanded per-layer inspector (Resize / Opacity / Position & Size). */
 function LayerInspector({ layer }: { readonly layer: Layer }): ReactElement {
+  const { t } = useTranslation('layers')
   const resizePct = layer.type === 'image' ? Math.round((layer as ImageLayer).resizePct) : 100
   const opPct = Math.round(layer.opacity * 100)
-  const t = layer.transform
+  const transform = layer.transform
 
   return (
     <div className="border-t border-border px-2 py-2" data-testid={`layer-inspector-${layer.id}`}>
       {layer.type === 'image' && (
         <div className="mb-2">
           <div className="mb-1 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
-            Resize
+            {t('resize')}
           </div>
           <div className="flex items-center gap-2">
             <input
@@ -218,7 +223,7 @@ function LayerInspector({ layer }: { readonly layer: Layer }): ReactElement {
               value={resizePct}
               onChange={(e) => layerService.setResize(layer.id, Number(e.target.value))}
               className="flex-1"
-              aria-label="Resize percentage"
+              aria-label={t('resizePercent')}
               data-testid={`layer-resize-${layer.id}`}
             />
             <span className="min-w-[28px] text-right text-[10px] tabular-nums text-muted-foreground">
@@ -229,7 +234,7 @@ function LayerInspector({ layer }: { readonly layer: Layer }): ReactElement {
       )}
       <div className="mb-2">
         <div className="mb-1 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
-          Opacity
+          {t('opacity')}
         </div>
         <div className="flex items-center gap-2">
           <input
@@ -240,7 +245,7 @@ function LayerInspector({ layer }: { readonly layer: Layer }): ReactElement {
             value={opPct}
             onChange={(e) => layerService.setOpacity(layer.id, Number(e.target.value) / 100)}
             className="flex-1"
-            aria-label="Opacity percentage"
+            aria-label={t('opacityPercent')}
             data-testid={`layer-opacity-${layer.id}`}
           />
           <span className="min-w-[28px] text-right text-[10px] tabular-nums text-muted-foreground">
@@ -250,14 +255,14 @@ function LayerInspector({ layer }: { readonly layer: Layer }): ReactElement {
       </div>
       <div>
         <div className="mb-1 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
-          Position &amp; Size
+          {t('positionSize')}
         </div>
         <div className="grid grid-cols-2 gap-1 text-[10px] text-muted-foreground">
           <label className="flex flex-col gap-0.5">
             X
             <input
               type="number"
-              value={Math.round(t.x)}
+              value={Math.round(transform.x)}
               onChange={(e) => layerService.setPosition(layer.id, 'x', Number(e.target.value))}
               className="w-full rounded border border-border bg-background px-1 py-0.5 text-foreground outline-none focus:border-primary"
               data-testid={`layer-x-${layer.id}`}
@@ -267,7 +272,7 @@ function LayerInspector({ layer }: { readonly layer: Layer }): ReactElement {
             Y
             <input
               type="number"
-              value={Math.round(t.y)}
+              value={Math.round(transform.y)}
               onChange={(e) => layerService.setPosition(layer.id, 'y', Number(e.target.value))}
               className="w-full rounded border border-border bg-background px-1 py-0.5 text-foreground outline-none focus:border-primary"
               data-testid={`layer-y-${layer.id}`}
@@ -277,7 +282,7 @@ function LayerInspector({ layer }: { readonly layer: Layer }): ReactElement {
             W
             <input
               type="number"
-              value={Math.round(t.width)}
+              value={Math.round(transform.width)}
               onChange={(e) => layerService.setPosition(layer.id, 'w', Number(e.target.value))}
               className="w-full rounded border border-border bg-background px-1 py-0.5 text-foreground outline-none focus:border-primary"
               data-testid={`layer-w-${layer.id}`}
@@ -287,7 +292,7 @@ function LayerInspector({ layer }: { readonly layer: Layer }): ReactElement {
             H
             <input
               type="number"
-              value={Math.round(t.height)}
+              value={Math.round(transform.height)}
               onChange={(e) => layerService.setPosition(layer.id, 'h', Number(e.target.value))}
               className="w-full rounded border border-border bg-background px-1 py-0.5 text-foreground outline-none focus:border-primary"
               data-testid={`layer-h-${layer.id}`}

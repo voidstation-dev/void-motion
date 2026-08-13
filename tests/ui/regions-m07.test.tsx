@@ -95,6 +95,22 @@ describe('M07 CanvasRegion transport', () => {
     const time = getByLabelText('Time display')
     expect(time.textContent).toBe('50%')
   })
+
+  it('renders precise progress with a compositor transform instead of rounded width steps', () => {
+    usePlaybackStore.getState().setProgress(0.505)
+    const { getByTestId } = render(<CanvasRegion />)
+    const fill = getByTestId('progress-fill')
+    expect(fill.style.transform).toBe('scaleX(0.505)')
+    expect(fill.style.width).toBe('')
+  })
+
+  it('keeps Crop and Slice away from the bottom-left animation mode badge', () => {
+    useLayerStore.getState().addLayer(makeLayer(1))
+    const { getByTestId } = render(<CanvasRegion />)
+    const toolbar = getByTestId('canvas-edit-toolbar')
+    expect(toolbar.className).toContain('top-3')
+    expect(toolbar.className).not.toContain('bottom-2')
+  })
 })
 
 describe('M07 BottomBar controls', () => {

@@ -29,7 +29,7 @@ export function CropOverlay({ canvasRef }: CropOverlayProps): ReactElement {
       ref={canvasRef}
       id="crop-canvas"
       data-testid="crop-canvas"
-      className="absolute left-0 top-0 h-full w-full"
+      className="absolute left-0 top-0 z-20 h-full w-full"
       style={{ cursor: 'crosshair' }}
     />
   )

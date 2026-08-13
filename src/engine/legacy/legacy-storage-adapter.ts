@@ -50,7 +50,12 @@ import type { LegacyProjectRecord } from './legacy-state.types'
 function requireWindowFn<
   K extends keyof Pick<
     Window,
-    'saveProject' | 'loadProject' | 'createNewProject' | 'deleteProject' | 'refreshProjectsList'
+    | 'saveProject'
+    | 'loadProject'
+    | 'createNewProject'
+    | 'deleteProject'
+    | 'refreshProjectsList'
+    | 'renameProject'
   >,
 >(name: K): NonNullable<Window[K]> {
   if (typeof window === 'undefined') {
@@ -75,7 +80,11 @@ export function readCurrentProjectId(): number | null {
 /** Read the legacy `db` readiness by probing `saveProject` presence. */
 export function isLegacyStorageReady(): boolean {
   if (typeof window === 'undefined') return false
-  return typeof window.saveProject === 'function' && typeof window.loadProject === 'function'
+  return (
+    typeof window.saveProject === 'function' &&
+    typeof window.loadProject === 'function' &&
+    window.__VOID_MOTION_STORAGE_READY__ !== false
+  )
 }
 
 /**
@@ -90,11 +99,13 @@ export interface LegacyProjectStorage {
   /** Save the currently-loaded project (legacy `saveProject`). */
   save(projectId?: number): void
   /** Load a project by IndexedDB key (legacy `loadProject`). */
-  load(projectId: number): void
+  load(projectId: number): Promise<void>
   /** Create + load a fresh project (legacy `createNewProject`). */
   createNew(): Promise<void>
+  /** Persist a project name immediately. */
+  rename(projectId: number, name: string): Promise<boolean>
   /** Delete a project by key (legacy `deleteProject`). */
-  delete(projectId: number): void
+  delete(projectId: number): Promise<boolean>
   /** Rebuild the project list UI + return nothing (legacy `refreshProjectsList`). */
   refreshList(): void
   /** True when the legacy IndexedDB runtime has booted. */
@@ -120,8 +131,11 @@ export class LegacyStorageAdapter implements LegacyProjectStorage {
     }
   }
 
-  load(projectId: number): void {
-    requireWindowFn('loadProject')(projectId)
+  load(projectId: number): Promise<void> {
+    const fn = requireWindowFn('loadProject')
+    return new Promise((resolve) => {
+      fn(projectId, () => resolve())
+    })
   }
 
   async createNew(): Promise<void> {
@@ -129,13 +143,18 @@ export class LegacyStorageAdapter implements LegacyProjectStorage {
     await fn()
   }
 
-  delete(projectId: number): void {
+  async rename(projectId: number, name: string): Promise<boolean> {
+    return Boolean(await requireWindowFn('renameProject')(projectId, name))
+  }
+
+  delete(projectId: number): Promise<boolean> {
     const fn = requireWindowFn('deleteProject')
-    // Legacy `deleteProject(projectId, event)` calls `event.stopPropagation()`.
-    // The adapter is not invoked from a DOM event, so we pass a minimal
-    // stop-propagation stub to satisfy the legacy signature without changing
-    // behavior.
-    fn(projectId, { stopPropagation() {} })
+    return new Promise((resolve) => {
+      // React owns the confirmation prompt, so skip the duplicate legacy
+      // prompt and resolve only after IndexedDB (and any replacement project)
+      // has settled.
+      fn(projectId, { stopPropagation() {} }, (deleted) => resolve(deleted), true)
+    })
   }
 
   refreshList(): void {

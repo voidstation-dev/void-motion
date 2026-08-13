@@ -3255,7 +3255,7 @@ input[type="number"]:focus { border-color: var(--accent); }
         </svg>
       </button>
     </div>
-    
+
     <div class="projects-actions">
       <button class="projects-new-btn" onclick="createNewProject()">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -4271,7 +4271,7 @@ function initDB() {
 // Save current state to project
 function saveProject(projectId = currentProjectId) {
   if (!db || !projectId) return;
-  
+
   try {
   const transaction = db.transaction(['projects'], 'readwrite');
   const objectStore = transaction.objectStore('projects');
@@ -4373,8 +4373,8 @@ function getImageDataURL(img) {
 }
 
 // Load project
-function loadProject(projectId) {
-  if (!db) return;
+function loadProject(projectId, onLoaded) {
+  if (!db) { if (typeof onLoaded === 'function') onLoaded(null); return; }
   
   try {
   const transaction = db.transaction(['projects'], 'readonly');
@@ -4627,11 +4627,16 @@ function loadProject(projectId) {
 
       // Clear undo/redo history — no cross-project history
       clearUndoHistory();
+      if (typeof onLoaded === 'function') onLoaded(project);
     }
+  };
+  request.onerror = () => {
+    if (typeof onLoaded === 'function') onLoaded(null);
   };
   } catch (err) {
     console.error('Load failed:', err);
     showToast('⚠️ Could not load project — storage may be unavailable', null, 4000);
+    if (typeof onLoaded === 'function') onLoaded(null);
   }
 }
 
@@ -4665,43 +4670,59 @@ async function createNewProject() {
     state: cleanState
   };
   
-  try {
-  const transaction = db.transaction(['projects'], 'readwrite');
-  const objectStore = transaction.objectStore('projects');
-  const request = objectStore.add(project);
-  
-  request.onsuccess = () => {
-    const newId = request.result;
-    loadProject(newId);
-    refreshProjectsList();
-  };
-  } catch (err) {
-    console.error('Create project failed:', err);
-    showToast('⚠️ Could not create project — storage may be unavailable', null, 4000);
-  }
+  return new Promise(resolve => {
+    try {
+      const transaction = db.transaction(['projects'], 'readwrite');
+      const objectStore = transaction.objectStore('projects');
+      const request = objectStore.add(project);
+
+      request.onsuccess = () => {
+        const newId = request.result;
+        loadProject(newId, () => {
+          refreshProjectsList();
+          resolve();
+        });
+      };
+      request.onerror = () => resolve();
+    } catch (err) {
+      console.error('Create project failed:', err);
+      showToast('⚠️ Could not create project — storage may be unavailable', null, 4000);
+      resolve();
+    }
+  });
 }
 
-// Delete project
-function deleteProject(projectId, event) {
-  event.stopPropagation();
-  
-  if (!db || !confirm('Delete this project? This cannot be undone.')) return;
-  
+// Delete project. The migration host supplies `skipConfirm=true` because its
+// React sheet owns the confirmation prompt; the legacy UI keeps the original
+// confirmation behavior.
+function deleteProject(projectId, event, onDeleted, skipConfirm = false) {
+  if (event && typeof event.stopPropagation === 'function') event.stopPropagation();
+
+  if (!db || (!skipConfirm && !confirm('Delete this project? This cannot be undone.'))) {
+    if (typeof onDeleted === 'function') onDeleted(false);
+    return;
+  }
+
   try {
   const transaction = db.transaction(['projects'], 'readwrite');
   const objectStore = transaction.objectStore('projects');
   objectStore.delete(projectId);
-  
-  transaction.oncomplete = () => {
+
+  transaction.oncomplete = async () => {
     if (projectId === currentProjectId) {
-      createNewProject();
+      await createNewProject();
     }
     refreshProjectsList();
+    if (typeof onDeleted === 'function') onDeleted(true);
   };
-  transaction.onerror = () => { showToast('⚠️ Could not delete project', null, 3000); };
+  transaction.onerror = () => {
+    showToast('⚠️ Could not delete project', null, 3000);
+    if (typeof onDeleted === 'function') onDeleted(false);
+  };
   } catch (err) {
     console.error('Delete failed:', err);
     showToast('⚠️ Could not delete project — storage may be unavailable', null, 3000);
+    if (typeof onDeleted === 'function') onDeleted(false);
   }
 }
 
@@ -4814,29 +4835,36 @@ function finishRenaming() {
   const newName = input.value.trim();
   if (newName && newName !== display.textContent) {
     display.textContent = newName;
-    
-    // Update in database
-    if (db && currentProjectId) {
-      try {
+
+    renameProject(currentProjectId, newName);
+  }
+
+  editor.classList.remove('editing');
+}
+
+function renameProject(projectId, newName) {
+  if (!db || !projectId || !newName) return Promise.resolve(false);
+  return new Promise(resolve => {
+    try {
       const transaction = db.transaction(['projects'], 'readwrite');
       const objectStore = transaction.objectStore('projects');
-      const request = objectStore.get(currentProjectId);
+      const request = objectStore.get(projectId);
       request.onsuccess = () => {
         const project = request.result;
-        if (project) {
-          project.name = newName;
-          project.modifiedAt = new Date().toISOString();
-          objectStore.put(project);
-        }
+        if (!project) { resolve(false); return; }
+        project.name = String(newName).trim();
+        project.modifiedAt = new Date().toISOString();
+        const putRequest = objectStore.put(project);
+        putRequest.onsuccess = () => resolve(true);
+        putRequest.onerror = () => resolve(false);
       };
-      } catch (err) {
-        console.error('Rename failed:', err);
-        showToast('⚠️ Could not save project name', null, 3000);
-      }
+      request.onerror = () => resolve(false);
+    } catch (err) {
+      console.error('Rename failed:', err);
+      showToast('⚠️ Could not save project name', null, 3000);
+      resolve(false);
     }
-  }
-  
-  editor.classList.remove('editing');
+  });
 }
 
 function handleRenameKey(event) {
@@ -5271,6 +5299,10 @@ setTimeout(() => {
   });
   
   initDB().then(() => {
+    const markStorageReady = () => {
+      window.__VOID_MOTION_STORAGE_READY__ = true;
+      window.dispatchEvent(new Event('void-motion-storage-ready'));
+    };
     // Check storage usage on startup
     checkStorageUsage();
     try {
@@ -5280,16 +5312,16 @@ setTimeout(() => {
     request.onsuccess = () => {
       const projects = request.result;
       if (projects.length === 0) {
-        createNewProject();
+        Promise.resolve(createNewProject()).then(markStorageReady);
       } else {
         projects.sort((a, b) => new Date(b.modifiedAt) - new Date(a.modifiedAt));
-        loadProject(projects[0].id);
+        loadProject(projects[0].id, markStorageReady);
       }
     };
     } catch (err) {
       console.error('Startup DB read failed:', err);
       showToast('⚠️ Could not access saved projects — storage may be unavailable', null, 5000);
-      createNewProject();
+      Promise.resolve(createNewProject()).then(markStorageReady);
     }
   });
 }, 100);
@@ -5635,7 +5667,7 @@ function _cacheElements() {
 // multiplied by this so they behave identically at every resolution.
 // 720p → 1.0 · 1080p → 1.5 · 1440p → 2.0
 function resScale() {
-  return 1 // Delegated to M19 renderer
+  return Math.sqrt((state.canvasW * state.canvasH) / (1280 * 720));
 }
 
 // Sub-linear scale used for perimeter point density.
@@ -5644,7 +5676,7 @@ function resScale() {
 // outline smooth at all resolutions while still adding enough points for clarity.
 //   720p → 1.0 · 1080p → 1.31 · 1440p → 1.57
 function resPointScale() {
-  return 1 // Delegated to M19 renderer
+  return Math.pow(resScale(), 0.6);
 }
 
 // Stroke softening blur — the tiny amount of shadowBlur that restores the
@@ -5652,7 +5684,7 @@ function resPointScale() {
 // but loses at higher resolutions where lines become pixel-crisp.
 //   720p → 0 · 1080p → 0.75 · 1440p → 1.5
 function resSoftBlur() {
-  return 0 // Delegated to M19 renderer
+  return Math.max(0, (resScale() - 1) * 1.5);
 }
 
 function initCanvas(w,h) {
@@ -5688,7 +5720,19 @@ function initCanvas(w,h) {
   redrawLayersOnCanvas();
 }
 function fitCanvas() {
-  // Delegated to M19 engine adapter resize()
+  const canvasArea = document.getElementById('canvas-area');
+  if (!canvasArea) return;
+  const styles = getComputedStyle(canvasArea);
+  const padX = parseFloat(styles.paddingLeft || '0') + parseFloat(styles.paddingRight || '0');
+  const padY = parseFloat(styles.paddingTop || '0') + parseFloat(styles.paddingBottom || '0');
+  const safeMargin = 24;
+  const availableW = Math.max(160, canvasArea.clientWidth - padX - safeMargin);
+  const availableH = Math.max(160, canvasArea.clientHeight - padY - safeMargin);
+  const s = Math.min(availableW/state.canvasW, availableH/state.canvasH, 1);
+  const sw=(state.canvasW*s)+'px', sh=(state.canvasH*s)+'px';
+  canvas.style.width=sw; canvas.style.height=sh;
+  handCanvas.style.width=sw; handCanvas.style.height=sh;
+  selectCanvas.style.width=sw; selectCanvas.style.height=sh;
 }
 // ─── BACKGROUND GRADIENTS (drawn on canvas) ───
 const BG_GRADIENTS = {
@@ -5747,7 +5791,21 @@ const BG_GRADIENTS = {
 };
 
 function fillBg(c) {
-  // Delegated to M19 background-renderer
+  // In slot mode each slot canvas is transparent — only the strokes/fills for that
+  // layer are drawn onto it. The real background is composited once per frame.
+  if (state._slotMode) { c.clearRect(0,0,state.canvasW,state.canvasH); return; }
+  const bg = state.canvasBg;
+  if (bg.type === 'solid') {
+    if (bg.val === 'transparent') { c.clearRect(0,0,state.canvasW,state.canvasH); }
+    else { c.fillStyle = (bg.val === 'white') ? '#ffffff' : bg.val; c.fillRect(0,0,state.canvasW,state.canvasH); }
+  } else if (bg.type === 'gradient' && BG_GRADIENTS[bg.key]) {
+    c.save(); BG_GRADIENTS[bg.key](c); c.restore();
+  } else if (bg.type === 'custom') {
+    c.fillStyle = bg.val; c.fillRect(0,0,state.canvasW,state.canvasH);
+  } else {
+    c.fillStyle='#fff'; c.fillRect(0,0,state.canvasW,state.canvasH);
+  }
+  if (state.bgCanvas) c.drawImage(state.bgCanvas, 0, 0);
 }
 function fillBgOnCtx(c) { fillBg(c); }
 
@@ -6555,18 +6613,43 @@ function onDragEnd(e) {
 
 // ── Redraw all layers composited on canvas ──
 function redrawLayersOnCanvas() {
-  // Delegated to M19 layer-compositor
-  // M03 engine interface triggers the React layer-change event instead,
-  // which causes the React shell to invoke `renderStatic()`.
-  if (window.engine) {
-    window.engine.renderStatic();
+  if (!state.layers || state.layers.length === 0) {
+    fillBg(ctx);
+    return;
   }
+  ctx.save();
+  fillBg(ctx);
+  state.layers.forEach(layer => {
+    if (layer.visible === false || !layer.img) return;
+    if (_ts.active && _ts.editingId !== null && layer.id === _ts.editingId) return;
+    ctx.save();
+    ctx.globalAlpha = (layer.opacity !== undefined) ? layer.opacity : 1;
+    if (layer.w < 100 && layer.h < 100) ctx.imageSmoothingEnabled = false;
+    ctx.drawImage(layer.img, layer.x, layer.y, layer.w, layer.h);
+    ctx.restore();
+  });
+  ctx.restore();
 }
 
 // ── Selection handles on selectCanvas ──
 const HANDLE_R = 6;
 function drawSelectionHandles() {
-  // Delegated to M19 selection-renderer via React shell renderStatic()
+  sctx.clearRect(0,0,state.canvasW,state.canvasH);
+  const layer = getSelectedLayer();
+  if (!layer || state.playing) return;
+  const {x,y,w,h} = layer;
+  sctx.save();
+  sctx.strokeStyle='#6c63ff'; sctx.lineWidth=2; sctx.setLineDash([5,3]);
+  sctx.strokeRect(x,y,w,h); sctx.setLineDash([]);
+  [[x,y],[x+w,y],[x+w,y+h],[x,y+h]].forEach(([cx2,cy2])=>{
+    sctx.fillStyle='#6c63ff'; sctx.beginPath(); sctx.arc(cx2,cy2,HANDLE_R,0,Math.PI*2); sctx.fill();
+    sctx.strokeStyle='#fff'; sctx.lineWidth=1.5; sctx.stroke();
+  });
+  [[x+w/2,y],[x+w,y+h/2],[x+w/2,y+h],[x,y+h/2]].forEach(([cx2,cy2])=>{
+    sctx.fillStyle='#fff'; sctx.beginPath(); sctx.arc(cx2,cy2,4,0,Math.PI*2); sctx.fill();
+    sctx.strokeStyle='#6c63ff'; sctx.lineWidth=1.5; sctx.stroke();
+  });
+  sctx.restore();
 }
 
 // ── Canvas pointer interaction: move + resize ──
@@ -8359,6 +8442,9 @@ function preRender(existingBgCanvas) {
   offscreen = document.createElement('canvas');
   offscreen.width  = state.canvasW;
   offscreen.height = state.canvasH;
+  if (AnimationEngine && typeof AnimationEngine._setOffscreen === 'function') {
+    AnimationEngine._setOffscreen(offscreen);
+  }
   const oc = offscreen.getContext('2d', { willReadFrequently: true });
   if (layer) {
     oc.save(); oc.globalAlpha = (layer.opacity !== undefined ? layer.opacity : 1);
@@ -9476,6 +9562,57 @@ function confirmCrop() {
   newImg.src = cc.toDataURL();
 }
 
+// React migration entry point. The visible React crop tool owns the temporary
+// rectangle, while this hidden runtime owns the source bitmap and undo stack.
+// Accepting the rectangle directly avoids depending on the legacy crop DOM.
+function applyMigrationCrop(layerId, rect) {
+  const layer = state.layers.find(item => item && item.id === Number(layerId));
+  if (!layer || !rect || rect.w <= 0 || rect.h <= 0) return Promise.resolve(false);
+
+  pushUndoSnapshot();
+  if (!layer._origImg) {
+    layer._origImg = layer.img;
+    layer._origX = layer.x;
+    layer._origY = layer.y;
+    layer._origW = layer.w;
+    layer._origH = layer.h;
+  }
+
+  const scaleX = layer._origImg.naturalWidth / layer._origW;
+  const scaleY = layer._origImg.naturalHeight / layer._origH;
+  const rx = (rect.x - layer._origX) * scaleX;
+  const ry = (rect.y - layer._origY) * scaleY;
+  const rw = rect.w * scaleX;
+  const rh = rect.h * scaleY;
+  const cc = document.createElement('canvas');
+  cc.width = Math.max(1, Math.round(rw));
+  cc.height = Math.max(1, Math.round(rh));
+  const cctx = cc.getContext('2d');
+  cctx.drawImage(layer._origImg, rx, ry, rw, rh, 0, 0, cc.width, cc.height);
+
+  return new Promise(resolve => {
+    const newImg = new Image();
+    newImg.onload = () => {
+      layer.img = newImg;
+      layer.x = rect.x;
+      layer.y = rect.y;
+      layer.w = rect.w;
+      layer.h = rect.h;
+      layer.baseW = rect.w;
+      layer.baseH = rect.h;
+      layer.resizePct = 100;
+      state.selectedLayerId = layer.id;
+      redrawLayersOnCanvas();
+      drawSelectionHandles();
+      renderLayerList();
+      scheduleAutoSave();
+      resolve(true);
+    };
+    newImg.onerror = () => resolve(false);
+    newImg.src = cc.toDataURL();
+  });
+}
+
 function _drawCropOverlay() {
   if (!_cropState) return;
   const { rect } = _cropState;
@@ -10040,10 +10177,13 @@ function clearSlicerRects() { _slicerRects = []; _updateRectList(); _drawSlicerP
 function clearSlicerFreehand() { _slicerFhPaths = []; _updateFhList(); _drawSlicerPreview(); _updateSlicerFooter(); }
 
 // ── Apply slices ─────────────────────────────────────────────────────────
-function applySlices() {
-  if (!_slicerLayer) return;
+function applySlices(migrationPayload = null) {
+  const migrationLayerId = migrationPayload && Number(migrationPayload.layerId);
+  const layer = migrationLayerId
+    ? state.layers.find(item => item && item.id === migrationLayerId)
+    : _slicerLayer;
+  if (!layer) return Promise.resolve(false);
   pushUndoSnapshot();
-  const layer = _slicerLayer;
 
   // Source image
   const srcImg = layer._origImg || layer.img;
@@ -10075,9 +10215,15 @@ function applySlices() {
   // ── Build slice descriptors ──────────────────────────────────────────
   // Each descriptor: { bounds:{x,y,w,h} in canvas-space, clipPts:[{x,y}]|null }
   // clipPts null = rectangular cut; array = freehand polygon clip
-  let slices = [];
+  let slices = migrationPayload && Array.isArray(migrationPayload.slices)
+    ? migrationPayload.slices.map(slice => ({
+        bounds: { ...slice.bounds },
+        clipPts: Array.isArray(slice.clipPts) ? slice.clipPts.map(point => ({ ...point })) : null,
+        label: String(slice.label || layer.name),
+      }))
+    : [];
 
-  if (_slicerMode === 'grid') {
+  if (!migrationPayload && _slicerMode === 'grid') {
     const cols = parseInt(document.getElementById('slicer-cols').value) || 2;
     const rows = parseInt(document.getElementById('slicer-rows').value) || 2;
     const cw = layer.w / cols, ch = layer.h / rows;
@@ -10092,13 +10238,13 @@ function applySlices() {
         idx++;
       }
     }
-  } else if (_slicerMode === 'rect') {
+  } else if (!migrationPayload && _slicerMode === 'rect') {
     slices = _slicerRects.map((r, i) => ({
       bounds: { x: r.x, y: r.y, w: r.w, h: r.h },
       clipPts: null,
       label: `${layer.name} — ${r.label}`,
     }));
-  } else {
+  } else if (!migrationPayload) {
     // Freehand: pts are stored in canvas-space already
     slices = _slicerFhPaths.map((p, i) => ({
       bounds: p.bounds,
@@ -10107,12 +10253,14 @@ function applySlices() {
     }));
   }
 
-  if (!slices.length) return;
+  if (!slices.length) return Promise.resolve(false);
 
-  let pending = slices.length;
-  const newLayers = new Array(slices.length);
+  return new Promise(resolve => {
+    let pending = slices.length;
+    let failed = false;
+    const newLayers = new Array(slices.length);
 
-  slices.forEach((slice, i) => {
+    slices.forEach((slice, i) => {
     const { bounds, clipPts } = slice;
 
     // How many pixels of the source image does this region cover?
@@ -10147,6 +10295,7 @@ function applySlices() {
 
     const img = new Image();
     img.onload = () => {
+      if (failed) return;
       newLayers[i] = {
         id:        Date.now() + i * 7,
         name:      slice.label,
@@ -10175,10 +10324,22 @@ function applySlices() {
         drawSelectionHandles();
         _updateToolToolbar();
         scheduleAutoSave();
+        resolve(true);
+      }
+    };
+    img.onerror = () => {
+      if (!failed) {
+        failed = true;
+        resolve(false);
       }
     };
     img.src = cc.toDataURL();
+    });
   });
+}
+
+function applyMigrationSlices(payload) {
+  return applySlices(payload);
 }
 
 // ── Patch selectLayer to show/hide Crop+Slice buttons ──────────────────
@@ -10684,11 +10845,66 @@ function obEnd() {
 
 // Init — show welcome modal only on first visit
 (function initOnboarding() {
+  if (new URLSearchParams(window.location.search).has('migration-runtime')) return;
   if (!localStorage.getItem(OB_KEY)) {
     setTimeout(() => {
       document.getElementById('welcome-modal').classList.remove('hidden');
     }, 600);
   }
+})();
+
+// Migration runtime host ----------------------------------------------------
+// The React application embeds this document off-screen as a same-origin
+// compatibility runtime. React owns every visible control; this page only
+// preserves the proven production engine and persistence behavior while the
+// remaining algorithms are migrated incrementally.
+(function exposeMigrationRuntime() {
+  if (!new URLSearchParams(window.location.search).has('migration-runtime')) return;
+
+  window.state = state;
+  Object.defineProperty(window, 'currentProjectId', {
+    configurable: true,
+    get: () => currentProjectId,
+    set: value => { currentProjectId = value; },
+  });
+  Object.defineProperty(window, '_layerIdCounter', {
+    configurable: true,
+    get: () => _layerIdCounter,
+    set: value => { _layerIdCounter = Number(value) || 0; },
+  });
+  Object.defineProperty(window, '__VOID_MOTION_HISTORY__', {
+    configurable: true,
+    get: () => ({ undo: _undoStack.length, redo: _redoStack.length }),
+  });
+
+  if (typeof window.createLegacyAnimationEngine === 'function') {
+    const nativeRandom = window.Math.random.bind(window.Math);
+    window.AnimationEngine = window.createLegacyAnimationEngine({
+      state,
+      main: ctx,
+      hand: hctx,
+      offscreen,
+      fillBackground: fillBg,
+      drawHand,
+      setProgress,
+      resScale,
+      resPointScale,
+      resSoftBlur,
+      document,
+      getSetting(id) {
+        const el = document.getElementById(id);
+        if (!el) return undefined;
+        if ('checked' in el && (el.type === 'checkbox' || el.type === 'radio')) return el.checked;
+        if ('value' in el) return el.value;
+        return undefined;
+      },
+      random: { next: nativeRandom },
+    });
+  }
+
+  window.__VOID_MOTION_STORAGE_READY__ = false;
+  window.__VOID_MOTION_RUNTIME_READY__ = true;
+  window.parent.postMessage({ type: 'void-motion-runtime-ready' }, window.location.origin);
 })();
 </script>
 </body>

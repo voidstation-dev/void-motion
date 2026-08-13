@@ -1,0 +1,213 @@
+{
+  "eyebrow": "Hướng dẫn sản phẩm · Phiên bản React",
+  "title": "Vẽ một ý tưởng. Xem nó chuyển động.",
+  "description": "Hướng dẫn đầy đủ để tạo hoạt ảnh bảng trắng bằng nét vẽ trong Void Motion—từ lớp đầu tiên đến video WebM hoặc MP4 hoàn chỉnh. Mọi dự án đều nằm trong trình duyệt cho đến khi bạn xuất tệp.",
+  "navLabel": "Các phần hướng dẫn",
+  "onThisPage": "Nội dung trang",
+  "sections": [
+    {
+      "id": "concepts",
+      "title": "Khái niệm cốt lõi",
+      "intro": "Void Motion biến hình ảnh và văn bản thành chuỗi nét vẽ theo từng khung hình, phù hợp cho video giải thích, bài học và nội dung mạng xã hội.",
+      "columns": 2,
+      "cards": [
+        {
+          "title": "Mô hình hoạt động",
+          "items": [
+            "Lớp là nguyên liệu đầu vào. Mỗi hình ảnh hoặc khối văn bản trở thành một lớp.",
+            "Thiết lập thuộc về lớp đang chọn, vì vậy mỗi lớp có thể dùng một kiểu hoạt ảnh khác nhau.",
+            "Tạo hoạt ảnh dựng lại chuỗi từ thiết lập hiện tại của các lớp.",
+            "Xuất video ghi lại chính xác những gì xuất hiện trên canvas."
+          ]
+        },
+        {
+          "title": "Canvas",
+          "paragraphs": [
+            "Canvas là vùng ghi hình cuối cùng. Chọn tỉ lệ 16:9, 9:16 hoặc 1:1 và độ phân giải 720p, 1080p hoặc 1440p. Nội dung tải lên được căn giữa, co vừa khung và vẫn có thể di chuyển tự do."
+          ]
+        },
+        {
+          "title": "Trình tự",
+          "paragraphs": [
+            "Các lớp chuyển động từ số thứ tự thấp nhất lên cao. Lớp đã hoàn thành vẫn hiển thị phía sau các lớp tiếp theo. Các lớp có cùng số thứ tự sẽ chạy song song."
+          ]
+        },
+        {
+          "title": "Hoạt ảnh và Vẽ",
+          "paragraphs": [
+            "Hoạt ảnh là lối tắt nhanh: chọn Scanner, Contour, Chunk Jump, Outline Chunks hoặc một kiểu nhận biết chủ thể. Vẽ cung cấp điều khiển phát hiện đường viền, nét, tô, hiệu ứng lộ ảnh và vẽ chữ. Mỗi lớp chỉ dùng một cách tại một thời điểm."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "projects",
+      "title": "Dự án và giao diện",
+      "columns": 2,
+      "cards": [
+        {
+          "title": "Tạo, chuyển và đổi tên",
+          "paragraphs": [
+            "Trình chỉnh sửa tự động tạo một dự án. Dùng Dự án để tạo thêm, chuyển dự án hoặc xóa. Nhấp tên dự án trên thanh đầu trang để đổi tên."
+          ]
+        },
+        {
+          "title": "Tự động lưu cục bộ",
+          "paragraphs": [
+            "Các thay đổi quan trọng tự động được lưu vào IndexedDB trên thiết bị này: lớp, hình ảnh, hình học, thiết lập từng lớp, nhóm, thứ tự hoạt ảnh, kích thước canvas và nền."
+          ]
+        },
+        {
+          "title": "Phím tắt",
+          "items": [
+            "Space — phát hoặc tạm dừng.",
+            "Ctrl/Cmd + Z — hoàn tác; Ctrl/Cmd + Shift + Z — làm lại.",
+            "Delete / Backspace — xóa lớp đang chọn.",
+            "Escape — hủy cắt ảnh, chia ảnh, đặt chữ hoặc đóng trình chỉnh sửa đang hoạt động.",
+            "Ctrl/Cmd + Enter — lưu nội dung chữ đang sửa."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "layers",
+      "title": "Các lớp",
+      "columns": 2,
+      "cards": [
+        {
+          "title": "Hình ảnh và văn bản",
+          "paragraphs": [
+            "Kéo thả hoặc chọn tệp PNG, JPG, GIF, SVG hay WEBP; có thể chọn nhiều tệp. Tab Văn bản hỗ trợ phông chữ, cỡ 10–400px, đậm, nghiêng, căn chỉnh, chiều cao dòng, khoảng cách chữ, preset và màu tùy chỉnh.",
+            "Nhấp đúp vào chữ đã đặt để chỉnh sửa lại."
+          ]
+        },
+        {
+          "title": "Danh sách lớp",
+          "paragraphs": [
+            "Dùng tay nắm để đổi thứ tự, biểu tượng mắt để ẩn, ô thứ tự để lên lịch và × để xóa. Khi chọn lớp, bạn có thể chỉnh tỉ lệ (10–300%), độ mờ, vị trí và kích thước."
+          ]
+        },
+        {
+          "title": "Cắt, chia và nền",
+          "paragraphs": [
+            "Cắt ảnh không phá hủy dữ liệu và có thể đặt lại. Chia ảnh biến một lớp thành các phần độc lập theo lưới, hình chữ nhật hoặc vẽ tự do. Nền canvas có thể là trắng, đen, trong suốt, màu tùy chỉnh hoặc một trong mười preset sổ kẻ, ô lưới, giấy, chuyển sắc, bản vẽ kỹ thuật, giấy kraft, tối và vải linen."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "animation",
+      "title": "Tab Hoạt ảnh",
+      "intro": "Con đường nhanh nhất để có kết quả sử dụng được. Chọn cách lộ nội dung, điều chỉnh mức chi tiết rồi tạo hoạt ảnh.",
+      "columns": 2,
+      "cards": [
+        {
+          "title": "Các kiểu cơ bản",
+          "items": [
+            "Scanner làm lộ ảnh bằng một lượt quét mượt.",
+            "Contour đi theo hình dạng chủ thể.",
+            "Outline Chunks dựng ảnh từ các vùng cạnh được phát hiện.",
+            "Chunk Jump ghép ảnh theo các mảng không gian.",
+            "Điều khiển Mảng trải từ các khối thô, nhanh đến nhiều mảnh nhỏ chi tiết."
+          ]
+        },
+        {
+          "title": "Kiểu nhận biết chủ thể và preset",
+          "paragraphs": [
+            "Người, Động vật, Chân dung, Phương tiện, Tòa nhà, Phong cảnh và Xoắn ốc dùng bản đồ ưu tiên không gian, bắt đầu từ những vùng quan trọng về thị giác. Preset có sẵn và tùy chỉnh khôi phục toàn bộ cấu hình; có thể lưu tối đa sáu preset tùy chỉnh."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "drawing",
+      "title": "Tab Vẽ",
+      "columns": 2,
+      "cards": [
+        {
+          "title": "Các chế độ đường viền",
+          "paragraphs": [
+            "Viền rồi tô lần theo cạnh trước khi tô; Minh họa màu tạo hình minh họa có màu; Chỉ đường viền giữ lại nét; Vẽ chữ đi theo hình dạng ký tự. Chế độ Vẽ tái tạo hình ảnh thay vì chỉ làm lộ ảnh gốc."
+          ]
+        },
+        {
+          "title": "Phát hiện và nét vẽ",
+          "paragraphs": [
+            "Điều chỉnh phát hiện từ nghiêm ngặt đến chi tiết và chọn thuật toán Cổ điển hoặc thuật toán cạnh khác. Kiểu nét, màu viền, màu tự nhận diện, độ dày (0,5–8px), lớp phủ và độ mờ quyết định đặc tính đường nét."
+          ]
+        },
+        {
+          "title": "Tô và làm lộ ảnh",
+          "paragraphs": [
+            "Chọn tô thưa hoặc tô đầy. Chế độ tô có thể làm lộ ảnh gốc ở cuối bằng hiệu ứng tức thời, mờ dần, theo hướng, tỏa tròn hoặc các cách khác. Chế độ vùng và cạnh thật dành cho ảnh chụp có thể hữu ích, dù ảnh chụp thường phù hợp với tab Hoạt ảnh hơn."
+          ]
+        },
+        {
+          "title": "Tùy chọn vẽ chữ",
+          "paragraphs": [
+            "Chữ có thể bắt đầu từ trái sang phải, phải sang trái, trên xuống dưới hoặc dưới lên trên. Kiểu tô có thể làm lộ ký tự, chỉ lần theo viền hoặc lần viền rồi tô."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "controls",
+      "title": "Điều khiển phía dưới",
+      "columns": 3,
+      "cards": [
+        {
+          "title": "Kiểu bàn tay",
+          "paragraphs": [
+            "Ghost ẩn bàn tay vẽ. Hand 1, Hand 2, Hand 3 và Pen cung cấp các dụng cụ hiển thị khác nhau mà không thay đổi logic hoạt ảnh."
+          ]
+        },
+        {
+          "title": "Tốc độ",
+          "paragraphs": [
+            "Tốc độ lộ ảnh (1–100) điều khiển tiến trình nội dung. Tốc độ tay (1–20) điều khiển hình bàn tay độc lập."
+          ]
+        },
+        {
+          "title": "Kích thước canvas",
+          "paragraphs": [
+            "Dùng 720p để xuất nhanh và gọn; 1080p cho video đầy đủ; chỉ dùng 1440p khi độ chi tiết cao hơn xứng đáng với thời gian kết xuất lâu hơn."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "export",
+      "title": "Tạo và xuất",
+      "columns": 2,
+      "cards": [
+        {
+          "title": "Tạo và phát lại",
+          "paragraphs": [
+            "Tạo hoạt ảnh đọc toàn bộ lớp và thiết lập hiện tại, dựng lại hoạt ảnh rồi bắt đầu phát. Hãy tạo lại sau khi đổi thiết lập. Khởi động lại đưa về khung hình 0, Phát/Tạm dừng điều khiển phát lại và thanh tiến trình dùng để tua."
+          ]
+        },
+        {
+          "title": "Định dạng và chất lượng",
+          "paragraphs": [
+            "WebM là định dạng mở được khuyên dùng. MP4/H.264 khả dụng khi trình duyệt hỗ trợ. Chất lượng Cao, Trung bình và Thấp tương ứng với bitrate giảm dần. Có thể tải khung hình PNG cuối cùng cùng với video."
+          ]
+        },
+        {
+          "title": "Quy trình ghi",
+          "paragraphs": [
+            "Bắt đầu ghi sẽ khởi động lại hoạt ảnh và ghi đến khung hình cuối. Không chỉnh sửa trong lúc ghi. Trình duyệt tải kết quả xuống khi hoàn tất."
+          ]
+        },
+        {
+          "title": "Trước khi xuất",
+          "items": [
+            "Xác nhận tỉ lệ khung hình, độ phân giải, nền và trạng thái hiển thị lớp.",
+            "Kiểm tra thứ tự hoạt ảnh và xem trọn một lượt đã tạo.",
+            "Chọn định dạng và chất lượng tương thích với nơi sử dụng.",
+            "Bật PNG khung hình cuối nếu cần ảnh thu nhỏ hoặc ảnh tĩnh."
+          ]
+        }
+      ]
+    }
+  ]
+}

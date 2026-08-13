@@ -156,8 +156,9 @@ export const presetService = {
    */
   applyPreset(settings: PresetSettings): void {
     // 1. Push an undo snapshot (delegated through legacy adapter)
-    if (typeof window !== 'undefined' && typeof (window as any).pushUndoSnapshot === 'function') {
-      (window as any).pushUndoSnapshot()
+    const pushUndo = (window as unknown as Record<string, unknown>).pushUndoSnapshot
+    if (typeof pushUndo === 'function') {
+      Reflect.apply(pushUndo, window, [])
     }
 
     // 2. Dispatch animation/drawing settings
@@ -169,9 +170,9 @@ export const presetService = {
       animStyle === 'text-draw'
 
     if (isDrawingMode) {
-      animationService.setDrawingMode(animStyle as any)
+      animationService.setDrawingMode(animStyle)
     } else {
-      animationService.setAnimationStyle(animStyle as any)
+      animationService.setAnimationStyle(animStyle)
     }
 
     // Hand style goes through canvasControlsService since it owns the hand

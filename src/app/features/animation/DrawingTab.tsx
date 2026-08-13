@@ -1,63 +1,76 @@
+import { useState } from 'react'
 import { useAnimationStore } from '@/app/store'
 import { animationService } from '@/app/services/animation-service'
 import { Label } from '@/app/components/ui/label'
 import { Slider } from '@/app/components/ui/slider'
-import type { DrawingMode, StrokeStyle, ColoringStyle, DetectionAlgorithm, RevealStyle, DrawDirection, TextDrawStyle } from '@/types/animation'
+import type {
+  DrawingMode,
+  StrokeStyle,
+  ColoringStyle,
+  DetectionAlgorithm,
+  RevealStyle,
+  DrawDirection,
+  TextDrawStyle,
+} from '@/types/animation'
+import { useTranslation } from 'react-i18next'
 
-const DRAWING_MODES: { id: DrawingMode; label: string; icon?: string }[] = [
-  { id: 'outline-fill', label: 'Outline Fill' },
-  { id: 'illust-fill', label: 'Illust Fill' },
-  { id: 'outline-only', label: 'Outline Only' },
-  { id: 'text-draw', label: '✏ Text' },
+const DRAWING_MODES: { id: DrawingMode; labelKey: string }[] = [
+  { id: 'outline-fill', labelKey: 'outlineFill' },
+  { id: 'illust-fill', labelKey: 'illustFill' },
+  { id: 'outline-only', labelKey: 'outlineOnly' },
+  { id: 'text-draw', labelKey: 'text' },
 ]
 
-const STROKE_STYLES: { id: StrokeStyle; label: string; icon: string }[] = [
-  { id: 'default', label: 'Default', icon: '🖊' },
-  { id: 'charcoal', label: 'Charcoal', icon: '✏️' },
-  { id: 'sketch', label: 'Sketch', icon: '〰' },
-  { id: 'fountain', label: 'Fountain', icon: '🪶' },
-  { id: 'blueprint', label: 'Blueprint', icon: '📐' },
+const STROKE_STYLES: { id: StrokeStyle; labelKey: string; icon: string }[] = [
+  { id: 'default', labelKey: 'default', icon: '🖊' },
+  { id: 'charcoal', labelKey: 'charcoal', icon: '✏️' },
+  { id: 'sketch', labelKey: 'sketch', icon: '〰' },
+  { id: 'fountain', labelKey: 'fountain', icon: '🪶' },
+  { id: 'blueprint', labelKey: 'blueprint', icon: '📐' },
 ]
 
-const COLORING_STYLES: { id: ColoringStyle; label: string }[] = [
-  { id: 'sparse', label: 'Sparse' },
-  { id: 'filled', label: 'Filled' },
-  { id: 'watercolor', label: 'Watercolor' },
+const COLORING_STYLES: { id: ColoringStyle; labelKey: string }[] = [
+  { id: 'sparse', labelKey: 'sparse' },
+  { id: 'filled', labelKey: 'filled' },
+  { id: 'watercolor', labelKey: 'watercolor' },
 ]
 
-const DETECTION_ALGORITHMS: { id: DetectionAlgorithm; label: string; desc: string }[] = [
-  { id: 'classic', label: 'Classic', desc: 'dark + neutral' },
-  { id: 'adaptive', label: 'Adaptive', desc: 'local contrast' },
-  { id: 'morph-shell', label: 'Morph Shell', desc: 'erosion border' },
-  { id: 'canny-plus', label: 'Canny+', desc: 'edge linking' },
+const DETECTION_ALGORITHMS: { id: DetectionAlgorithm; labelKey: string; descKey: string }[] = [
+  { id: 'classic', labelKey: 'classic', descKey: 'darkNeutral' },
+  { id: 'adaptive', labelKey: 'adaptive', descKey: 'localContrast' },
+  { id: 'morph-shell', labelKey: 'morphShell', descKey: 'erosionBorder' },
+  { id: 'canny-plus', labelKey: 'cannyPlus', descKey: 'edgeLinking' },
 ]
 
-const REVEAL_STYLES: { id: RevealStyle; label: string; icon: string }[] = [
-  { id: 'instant', label: 'Instant', icon: '⚡' },
-  { id: 'fade', label: 'Fade', icon: '🌫' },
-  { id: 'dissolve', label: 'Dissolve', icon: '✦' },
-  { id: 'wipe-right', label: 'Wipe', icon: '→' },
-  { id: 'iris', label: 'Iris', icon: '◎' },
-  { id: 'scan-lines', label: 'Scanlines', icon: '≡' },
+const REVEAL_STYLES: { id: RevealStyle; labelKey: string; icon: string }[] = [
+  { id: 'instant', labelKey: 'instant', icon: '⚡' },
+  { id: 'fade', labelKey: 'fade', icon: '🌫' },
+  { id: 'dissolve', labelKey: 'dissolve', icon: '✦' },
+  { id: 'wipe-right', labelKey: 'wipe', icon: '→' },
+  { id: 'iris', labelKey: 'iris', icon: '◎' },
+  { id: 'scan-lines', labelKey: 'scanlines', icon: '≡' },
 ]
 
-const TEXT_DIRECTIONS: { id: DrawDirection; label: string }[] = [
-  { id: 'left-to-right', label: '← Left → Right' },
-  { id: 'right-to-left', label: 'Right → Left →' },
-  { id: 'top-to-bottom', label: '↓ Top → Bottom' },
-  { id: 'bottom-to-top', label: '↑ Bottom → Top' },
+const TEXT_DIRECTIONS: { id: DrawDirection; labelKey: string }[] = [
+  { id: 'left-to-right', labelKey: 'leftRight' },
+  { id: 'right-to-left', labelKey: 'rightLeft' },
+  { id: 'top-to-bottom', labelKey: 'topBottom' },
+  { id: 'bottom-to-top', labelKey: 'bottomTop' },
 ]
 
-const TEXT_DRAW_STYLES: { id: TextDrawStyle; label: string }[] = [
-  { id: 'reveal', label: 'Reveal' },
-  { id: 'outline', label: 'Outline' },
-  { id: 'outline-fill', label: 'Outline + Fill' },
+const TEXT_DRAW_STYLES: { id: TextDrawStyle; labelKey: string }[] = [
+  { id: 'reveal', labelKey: 'reveal' },
+  { id: 'outline', labelKey: 'outline' },
+  { id: 'outline-fill', labelKey: 'outlineAndFill' },
 ]
 
 export function DrawingTab() {
+  const { t } = useTranslation('animation')
   const activeMode = useAnimationStore((s) => s.activeMode)
   const defaults = useAnimationStore((s) => s.defaults)
   const revealStyle = useAnimationStore((s) => s.revealStyle)
+  const [revealDuration, setRevealDuration] = useState(1.2)
+  const [outlineOpacity, setOutlineOpacity] = useState(100)
 
   const isOutlineFillOrIllust = activeMode === 'outline-fill' || activeMode === 'illust-fill'
   const isOutlineOnly = activeMode === 'outline-only'
@@ -67,7 +80,9 @@ export function DrawingTab() {
     <div className="flex flex-col gap-6 pb-20">
       {/* Drawing Mode Selector */}
       <div className="flex flex-col gap-3">
-        <Label className="text-xs uppercase text-muted-foreground tracking-wider">Drawing Mode</Label>
+        <Label className="text-xs uppercase text-muted-foreground tracking-wider">
+          {t('drawing.mode')}
+        </Label>
         <div className="grid grid-cols-2 gap-2">
           {DRAWING_MODES.map((mode) => (
             <button
@@ -79,25 +94,24 @@ export function DrawingTab() {
               }`}
               onClick={() => animationService.setDrawingMode(mode.id)}
             >
-              {mode.label}
+              {t(`drawing.${mode.labelKey}`)}
             </button>
           ))}
         </div>
       </div>
 
       {/* Mode-specific settings */}
-      
+
       {/* General Outline Settings (shown for all drawing modes) */}
       <div className="flex flex-col gap-4 p-3 border rounded-md bg-muted/20">
-        
         {/* Stroke Style */}
         <div className="flex flex-col gap-2">
-          <Label>Stroke Style</Label>
+          <Label>{t('drawing.strokeStyle')}</Label>
           <div className="grid grid-cols-5 gap-1">
             {STROKE_STYLES.map((style) => (
               <button
                 key={style.id}
-                title={style.label}
+                title={t(`drawing.options.${style.labelKey}`)}
                 className={`flex flex-col items-center justify-center p-2 text-xs border rounded transition-colors ${
                   defaults.strokeStyle === style.id
                     ? 'bg-foreground text-background border-foreground'
@@ -113,7 +127,7 @@ export function DrawingTab() {
 
         {/* Coloring Style */}
         <div className="flex flex-col gap-2 pt-4 border-t">
-          <Label>Coloring Style</Label>
+          <Label>{t('drawing.coloringStyle')}</Label>
           <div className="grid grid-cols-3 gap-2">
             {COLORING_STYLES.map((style) => (
               <button
@@ -125,7 +139,7 @@ export function DrawingTab() {
                 }`}
                 onClick={() => animationService.setColoringStyle(style.id)}
               >
-                {style.label}
+                {t(`drawing.options.${style.labelKey}`)}
               </button>
             ))}
           </div>
@@ -134,18 +148,22 @@ export function DrawingTab() {
         {/* Outline Detection */}
         <div className="flex flex-col gap-2 pt-4 border-t">
           <div className="flex justify-between">
-            <Label>Outline Detection</Label>
+            <Label>{t('drawing.outlineDetection')}</Label>
             <span className="text-xs">{defaults.outlineDetect}</span>
           </div>
-          <span className="text-[10px] text-muted-foreground leading-snug">Strict = bold lines only · Fine = catches thin & light strokes</span>
+          <span className="text-[10px] text-muted-foreground leading-snug">
+            {t('drawing.detectionHint')}
+          </span>
           <Slider
             value={[defaults.outlineDetect]}
             min={0}
             max={100}
-            onValueChange={(vals) => { if (vals[0] !== undefined) animationService.setOutlineDetect(vals[0]) }}
+            onValueChange={(vals) => {
+              if (vals[0] !== undefined) animationService.setOutlineDetect(vals[0])
+            }}
           />
 
-          <Label className="mt-2">Detection Algorithm</Label>
+          <Label className="mt-2">{t('drawing.detectionAlgorithm')}</Label>
           <div className="grid grid-cols-2 gap-2">
             {DETECTION_ALGORITHMS.map((algo) => (
               <button
@@ -157,20 +175,23 @@ export function DrawingTab() {
                 }`}
                 onClick={() => animationService.setDetectionAlgorithm(algo.id)}
               >
-                <span>{algo.label}</span>
-                <span className="text-[9px] opacity-70">{algo.desc}</span>
+                <span>{t(`drawing.options.${algo.labelKey}`)}</span>
+                <span className="text-[9px] opacity-70">
+                  {t(`drawing.options.${algo.descKey}`)}
+                </span>
               </button>
             ))}
           </div>
         </div>
-
       </div>
 
       {isOutlineFillOrIllust && (
         <div className="flex flex-col gap-4 p-3 border rounded-md">
-          <Label className="text-xs uppercase text-muted-foreground tracking-wider">Fill Options</Label>
+          <Label className="text-xs uppercase text-muted-foreground tracking-wider">
+            {t('drawing.fillOptions')}
+          </Label>
           <div className="flex flex-col gap-2">
-            <Label>Reveal Animation</Label>
+            <Label>{t('drawing.revealAnimation')}</Label>
             <div className="grid grid-cols-3 gap-2">
               {REVEAL_STYLES.map((style) => (
                 <button
@@ -183,25 +204,38 @@ export function DrawingTab() {
                   onClick={() => animationService.setRevealStyle(style.id)}
                 >
                   <span>{style.icon}</span>
-                  <span>{style.label}</span>
+                  <span>{t(`drawing.options.${style.labelKey}`)}</span>
                 </button>
               ))}
             </div>
-            
+
             <div className="flex justify-between items-center mt-2">
-              <Label>Duration</Label>
-              <span className="text-xs">1.2s (Not typed)</span>
+              <Label>{t('drawing.duration')}</Label>
+              <span className="text-xs">{revealDuration.toFixed(1)}s</span>
             </div>
-            <Slider disabled value={[1.2]} min={0.3} max={4} step={0.1} />
+            <Slider
+              value={[revealDuration]}
+              min={0.3}
+              max={4}
+              step={0.1}
+              onValueChange={([value]) => {
+                if (value !== undefined) {
+                  setRevealDuration(value)
+                  animationService.setRevealDuration(value)
+                }
+              }}
+            />
           </div>
         </div>
       )}
 
       {isOutlineOnly && (
         <div className="flex flex-col gap-4 p-3 border rounded-md">
-          <Label className="text-xs uppercase text-muted-foreground tracking-wider">Outline Only Options</Label>
+          <Label className="text-xs uppercase text-muted-foreground tracking-wider">
+            {t('drawing.outlineOnlyOptions')}
+          </Label>
           <div className="flex flex-col gap-2">
-            <Label>Outline Color</Label>
+            <Label>{t('drawing.outlineColor')}</Label>
             <div className="flex items-center gap-2">
               <input
                 type="color"
@@ -209,7 +243,7 @@ export function DrawingTab() {
                 onChange={(e) => animationService.setColor(e.target.value)}
                 className="w-10 h-8 p-0 border-0 cursor-pointer rounded-sm"
               />
-              <span className="text-xs text-muted-foreground">Pick a color</span>
+              <span className="text-xs text-muted-foreground">{t('drawing.pickColor')}</span>
             </div>
           </div>
         </div>
@@ -217,10 +251,12 @@ export function DrawingTab() {
 
       {isTextDraw && (
         <div className="flex flex-col gap-4 p-3 border rounded-md">
-          <Label className="text-xs uppercase text-muted-foreground tracking-wider">Text Draw Options</Label>
-          
+          <Label className="text-xs uppercase text-muted-foreground tracking-wider">
+            {t('drawing.textOptions')}
+          </Label>
+
           <div className="flex flex-col gap-2">
-            <Label>Start Direction</Label>
+            <Label>{t('drawing.startDirection')}</Label>
             <div className="grid grid-cols-2 gap-2">
               {TEXT_DIRECTIONS.map((dir) => (
                 <button
@@ -232,14 +268,14 @@ export function DrawingTab() {
                   }`}
                   onClick={() => animationService.setDrawDirection(dir.id)}
                 >
-                  {dir.label}
+                  {t(`drawing.options.${dir.labelKey}`)}
                 </button>
               ))}
             </div>
           </div>
 
           <div className="flex flex-col gap-2 pt-2 border-t">
-            <Label>Fill Style</Label>
+            <Label>{t('drawing.fillStyle')}</Label>
             <div className="grid grid-cols-3 gap-2">
               {TEXT_DRAW_STYLES.map((style) => (
                 <button
@@ -251,7 +287,7 @@ export function DrawingTab() {
                   }`}
                   onClick={() => animationService.setTextDrawStyle(style.id)}
                 >
-                  {style.label}
+                  {t(`drawing.options.${style.labelKey}`)}
                 </button>
               ))}
             </div>
@@ -261,27 +297,35 @@ export function DrawingTab() {
 
       {/* Outline Overlay settings (Not typed yet) */}
       <div className="flex flex-col gap-2 p-3 border rounded-md">
-        <Label className="text-xs uppercase text-muted-foreground tracking-wider">Export Outlines</Label>
+        <Label className="text-xs uppercase text-muted-foreground tracking-wider">
+          {t('drawing.exportOutlines')}
+        </Label>
         <div className="flex items-center gap-2">
-          <input type="checkbox" id="outline-overlay-vis" defaultChecked className="w-4 h-4 accent-foreground" 
-                 onChange={(e) => {
-                   if (typeof window !== 'undefined' && typeof (window as any).setOutlineVisible === 'function') {
-                     (window as any).setOutlineVisible(e.target.checked)
-                   }
-                 }}
+          <input
+            type="checkbox"
+            id="outline-overlay-vis"
+            defaultChecked
+            className="w-4 h-4 accent-foreground"
+            onChange={(e) => {
+              animationService.setOutlineVisible(e.target.checked)
+            }}
           />
-          <Label htmlFor="outline-overlay-vis">Show outlines on export</Label>
+          <Label htmlFor="outline-overlay-vis">{t('drawing.showOutlines')}</Label>
         </div>
         <div className="flex justify-between items-center mt-2">
-          <Label>Opacity</Label>
-          <span className="text-xs">100%</span>
+          <Label>{t('drawing.opacity')}</Label>
+          <span className="text-xs">{outlineOpacity}%</span>
         </div>
-        <Slider defaultValue={[100]} min={0} max={100} 
-                onValueChange={(vals) => {
-                  if (typeof window !== 'undefined' && typeof (window as any).setOutlineOpacity === 'function') {
-                    if (vals[0] !== undefined) (window as any).setOutlineOpacity(vals[0])
-                  }
-                }}
+        <Slider
+          value={[outlineOpacity]}
+          min={0}
+          max={100}
+          onValueChange={(vals) => {
+            if (vals[0] !== undefined) {
+              setOutlineOpacity(vals[0])
+              animationService.setOutlineOpacity(vals[0])
+            }
+          }}
         />
       </div>
     </div>

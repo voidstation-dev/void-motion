@@ -7,11 +7,15 @@
  * can co-host the legacy engine natively.
  */
 
-
-
 // ─── POLYFILL ───
 if (!CanvasRenderingContext2D.prototype.roundRect) {
-  CanvasRenderingContext2D.prototype.roundRect = function (x: number, y: number, w: number, h: number, r: number = 0) {
+  CanvasRenderingContext2D.prototype.roundRect = function (
+    x: number,
+    y: number,
+    w: number,
+    h: number,
+    r: number = 0,
+  ) {
     this.beginPath()
     this.moveTo(x + r, y)
     this.lineTo(x + w - r, y)

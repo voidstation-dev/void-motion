@@ -112,7 +112,7 @@ export const projectService = {
     )
     const first = sorted[0]
     if (first) {
-      this.load(fromLegacyProjectId(first.id))
+      await this.load(fromLegacyProjectId(first.id))
     }
   },
 
@@ -137,16 +137,10 @@ export const projectService = {
    * Legacy `loadProject` is fire-and-forget over IDB, so hydration runs on a
    * microtask. Re-hydrating is idempotent.
    */
-  load(id: ProjectId): void {
+  async load(id: ProjectId): Promise<void> {
     const legacyId = toLegacyProjectId(id)
-    storage.load(legacyId)
-    // Hydrate after the legacy IDB callback path settles. queueMicrotask is
-    // enough because the legacy `loadProject` only schedules the read; the
-    // actual apply happens in `onsuccess`. We hydrate defensively on a
-    // short timeout so the legacy state has settled.
-    setTimeout(() => {
-      void this.hydrateCurrentFromLegacy()
-    }, 0)
+    await storage.load(legacyId)
+    await this.hydrateCurrentFromLegacy()
   },
 
   /**
@@ -161,25 +155,24 @@ export const projectService = {
     if (typeof window !== 'undefined' && typeof window.updateProjectNameDisplay === 'function') {
       window.updateProjectNameDisplay(trimmed)
     }
+    const id = resolveCurrentLegacyId()
+    if (id !== null && typeof window.renameProject === 'function') {
+      void storage.rename(id, trimmed).then(() => this.refreshList())
+    }
     this.scheduleAutosave()
   },
 
   /**
-   * Delete a project. Delegates to the legacy `deleteProject`, which prompts
-   * + removes from IDB. If the deleted project is current, legacy creates a
-   * fresh one; we then hydrate that fresh state. Finally refresh the list.
+   * Delete a project after the React sheet has confirmed it. The adapter
+   * resolves only after IndexedDB and any replacement current project settle,
+   * preventing a stale list/current-project hydration race.
    */
   async delete(id: ProjectId): Promise<void> {
     const legacyId = toLegacyProjectId(id)
     const wasCurrent = readCurrentProjectId() === legacyId
-    storage.delete(legacyId)
-    if (wasCurrent) {
-      // Legacy `deleteProject` calls `createNewProject` when current is
-      // deleted; hydrate whatever the legacy runtime lands on.
-      setTimeout(() => {
-        void this.hydrateCurrentFromLegacy()
-      }, 0)
-    }
+    const deleted = await storage.delete(legacyId)
+    if (!deleted) return
+    if (wasCurrent) await this.hydrateCurrentFromLegacy()
     await this.refreshList()
   },
 

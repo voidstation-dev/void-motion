@@ -1,0 +1,52 @@
+{
+  "text": {
+    "add": "Thêm chữ",
+    "placing": "Nhấp vào canvas để đặt chữ…",
+    "editing": "Đang chỉnh sửa chữ…",
+    "font": "Phông chữ",
+    "size": "Cỡ chữ",
+    "bold": "Bật/tắt chữ đậm",
+    "italic": "Bật/tắt chữ nghiêng",
+    "alignLeft": "Căn trái",
+    "alignCenter": "Căn giữa",
+    "alignRight": "Căn phải",
+    "color": "Màu chữ",
+    "selectColor": "Chọn màu {{color}}",
+    "lineHeight": "Chiều cao dòng",
+    "letterSpacing": "Khoảng cách chữ",
+    "placeholder": "Nhập nội dung…",
+    "shortcut": "Ctrl/Cmd+Enter để lưu, Esc để hủy"
+  },
+  "crop": {
+    "actions": "Thao tác cắt ảnh",
+    "reset": "Đặt lại vùng cắt",
+    "apply": "Áp dụng cắt ảnh",
+    "applyLabel": "Áp dụng vùng cắt",
+    "cancel": "Hủy cắt ảnh"
+  },
+  "slicer": {
+    "title": "Chia ảnh",
+    "description": "Chia ảnh đang chọn thành nhiều lớp.",
+    "grid": "Lưới",
+    "rectangles": "Hình chữ nhật",
+    "freehand": "Vẽ tự do",
+    "columns": "Số cột",
+    "rows": "Số hàng",
+    "gridHelp": "Chia ảnh thành một lưới đều. Mỗi ô sẽ trở thành một lớp riêng.",
+    "rectHelp": "Vẽ các hình chữ nhật trên bản xem trước để xác định vùng chia. Mỗi hình sẽ trở thành một lớp.",
+    "freehandHelp": "Vẽ đường bao tự do. Hộp giới hạn của vùng vẽ sẽ trở thành một phần ảnh.",
+    "slices": "Các phần ({{count}})",
+    "removeSlice": "Xóa phần {{number}}",
+    "removeRegion": "Xóa vùng {{number}}",
+    "clearAll": "Xóa tất cả",
+    "apply": "Áp dụng chia ảnh",
+    "footer": {
+      "grid_one": "Sẽ tạo {{count}} lớp từ ảnh này.",
+      "grid_other": "Sẽ tạo {{count}} lớp từ ảnh này.",
+      "rectEmpty": "Hãy vẽ ít nhất 2 hình chữ nhật",
+      "rect": "{{count}} phần hình chữ nhật",
+      "freehandEmpty": "Hãy vẽ ít nhất 2 vùng",
+      "freehand": "{{count}} vùng vẽ tự do"
+    }
+  }
+}

@@ -30,6 +30,7 @@ window.createLegacyAnimationEngine = function(context) {
   let _mainCtx = context.main;
   let hctx = context.hand;
   let offscreen = context.offscreen;
+  function _setOffscreen(next) { offscreen = next; }
   const fillBg = context.fillBackground;
   const drawHand = context.drawHand;
   const setProgress = context.setProgress;
@@ -40,7 +41,7 @@ window.createLegacyAnimationEngine = function(context) {
   const Math = Object.create(window.Math);
   Math.random = () => context.random.next();
 
-  const document = {
+  const document = context.document || {
     getElementById: (id) => {
       const val = context.getSetting(id);
       return {
@@ -111,7 +112,16 @@ function tickScanner(speed) {
   const tipY=cb.y+state.curY+bandH*0.5;
   hctx.clearRect(0,0,state.canvasW,state.canvasH);
   drawHand(hctx, tipX,tipY, state.scanDir, state.hand);
-  setProgress((state.curY+(state.curX/cb.w)*bandH)/cb.h);
+  // A zigzag row is complete when the hand reaches either edge. Using curX
+  // directly makes progress run backwards on right-to-left rows, which is
+  // especially visible in the React progress transport. Measure distance from
+  // the row's starting edge instead so progress stays monotonic in both
+  // directions.
+  const rowProgress = state.scanDir === 1
+    ? state.curX / cb.w
+    : (cb.w - state.curX) / cb.w;
+  const clampedRowProgress = Math.max(0, Math.min(1, rowProgress));
+  setProgress((state.curY + clampedRowProgress * bandH) / cb.h);
 }
 
 // ─────────────────────────────────────────────
@@ -1809,6 +1819,7 @@ function tickSpecialized(speed) {
 
 // All state keys that are unique per animation slot (not shared globals)
 const _SLOT_KEYS = [
+  '_animProgress',
   'curX','curY','scanDir',
   'strokeList','strokeIdx','scribblePhase',
   'contourPhase','contourEdgePts','contourFillPts','contourEdgeIdx','contourFillIdx',
@@ -1888,6 +1899,16 @@ function _tickAllSlots() {
   });
 
   hctx.clearRect = _origClear; // restore
+
+  // Slot state is isolated while ticking, so publish one stable group-level
+  // value after all slots have advanced. This keeps legacy consumers (export,
+  // reveal blending, the hidden runtime UI) aligned with the React transport
+  // and prevents whichever slot ran last from owning global progress.
+  const groupProgress = state._activeSlots.reduce((sum, slot) => {
+    const value = slot.done ? 1 : Number(slot._state?._animProgress ?? 0);
+    return sum + Math.max(0, Math.min(1, Number.isFinite(value) ? value : 0));
+  }, 0) / state._activeSlots.length;
+  setProgress(groupProgress);
 
   // Check if every slot in this group has finished
   if (state._activeSlots.every(s => s.done)) {
@@ -2132,6 +2153,9 @@ function _runGroupAt(gpos) {
     };
     // Seed slot state from current globals, then apply layer overrides
     _SLOT_KEYS.forEach(k => slot._state[k] = state[k]);
+    // Every group owns a fresh 0..1 progress range. The previous group leaves
+    // global progress at 1, which must not leak into newly-created slots.
+    slot._state._animProgress = 0;
     slot._state.animStyle   = layer.animStyle;  // always set — inherited from state at addLayer time
     slot._state.hand        = layer.hand      || state.hand;
     slot._state.zigzag      = layer.zigzag    ?? state.zigzag;
@@ -3594,5 +3618,6 @@ function setOutlineOpacity(val) {
     _slotOut,
     _tickSlot,
     _tickAllSlots,
+    _setOffscreen,
   };
 };

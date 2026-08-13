@@ -9,15 +9,17 @@
 import { Folder } from 'lucide-react'
 import { Button } from '@/app/components/ui/button'
 import { projectService } from '@/app/services/project-service'
+import { useTranslation } from 'react-i18next'
 
 export function ProjectsButton() {
+  const { t } = useTranslation('editor')
   const onOpen = () => {
     void projectService.openProjects()
   }
   return (
-    <Button variant="outline" size="sm" onClick={onOpen} aria-label="Open projects list">
-      <Folder className="mr-1 h-4 w-4" />
-      Projects
+    <Button variant="outline" size="sm" onClick={onOpen} aria-label={t('header.openProjects')}>
+      <Folder className="h-4 w-4 sm:mr-1" />
+      <span className="hidden sm:inline">{t('header.projects')}</span>
     </Button>
   )
 }

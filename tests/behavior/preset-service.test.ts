@@ -21,7 +21,7 @@ describe('presetService (M14)', () => {
 
   beforeEach(() => {
     localStorage.clear()
-    
+
     vi.spyOn(animationService, 'setAnimationStyle').mockImplementation(() => {})
     vi.spyOn(animationService, 'setDrawingMode').mockImplementation(() => {})
     vi.spyOn(animationService, 'setZigzag').mockImplementation(() => {})

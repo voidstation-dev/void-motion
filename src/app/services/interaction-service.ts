@@ -285,11 +285,11 @@ export const interactionService = {
   ): void {
     if (usePlaybackStore.getState().status === 'playing') return
     if (textService.isActive() || textService.isPlacing()) return
-    
+
     const { x, y } = toCanvasCoords(clientX, clientY, rect, canvasWidth)
     const layers = useLayerStore.getState().layers
     const hitId = hitTestLayer(x, y, layers)
-    
+
     if (hitId !== null) {
       const hit = layers.find((l) => l.id === hitId)
       if (hit && hit.type === 'text') {

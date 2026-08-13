@@ -1,3 +1,8 @@
+import i18n, { i18nReady } from '@/i18n'
+
+await i18nReady
+await i18n.loadNamespaces(['info', 'tutorial'])
+
 /**
  * Vitest setup — jsdom DOM polyfills for Radix primitives (M02).
  *
@@ -51,6 +56,40 @@ if (typeof Element.prototype.scrollIntoView === 'undefined') {
   Element.prototype.scrollIntoView = function scrollIntoView(): void {
     // no-op
   }
+}
+
+// jsdom ships a canvas `getContext` placeholder that reports a not-implemented
+// error to stderr. UI tests only need a deterministic no-op 2D surface.
+if (typeof HTMLCanvasElement !== 'undefined') {
+  const gradient = { addColorStop: () => undefined }
+  const context = new Proxy(
+    {
+      canvas: document.createElement('canvas'),
+      measureText: (value: string) => ({ width: value.length * 8 }),
+      createLinearGradient: () => gradient,
+      createRadialGradient: () => gradient,
+      createPattern: () => null,
+      getImageData: (_x: number, _y: number, width: number, height: number) => ({
+        data: new Uint8ClampedArray(Math.max(0, width * height * 4)),
+        width,
+        height,
+      }),
+    } as Record<string, unknown>,
+    {
+      get(target, property) {
+        if (property in target) return target[property as string]
+        return () => undefined
+      },
+      set(target, property, value) {
+        target[property as string] = value
+        return true
+      },
+    },
+  )
+  Object.defineProperty(HTMLCanvasElement.prototype, 'getContext', {
+    configurable: true,
+    value: () => context,
+  })
 }
 
 // Mock the legacy engine context factory for UI tests (M17)

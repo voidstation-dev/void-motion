@@ -1,0 +1,76 @@
+name: Deploy Vercel Production
+
+on:
+  workflow_dispatch:
+    inputs:
+      commit:
+        description: Commit SHA to deploy (defaults to the selected branch SHA)
+        required: false
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: vercel-production
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    environment: production
+    env:
+      VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+      VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+      VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+
+    steps:
+      - name: Checkout verified commit
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.commit || github.sha }}
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10.11.0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Pull production environment
+        run: pnpm dlx vercel@54.18.7 pull --yes --environment=production
+
+      - name: Build immutable Vercel artifact
+        run: pnpm dlx vercel@54.18.7 build --prod
+
+      - name: Deploy without assigning production traffic
+        id: deploy
+        run: |
+          DEPLOYMENT_URL=$(pnpm dlx vercel@54.18.7 deploy --prebuilt --prod --skip-domain)
+          echo "url=$DEPLOYMENT_URL" >> "$GITHUB_OUTPUT"
+
+      - name: Smoke-check deployment
+        env:
+          DEPLOYMENT_URL: ${{ steps.deploy.outputs.url }}
+        run: |
+          pnpm dlx vercel@54.18.7 curl / --deployment "$DEPLOYMENT_URL" -- --fail --silent --show-error > /dev/null
+          pnpm dlx vercel@54.18.7 curl /legacy/index.html --deployment "$DEPLOYMENT_URL" -- --fail --silent --show-error > /dev/null
+          pnpm dlx vercel@54.18.7 curl /tutorial --deployment "$DEPLOYMENT_URL" -- --fail --silent --show-error > /dev/null
+
+      - name: Promote verified artifact
+        run: pnpm dlx vercel@54.18.7 promote "${{ steps.deploy.outputs.url }}"
+
+      - name: Deployment summary
+        run: |
+          echo "## Void Motion production deployment" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Commit: \`${{ inputs.commit || github.sha }}\`" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Verified deployment: ${{ steps.deploy.outputs.url }}" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Production: https://void-motion-phong-vus-projects-82e2aa07.vercel.app" >> "$GITHUB_STEP_SUMMARY"

@@ -37,6 +37,7 @@ import type { AspectRatio, ResolutionPreset } from '@/types/canvas'
 import type { HandStyle } from '@/types/animation'
 import type { LegacyControlElement } from '@/engine/legacy/legacy-state.types'
 import { domainHandStyleToLegacy } from '@/engine/legacy/legacy-enum-mapping'
+import { setLegacyControlValue } from '@/engine/legacy/legacy-runtime-bridge'
 
 /** True when the legacy canvas-control globals are present. */
 function legacyReady(): boolean {
@@ -146,11 +147,27 @@ export const canvasControlsService = {
    * here because per-layer values are an M08 concern (layer inspector).
    */
   setRevealSpeed(speed: number): void {
+    const legacy = typeof window !== 'undefined' ? window.state : undefined
+    if (legacy) {
+      legacy.speed = speed
+      const layer = legacy.layers.find((item) => item.id === legacy.selectedLayerId)
+      if (layer) layer.speed = speed
+      setLegacyControlValue('speed-slider', String(speed))
+      window.scheduleAutoSave?.()
+    }
     usePlaybackStore.getState().setRevealSpeed(speed)
   },
 
   /** Set the hand speed. Mirrors into the playback store. */
   setHandSpeed(speed: number): void {
+    const legacy = typeof window !== 'undefined' ? window.state : undefined
+    if (legacy) {
+      legacy.handSpeed = speed
+      const layer = legacy.layers.find((item) => item.id === legacy.selectedLayerId)
+      if (layer) layer.handSpeed = speed
+      setLegacyControlValue('hand-speed-slider', String(speed))
+      window.scheduleAutoSave?.()
+    }
     usePlaybackStore.getState().setHandSpeed(speed)
   },
 

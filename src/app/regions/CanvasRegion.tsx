@@ -1,35 +1,10 @@
-/**
- * Canvas region (M07/M09).
- *
- * Mirrors the legacy canvas area (legacy/index.html ~line 3680): the main
- * drawing surface and the play/restart transport.
- *
- * M07 wires the transport controls (Restart / Play-Pause / progress bar) to
- * the playback service, which delegates to the legacy `togglePlay`/
- * `restartAnim`/`setProgress` globals and mirrors status into the typed
- * playback store.
- *
- * M09 moves the canvas lifecycle into React: the `CanvasViewport` hosts the
- * stacked `CanvasStage` (main + hand) and `CanvasOverlay` (selection +
- * outline) `<canvas>` elements, owned by React refs and attached to the
- * engine via `useCanvasHost`. The engine owns rendering (no-op until the
- * legacy runtime is co-hosted in M16 + the renderer is migrated in M19).
- *
- * Legacy behavior parity:
- *   - `play-pause-btn` (3836): `onclick="togglePlay()"`, disabled until a
- *     layer exists. Shows play/pause icon based on `state.playing`.
- *   - `restart-btn` (3835): `onclick="restartAnim()"`.
- *   - `progress-track` (3843): `onclick="seekAnim(event)"` — ratio =
- *     `offsetX / clientWidth`. We compute the ratio from the click and call
- *     `playbackService.seek`.
- *   - `time-display` (3846): `${round(progress*100)}%`.
- */
-import type { ReactElement, MouseEvent } from 'react'
-import { Play, Pause, RotateCcw, Crop, Scissors } from 'lucide-react'
-import { Button } from '@/app/components/ui/button'
+import type { ReactElement } from 'react'
+import { Crop, Scissors } from 'lucide-react'
 import { CanvasViewport } from '@/app/components/canvas/CanvasViewport'
 import { CanvasStage } from '@/app/components/canvas/CanvasStage'
 import { CanvasOverlay } from '@/app/components/canvas/CanvasOverlay'
+import { PlaybackTransport } from '@/app/components/canvas/PlaybackTransport'
+import { BottomBar } from '@/app/regions/BottomBar'
 import { useCanvasHost } from '@/app/hooks/useCanvasHost'
 import { useCanvasInteraction } from '@/app/hooks/useCanvasInteraction'
 import { CropFeature } from '@/app/features/crop/CropFeature'
@@ -38,121 +13,112 @@ import { TextFeature } from '@/app/features/text/TextFeature'
 import { cropService } from '@/app/services/crop-service'
 import { slicerService } from '@/app/services/slicer-service'
 import { playbackService } from '@/app/services/playback-service'
-import { usePlaybackStore, selectIsPlaying, selectProgress } from '@/app/store'
-import { useLayerStore, useSelectionStore } from '@/app/store'
+import {
+  selectIsPlaying,
+  useAnimationStore,
+  useCanvasStore,
+  useLayerStore,
+  usePlaybackStore,
+  useSelectionStore,
+} from '@/app/store'
+import { useTranslation } from 'react-i18next'
+
+const LABEL_KEYS: Readonly<Record<string, string>> = {
+  scanner: 'styles.scanner',
+  contour: 'styles.contour',
+  'outline-chunks': 'styles.outlineChunks',
+  'chunk-jump': 'styles.chunkJump',
+  'specialized-human': 'styles.human',
+  'specialized-animal': 'styles.animal',
+  'specialized-portrait': 'styles.portrait',
+  'specialized-vehicle': 'styles.vehicle',
+  'specialized-building': 'styles.building',
+  'specialized-landscape': 'styles.landscape',
+  'specialized-spiral': 'styles.spiral',
+  'outline-fill': 'drawing.outlineFill',
+  'illust-fill': 'drawing.illustFill',
+  'outline-only': 'drawing.outlineOnly',
+  'text-draw': 'drawing.text',
+}
 
 export function CanvasRegion(): ReactElement {
+  const { t } = useTranslation(['editor', 'common', 'animation'])
   const refs = useCanvasHost()
   useCanvasInteraction(refs.selection, refs.viewport)
-  const hasLayers = useLayerStore((s) => s.layers.length > 0)
+  const hasLayers = useLayerStore((state) => state.layers.length > 0)
   const isPlaying = usePlaybackStore(selectIsPlaying)
-  const status = usePlaybackStore((s) => s.status)
-  const progress = usePlaybackStore(selectProgress)
-  const editorMode = useSelectionStore((s) => s.editorMode)
+  const editorMode = useSelectionStore((state) => state.editorMode)
+  const activeMode = useAnimationStore((state) => state.activeMode)
+  const canvas = useCanvasStore((state) => state.canvas)
+  const ratio = canvas?.aspectRatio ?? '16:9'
+  const size = canvas?.size ?? DEFAULT_CANVAS_SIZE
   const cropActive = editorMode === 'crop'
   const slicerActive = editorMode === 'slicer'
   const canPlay = hasLayers && playbackService.canPlay()
 
-  const onPlayPause = () => playbackService.playPause()
-  const onRestart = () => playbackService.restart()
-  const onActivateCrop = () => cropService.activate()
-  const onActivateSlicer = () => slicerService.activate()
-
-  const onSeek = (e: MouseEvent<HTMLDivElement>) => {
-    const track = e.currentTarget
-    const rect = track.getBoundingClientRect()
-    // Legacy uses `e.offsetX / clientWidth`; getBoundingClientRect gives the
-    // same ratio for a left-aligned fill and is robust to padding/borders.
-    const ratio = rect.width > 0 ? (e.clientX - rect.left) / rect.width : 0
-    playbackService.seek(ratio)
-  }
-
-  const pct = Math.round(progress * 100)
-
   return (
-    <main data-region="canvas" className="flex min-w-0 flex-1 flex-col gap-3 p-4">
-      <CanvasViewport viewportRef={refs.viewport}>
-        <CanvasStage mainRef={refs.main} handRef={refs.hand} />
-        <CanvasOverlay selectionRef={refs.selection} outlineOverlayRef={refs.outlineOverlay} />
-        <TextFeature />
-        {cropActive && <CropFeature />}
-        {slicerActive && <SlicerFeature />}
-        <span className="relative text-lg text-muted-foreground">Canvas</span>
-      </CanvasViewport>
-      <div className="flex items-center justify-center gap-2">
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={onActivateCrop}
-          disabled={!hasLayers || cropActive || slicerActive}
-          aria-label="Crop"
-          title="Crop selected layer"
-          data-testid="crop-activate-btn"
-        >
-          <Crop className="h-4 w-4" />
-          Crop
-        </Button>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={onActivateSlicer}
-          disabled={!hasLayers || cropActive || slicerActive}
-          aria-label="Slicer"
-          title="Slice selected layer"
-          data-testid="slicer-activate-btn"
-        >
-          <Scissors className="h-4 w-4" />
-          Slice
-        </Button>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={onRestart}
-          disabled={!canPlay}
-          aria-label="Restart"
-          title="Restart"
-        >
-          <RotateCcw className="h-4 w-4" />
-        </Button>
-        <Button
-          variant="default"
-          size="sm"
-          onClick={onPlayPause}
-          disabled={!canPlay}
-          aria-label={isPlaying ? 'Pause' : 'Play'}
-          title={isPlaying ? 'Pause' : 'Play'}
-        >
-          {isPlaying ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
-          {isPlaying ? 'Pause' : 'Play'}
-        </Button>
-        <div
-          role="slider"
-          aria-label="Animation progress"
-          aria-valuemin={0}
-          aria-valuemax={100}
-          aria-valuenow={pct}
-          aria-valuetext={`${pct}%`}
-          tabIndex={0}
-          onClick={onSeek}
-          className="group relative h-2 w-48 cursor-pointer overflow-hidden rounded-full bg-secondary"
-          data-testid="progress-track"
-        >
-          <div
-            className="h-full bg-primary transition-[width]"
-            style={{ width: `${pct}%` }}
-            data-testid="progress-fill"
-          />
+    <main
+      data-region="canvas"
+      className="flex min-w-0 flex-1 flex-col overflow-hidden rounded-[14px] border border-black/10 bg-background shadow-[0_8px_24px_rgba(24,28,26,0.06)]"
+    >
+      <div className="canvas-workspace relative flex min-h-0 flex-1 items-center justify-center overflow-hidden p-3 pb-10 sm:p-5 sm:pb-12 2xl:p-7">
+        <div className="relative flex h-full w-full items-center justify-center">
+          <CanvasViewport
+            viewportRef={refs.viewport}
+            aspectRatio={`${size.width} / ${size.height}`}
+          >
+            <CanvasStage mainRef={refs.main} handRef={refs.hand} />
+            <CanvasOverlay selectionRef={refs.selection} outlineOverlayRef={refs.outlineOverlay} />
+            <TextFeature />
+            {cropActive && <CropFeature />}
+            {slicerActive && <SlicerFeature />}
+            <span
+              data-testid="animation-mode-badge"
+              className="pointer-events-none absolute bottom-3 left-3 rounded-full border border-black/10 bg-[#fffdf8]/95 px-3 py-1 text-[10px] font-semibold text-black shadow-sm"
+            >
+              {LABEL_KEYS[activeMode]
+                ? t(LABEL_KEYS[activeMode], { ns: 'animation' })
+                : t('canvas.animation')}
+            </span>
+          </CanvasViewport>
+
+          {!isPlaying && (
+            <div
+              data-testid="canvas-edit-toolbar"
+              className={`absolute left-3 top-3 z-10 flex gap-1.5 ${hasLayers ? '' : 'pointer-events-none opacity-0'}`}
+            >
+              <button
+                type="button"
+                onClick={() => cropService.activate()}
+                disabled={!hasLayers || cropActive || slicerActive}
+                data-testid="crop-activate-btn"
+                className="inline-flex h-8 items-center gap-1.5 rounded-[9px] border border-border bg-[#fffdf8]/95 px-3 text-[11px] shadow-sm transition hover:-translate-y-px disabled:opacity-40"
+              >
+                <Crop className="h-3.5 w-3.5" />
+                {t('canvas.crop')}
+              </button>
+              <button
+                type="button"
+                onClick={() => slicerService.activate()}
+                disabled={!hasLayers || cropActive || slicerActive}
+                data-testid="slicer-activate-btn"
+                className="inline-flex h-8 items-center gap-1.5 rounded-[9px] border border-border bg-[#fffdf8]/95 px-3 text-[11px] shadow-sm transition hover:-translate-y-px disabled:opacity-40"
+              >
+                <Scissors className="h-3.5 w-3.5" />
+                {t('canvas.slice')}
+              </button>
+            </div>
+          )}
+
+          <PlaybackTransport canPlay={canPlay} isPlaying={isPlaying} />
         </div>
-        <span
-          className="w-10 text-right text-xs tabular-nums text-muted-foreground"
-          aria-label="Time display"
-        >
-          {pct}%
-        </span>
+        <div className="absolute right-3 top-3 rounded-full border border-black/5 bg-[#fffdf8]/85 px-2.5 py-1 text-[10px] font-medium text-muted-foreground backdrop-blur">
+          {size.width} × {size.height} · {ratio}
+        </div>
       </div>
-      <span className="sr-only" data-testid="playback-status">
-        {status}
-      </span>
+      <BottomBar />
     </main>
   )
 }
+
+const DEFAULT_CANVAS_SIZE = { width: 1280, height: 720 } as const

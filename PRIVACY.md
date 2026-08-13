@@ -84,7 +84,7 @@ If meaningful changes are made to this policy — for example, if analytics or e
 
 ## 9. Contact
 
-For questions about this privacy policy, open an issue on GitHub: [github.com/NadirWeb-App](https://github.com/NadirWeb-App)
+For questions about this privacy policy, open an issue in the [Void Motion repository](https://github.com/voidstation-dev/void-motion/issues).
 
 ---
 

@@ -1,0 +1,105 @@
+{
+  "tabs": { "presets": "Mẫu thiết lập", "animation": "Chuyển động", "drawing": "Vẽ nét" },
+  "basic": "Cơ bản",
+  "styles": {
+    "scanner": "Quét ảnh",
+    "contour": "Theo đường nét",
+    "outlineChunks": "Mảng đường viền",
+    "chunkJump": "Ghép mảng",
+    "human": "Người",
+    "animal": "Động vật",
+    "portrait": "Chân dung",
+    "vehicle": "Phương tiện",
+    "building": "Công trình",
+    "landscape": "Phong cảnh",
+    "spiral": "Xoắn ốc"
+  },
+  "zigzag": "Quét zíc zắc",
+  "chunks": "Số mảng",
+  "moreFiner": "nhiều hơn = mịn hơn",
+  "specialized": "Chuyên biệt",
+  "subjectAware": "Thứ tự vẽ phù hợp với chủ thể.",
+  "presets": {
+    "title": "Mẫu thiết lập",
+    "builtIn": "Có sẵn",
+    "custom": "Tùy chỉnh",
+    "empty": "Chưa có mẫu tùy chỉnh. Hãy lưu thiết lập hiện tại bên dưới.",
+    "delete": "Xóa mẫu",
+    "name": "Tên mẫu...",
+    "save": "Lưu",
+    "saveCurrent": "+ Lưu thiết lập hiện tại",
+    "builtIns": {
+      "preset-quick-reveal": {
+        "name": "Hiện nhanh",
+        "description": "Quét nhanh, ẩn bàn tay và tốc độ cao — phù hợp cho bản trình diễn ngắn."
+      },
+      "preset-sketch-artist": {
+        "name": "Họa sĩ phác thảo",
+        "description": "Chuyển động theo đường nét với nét than và tốc độ tay tự nhiên."
+      },
+      "preset-blueprint": {
+        "name": "Bản vẽ kỹ thuật",
+        "description": "Chỉ vẽ đường viền kiểu blueprint — phù hợp nhất với nền tối."
+      },
+      "preset-illustrated": {
+        "name": "Minh họa",
+        "description": "Tô minh họa đầy màu với bàn tay hiển thị."
+      }
+    }
+  },
+  "drawing": {
+    "mode": "Chế độ vẽ",
+    "outlineFill": "Viền rồi tô",
+    "illustFill": "Tô minh họa",
+    "outlineOnly": "Chỉ đường viền",
+    "text": "✏ Văn bản",
+    "strokeStyle": "Kiểu nét",
+    "coloringStyle": "Kiểu tô màu",
+    "outlineDetection": "Nhận diện đường viền",
+    "detectionHint": "Nghiêm ngặt = chỉ nét đậm · Chi tiết = bắt nét mảnh và sáng",
+    "detectionAlgorithm": "Thuật toán nhận diện",
+    "fillOptions": "Tùy chọn tô",
+    "revealAnimation": "Chuyển động hiện ảnh",
+    "duration": "Thời lượng",
+    "outlineOnlyOptions": "Tùy chọn đường viền",
+    "outlineColor": "Màu đường viền",
+    "pickColor": "Chọn màu",
+    "textOptions": "Tùy chọn vẽ chữ",
+    "startDirection": "Hướng bắt đầu",
+    "fillStyle": "Kiểu tô",
+    "exportOutlines": "Đường viền khi xuất",
+    "showOutlines": "Hiện đường viền trong video",
+    "opacity": "Độ trong suốt",
+    "options": {
+      "default": "Mặc định",
+      "charcoal": "Than chì",
+      "sketch": "Phác thảo",
+      "fountain": "Bút máy",
+      "blueprint": "Bản vẽ",
+      "sparse": "Tô thưa",
+      "filled": "Tô đầy",
+      "watercolor": "Màu nước",
+      "classic": "Cổ điển",
+      "adaptive": "Thích ứng",
+      "morphShell": "Biên hình thái",
+      "cannyPlus": "Canny+",
+      "darkNeutral": "tối + trung tính",
+      "localContrast": "tương phản cục bộ",
+      "erosionBorder": "biên bào mòn",
+      "edgeLinking": "nối cạnh",
+      "instant": "Tức thời",
+      "fade": "Mờ dần",
+      "dissolve": "Tan biến",
+      "wipe": "Quét ngang",
+      "iris": "Tỏa tròn",
+      "scanlines": "Quét dòng",
+      "leftRight": "← Trái → Phải",
+      "rightLeft": "Phải → Trái →",
+      "topBottom": "↓ Trên → Dưới",
+      "bottomTop": "↑ Dưới → Trên",
+      "reveal": "Lộ chữ",
+      "outline": "Đường viền",
+      "outlineAndFill": "Viền + Tô"
+    }
+  }
+}

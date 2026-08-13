@@ -1,128 +1,159 @@
-/**
- * Header region (M06).
- *
- * Hosts the global editor controls: brand, Projects button, project name
- * editor + save indicator, undo/redo (with depth badges), export trigger,
- * and the center status readout (canvas size + active animation label).
- * Mirrors the legacy topbar layout (legacy/index.html:3190).
- *
- * M06 promotes the undo/redo/export buttons from disabled placeholders to
- * wired controls: they call the global-controls service, which delegates to
- * the legacy runtime through guarded `window.*` calls and mirrors state into
- * the typed stores. The badge counts come from the layer store (typed mirror
- * of the legacy `_undoStack`/`_redoStack`).
- *
- * Keyboard shortcuts (Ctrl/Cmd+Z, Ctrl/Cmd+Shift+Z) are mounted at the App
- * root via `useGlobalShortcuts` — see App.tsx.
- */
 import type { ReactElement } from 'react'
-import { Undo2, Redo2, Download } from 'lucide-react'
+import {
+  Code2,
+  Coffee,
+  Download,
+  HelpCircle,
+  Layers3,
+  Pencil,
+  Redo2,
+  SlidersHorizontal,
+  Undo2,
+} from 'lucide-react'
 import { Button } from '@/app/components/ui/button'
-import { Separator } from '@/app/components/ui/separator'
 import { ProjectNameEditor } from '@/app/components/project/ProjectNameEditor'
 import { ProjectsButton } from '@/app/components/project/ProjectsButton'
 import { SaveIndicator } from '@/app/components/project/SaveIndicator'
 import { globalControlsService } from '@/app/services/global-controls-service'
 import { useLayerStore } from '@/app/store'
-import { useAnimationStore } from '@/app/store'
-import { useCanvasStore } from '@/app/store'
+import { useTranslation } from 'react-i18next'
+import { LanguageSwitcher } from '@/app/components/LanguageSwitcher'
+import { EXTERNAL_LINKS } from '@/app/config/external-links'
 
-export function Header(): ReactElement {
-  // Subscribe to the typed mirror of the legacy undo/redo stacks.
-  const undoDepth = useLayerStore((s) => s.undoStack.length)
-  const redoDepth = useLayerStore((s) => s.redoStack.length)
-  const canUndo = undoDepth > 0
-  const canRedo = redoDepth > 0
+interface HeaderProps {
+  readonly compact?: boolean
+  readonly onOpenSettings?: () => void
+  readonly onOpenLayers?: () => void
+}
 
-  // Center status readout — canvas size + active animation label.
-  const canvas = useCanvasStore((s) => s.canvas)
-  const activeMode = useAnimationStore((s) => s.activeMode)
-  const sizeText = canvas ? `${canvas.size.width} × ${canvas.size.height}` : '1280 × 720'
-  const animLabel = ANIMATION_LABELS[activeMode] ?? 'Chunk Jump'
-
-  const onUndo = () => globalControlsService.undo()
-  const onRedo = () => globalControlsService.redo()
-  const onExport = () => globalControlsService.openExport()
+export function Header({
+  compact = false,
+  onOpenSettings,
+  onOpenLayers,
+}: HeaderProps): ReactElement {
+  const { t } = useTranslation(['editor', 'common'])
+  const canUndo = useLayerStore((state) => state.undoStack.length > 0)
+  const canRedo = useLayerStore((state) => state.redoStack.length > 0)
 
   return (
     <header
       data-region="header"
-      className="flex h-[52px] items-center gap-3 border-b border-border bg-sidebar px-4"
+      className="motion-trace relative z-20 mx-2 mt-2 flex h-[64px] shrink-0 items-center gap-1 overflow-hidden rounded-[14px] border border-black/10 bg-sidebar px-2 shadow-[0_5px_18px_rgba(24,28,26,0.06)] sm:gap-2 sm:px-3 xl:mx-2.5 xl:mt-2.5 xl:px-4"
     >
-      <span className="font-hand text-xl font-bold leading-none">Void Motion</span>
-      <Separator orientation="vertical" className="mx-1 h-6" />
-      <ProjectsButton />
-      <Separator orientation="vertical" className="mx-1 h-6" />
-      <div className="flex min-w-0 flex-1 items-center gap-2">
-        <ProjectNameEditor />
-        <SaveIndicator />
+      <div className="flex items-center gap-2 sm:pr-2 xl:pr-3">
+        <span className="flex h-9 w-9 items-center justify-center rounded-[11px] bg-[#171918] text-[#f8f7f2] shadow-sm">
+          <Pencil className="h-4 w-4" />
+        </span>
+        <span className="hidden min-w-0 leading-none md:block">
+          <span className="block font-hand text-[23px] font-bold tracking-tight">Void Motion</span>
+          <span className="mt-0.5 hidden text-[8px] font-semibold uppercase tracking-[0.2em] text-muted-foreground xl:block">
+            by Void Station
+          </span>
+        </span>
       </div>
-      <div className="flex items-center gap-1">
+      <div className="hidden h-7 w-px bg-border sm:block" />
+      <div className="sm:ml-1 xl:ml-2">
+        <ProjectsButton />
+      </div>
+      <div className="mx-2 hidden h-7 w-px bg-border md:block xl:mx-3" />
+      <div className="hidden min-w-0 max-w-[360px] flex-1 items-center gap-2 rounded-lg px-1 py-1 hover:bg-surface-1 sm:flex">
+        <ProjectNameEditor />
+        <span className="hidden xl:inline">
+          <SaveIndicator />
+        </span>
+      </div>
+      <div className="flex items-center gap-0.5 sm:ml-1 xl:ml-3 xl:gap-1">
         <Button
-          variant="outline"
-          size="sm"
+          variant="ghost"
+          size="icon"
+          className="h-8 w-8"
           disabled={!canUndo}
-          onClick={onUndo}
-          aria-label="Undo"
-          title={
-            canUndo
-              ? `Undo (${undoDepth} step${undoDepth !== 1 ? 's' : ''}) — Ctrl+Z`
-              : 'Nothing to undo'
-          }
+          onClick={() => globalControlsService.undo()}
+          aria-label={t('actions.undo', { ns: 'common' })}
+          title={t('header.undoShortcut')}
         >
           <Undo2 className="h-4 w-4" />
-          {canUndo && <span className="ml-1 text-xs tabular-nums">{undoDepth}</span>}
         </Button>
         <Button
-          variant="outline"
-          size="sm"
+          variant="ghost"
+          size="icon"
+          className="h-8 w-8"
           disabled={!canRedo}
-          onClick={onRedo}
-          aria-label="Redo"
-          title={
-            canRedo
-              ? `Redo (${redoDepth} step${redoDepth !== 1 ? 's' : ''}) — Ctrl+Shift+Z`
-              : 'Nothing to redo'
-          }
+          onClick={() => globalControlsService.redo()}
+          aria-label={t('actions.redo', { ns: 'common' })}
+          title={t('header.redoShortcut')}
         >
           <Redo2 className="h-4 w-4" />
-          {canRedo && <span className="ml-1 text-xs tabular-nums">{redoDepth}</span>}
         </Button>
       </div>
-      <Separator orientation="vertical" className="mx-1 h-6" />
-      <div
-        className="flex min-w-0 items-center gap-2 text-xs text-muted-foreground"
-        aria-label="Canvas size and animation"
+
+      {compact && (
+        <div className="flex items-center gap-0.5 border-l border-border pl-1 sm:gap-1 sm:pl-2">
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-8 w-8"
+            onClick={onOpenSettings}
+            aria-label={t('header.openSettings')}
+            title={t('header.settings')}
+          >
+            <SlidersHorizontal className="h-4 w-4" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-8 w-8"
+            onClick={onOpenLayers}
+            aria-label={t('header.openLayers')}
+            title={t('header.layers')}
+          >
+            <Layers3 className="h-4 w-4" />
+          </Button>
+        </div>
+      )}
+
+      <nav
+        className="ml-auto flex items-center gap-1 xl:gap-1.5"
+        aria-label={t('header.helpExport')}
       >
-        <span>{sizeText}</span>
-        <span aria-hidden>•</span>
-        <span>{animLabel}</span>
-      </div>
-      <Separator orientation="vertical" className="mx-1 h-6" />
-      <Button variant="default" size="sm" onClick={onExport} aria-label="Export">
-        <Download className="mr-1 h-4 w-4" />
-        Export
-      </Button>
+        <LanguageSwitcher />
+        <a
+          href="/tutorial"
+          aria-label={t('nav.tutorial', { ns: 'common' })}
+          className="inline-flex h-9 items-center gap-2 rounded-[10px] border border-border bg-background px-2 text-xs font-medium transition hover:-translate-y-px hover:bg-accent xl:px-3"
+        >
+          <HelpCircle className="h-4 w-4" />
+          <span className="hidden 2xl:inline">{t('nav.tutorial', { ns: 'common' })}</span>
+        </a>
+        <a
+          href={EXTERNAL_LINKS.repository}
+          target="_blank"
+          rel="noopener noreferrer"
+          aria-label={t('nav.source', { ns: 'common' })}
+          className="hidden h-9 items-center gap-2 rounded-[10px] border border-border bg-background px-3 text-xs font-medium transition hover:-translate-y-px hover:bg-accent 2xl:inline-flex"
+        >
+          <Code2 className="h-4 w-4" />
+          {t('nav.source', { ns: 'common' })}
+        </a>
+        <a
+          href={EXTERNAL_LINKS.support}
+          target="_blank"
+          rel="noopener noreferrer"
+          aria-label={t('nav.support', { ns: 'common' })}
+          className="hidden h-9 items-center gap-2 rounded-[10px] border border-border bg-background px-3 text-xs font-medium transition hover:-translate-y-px hover:bg-accent 2xl:inline-flex"
+        >
+          <Coffee className="h-4 w-4" />
+          {t('nav.support', { ns: 'common' })}
+        </a>
+        <Button
+          className="h-9 gap-2 rounded-[10px] bg-[#171918] px-3 text-xs text-white shadow-sm transition hover:-translate-y-px hover:bg-[#252826] xl:px-4"
+          onClick={() => globalControlsService.openExport()}
+          aria-label={t('header.exportVideo')}
+        >
+          <Download className="h-4 w-4" />
+          <span className="hidden lg:inline">{t('header.exportVideo')}</span>
+        </Button>
+      </nav>
     </header>
   )
-}
-
-/** Legacy animation-style → display label map (legacy topbar anim label). */
-const ANIMATION_LABELS: Readonly<Record<string, string>> = {
-  'chunk-jump': 'Chunk Jump',
-  scanner: 'Scanner',
-  contour: 'Contour',
-  'outline-chunks': 'Outline Chunks',
-  'outline-fill': 'Outline Fill',
-  'illust-fill': 'Illust Fill',
-  'outline-only': 'Outline Only',
-  'text-draw': 'Text Draw',
-  'spec-human': 'Human',
-  'spec-animal': 'Animal',
-  'spec-portrait': 'Portrait',
-  'spec-vehicle': 'Vehicle',
-  'spec-building': 'Building',
-  'spec-landscape': 'Landscape',
-  'spec-spiral': 'Spiral',
-  'spec-text': 'Spec Text',
 }

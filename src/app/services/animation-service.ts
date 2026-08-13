@@ -34,6 +34,10 @@ import {
   domainRevealStyleToLegacy,
 } from '@/engine/legacy/legacy-enum-mapping'
 import type { LegacyControlElement } from '@/engine/legacy/legacy-state.types'
+import {
+  getLegacyRuntimeWindow,
+  setLegacyControlValue,
+} from '@/engine/legacy/legacy-runtime-bridge'
 
 /** True when the legacy globals are present. */
 function legacyReady(): boolean {
@@ -100,7 +104,10 @@ export const animationService = {
       const val = domainDrawDirectionToLegacy(dir)
       legacy.textAnimDir = val
       const layerId = legacy.selectedLayerId
-      const layer = layerId !== null && layerId !== undefined ? legacy.layers?.find(l => l.id === layerId) : null
+      const layer =
+        layerId !== null && layerId !== undefined
+          ? legacy.layers?.find((l) => l.id === layerId)
+          : null
       if (layer) layer.textAnimDir = val
       window.scheduleAutoSave?.()
     }
@@ -116,7 +123,10 @@ export const animationService = {
       const val = domainTextDrawStyleToLegacy(style)
       legacy.textDrawStyle = val
       const layerId = legacy.selectedLayerId
-      const layer = layerId !== null && layerId !== undefined ? legacy.layers?.find(l => l.id === layerId) : null
+      const layer =
+        layerId !== null && layerId !== undefined
+          ? legacy.layers?.find((l) => l.id === layerId)
+          : null
       if (layer) layer.textDrawStyle = val
       window.scheduleAutoSave?.()
     }
@@ -150,7 +160,10 @@ export const animationService = {
       const val = domainDetectionAlgorithmToLegacy(algo)
       legacy.outlineAlgorithm = val
       const layerId = legacy.selectedLayerId
-      const layer = layerId !== null && layerId !== undefined ? legacy.layers?.find(l => l.id === layerId) : null
+      const layer =
+        layerId !== null && layerId !== undefined
+          ? legacy.layers?.find((l) => l.id === layerId)
+          : null
       if (layer) layer.outlineAlgorithm = val
       window.scheduleAutoSave?.()
     }
@@ -166,7 +179,10 @@ export const animationService = {
       const val = domainStrokeStyleToLegacy(style)
       legacy.outlineStrokeStyle = val
       const layerId = legacy.selectedLayerId
-      const layer = layerId !== null && layerId !== undefined ? legacy.layers?.find(l => l.id === layerId) : null
+      const layer =
+        layerId !== null && layerId !== undefined
+          ? legacy.layers?.find((l) => l.id === layerId)
+          : null
       if (layer) layer.outlineStrokeStyle = val
       window.scheduleAutoSave?.()
     }
@@ -182,7 +198,10 @@ export const animationService = {
       const val = domainColoringStyleToLegacy(style)
       legacy.colorStyle = val
       const layerId = legacy.selectedLayerId
-      const layer = layerId !== null && layerId !== undefined ? legacy.layers?.find(l => l.id === layerId) : null
+      const layer =
+        layerId !== null && layerId !== undefined
+          ? legacy.layers?.find((l) => l.id === layerId)
+          : null
       if (layer) layer.colorStyle = val
       window.scheduleAutoSave?.()
     }
@@ -212,17 +231,57 @@ export const animationService = {
    */
   setRevealStyle(style: RevealStyle): void {
     if (legacyReady()) {
-      const legacy = requireLegacyState()
-      // Wait, what does selectRevealAnim set? Let me just use any for now, or check domain mapped property.
-      // It's probably animStyle or something. I'll just check if there's a property.
-      // Wait, I will use `legacy.animStyle` (if RevealStyle maps to LegacyAnimationStyle).
       const val = domainRevealStyleToLegacy(style)
-      legacy.animStyle = val as any
-      const layerId = legacy.selectedLayerId
-      const layer = layerId !== null && layerId !== undefined ? legacy.layers?.find(l => l.id === layerId) : null
-      if (layer) layer.animStyle = val as any
+      const runtime = getLegacyRuntimeWindow()
+      const selectReveal = runtime
+        ? (window as unknown as Record<string, unknown>).selectRevealAnim
+        : undefined
+      if (runtime && typeof selectReveal === 'function') {
+        Reflect.apply(selectReveal, window, [stubElement({ reveal: val })])
+      } else {
+        // Pre-cohost/test fallback retained for the original M14 contract.
+        const legacy = requireLegacyState()
+        legacy.animStyle = val as unknown as typeof legacy.animStyle
+        const layer = legacy.layers.find((item) => item.id === legacy.selectedLayerId)
+        if (layer) layer.animStyle = val as unknown as typeof layer.animStyle
+      }
       window.scheduleAutoSave?.()
     }
     useAnimationStore.getState().setRevealStyle(style)
+  },
+
+  setChunks(value: number): void {
+    if (typeof window !== 'undefined' && window.state) {
+      const layer = window.state.layers.find((item) => item.id === window.state?.selectedLayerId)
+      if (layer) layer.chunks = value
+      setLegacyControlValue('tile-slider', String(value))
+      window.scheduleAutoSave?.()
+    }
+  },
+
+  setSpecializedChunks(value: number): void {
+    if (typeof window !== 'undefined' && window.state) {
+      window.state.specChunks = value
+      const layer = window.state.layers.find((item) => item.id === window.state?.selectedLayerId)
+      if (layer) layer.specChunks = value
+      setLegacyControlValue('spec-tile-slider', String(value))
+      window.scheduleAutoSave?.()
+    }
+  },
+
+  setRevealDuration(value: number): void {
+    if (typeof window !== 'undefined' && window.state) window.state.revealDuration = value
+    setLegacyControlValue('reveal-duration-slider', String(value))
+    window.scheduleAutoSave?.()
+  },
+
+  setOutlineVisible(value: boolean): void {
+    const candidate = (window as unknown as Record<string, unknown>).setOutlineVisible
+    if (typeof candidate === 'function') Reflect.apply(candidate, window, [value])
+  },
+
+  setOutlineOpacity(value: number): void {
+    const candidate = (window as unknown as Record<string, unknown>).setOutlineOpacity
+    if (typeof candidate === 'function') Reflect.apply(candidate, window, [value])
   },
 }

@@ -197,11 +197,7 @@ export const textService = {
    * layer). The legacy co-host receives the legacy layer object via
    * `legacyOpenTextEditor` when present.
    */
-  openEditor(
-    canvasX: number,
-    canvasY: number,
-    existingLayer: TextLayer | null,
-  ): boolean {
+  openEditor(canvasX: number, canvasY: number, existingLayer: TextLayer | null): boolean {
     // Deactivate placement first (legacy 8132).
     const session = this.session
     if (session) session.placing = false
@@ -291,9 +287,7 @@ export const textService = {
     // Resolve the old layer (when editing) + the animation inheritance.
     const layers = useLayerStore.getState().layers
     const oldLayer =
-      session.editingId !== null
-        ? (layers.find((l) => l.id === session.editingId) ?? null)
-        : null
+      session.editingId !== null ? (layers.find((l) => l.id === session.editingId) ?? null) : null
     // oldText is not used, so we removed it.
 
     // Push an undo snapshot before mutating (legacy 8305 / 8311).
@@ -314,7 +308,7 @@ export const textService = {
       if (m) {
         const n = Number(m[1])
         if (n > maxN) maxN = n
-    }
+      }
     }
     const newId = `layer-${maxN + 1}` as LayerId
 
@@ -355,20 +349,24 @@ export const textService = {
 
     // Delegate the rasterize + redraw + autosave to the legacy runtime when
     // present. We use our ported TS version of _commitTextLayer.
-    const commitSuccess = commitLegacyTextLayer(text, {
-      font: style.fontFamily,
-      size: style.fontSize,
-      bold: style.bold,
-      italic: style.italic,
-      color: style.color,
-      align: style.align,
-      lineHeight: style.lineHeight,
-      spacing: style.letterSpacing
-    }, {
-      editingId: session.editingId !== null ? layerIdToLegacyNum(session.editingId) : null,
-      canvasX: session.canvasX,
-      canvasY: session.canvasY
-    })
+    const commitSuccess = commitLegacyTextLayer(
+      text,
+      {
+        font: style.fontFamily,
+        size: style.fontSize,
+        bold: style.bold,
+        italic: style.italic,
+        color: style.color,
+        align: style.align,
+        lineHeight: style.lineHeight,
+        spacing: style.letterSpacing,
+      },
+      {
+        editingId: session.editingId !== null ? layerIdToLegacyNum(session.editingId) : null,
+        canvasX: session.canvasX,
+        canvasY: session.canvasY,
+      },
+    )
 
     if (!commitSuccess) {
       legacySelectLayer(layerIdToLegacyNum(newLayer.id))

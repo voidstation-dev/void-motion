@@ -28,9 +28,14 @@ export async function runLegacyExport(
     if (!groups || !groups.length) return state.done ? 1 : 0
     if (isComplete()) return 1
     const total = groups.length
-    const groupPos = Math.max(0, Math.min(total - 1, Number.isFinite(state._groupPos) ? (state._groupPos as number) : 0))
+    const groupPos = Math.max(
+      0,
+      Math.min(total - 1, Number.isFinite(state._groupPos) ? (state._groupPos as number) : 0),
+    )
     const completedGroups = Math.max(0, Math.min(total, groupPos + (state.done ? 1 : 0)))
-    const currentGroupFraction = state.done ? 0 : Math.max(0, Math.min(1, (state._animProgress as number) || 0))
+    const currentGroupFraction = state.done
+      ? 0
+      : Math.max(0, Math.min(1, (state._animProgress as number) || 0))
     return Math.max(0, Math.min(1, (completedGroups + currentGroupFraction) / total))
   }
 
@@ -105,13 +110,8 @@ function recordWebM(
 
       mr.onstop = () => {
         const blob = new Blob(state.chunks, { type: 'video/webm' })
-        const url = URL.createObjectURL(blob)
-        const a = document.createElement('a')
         const timestamp = new Date().toISOString().slice(0, 19).replace(/:/g, '-')
-        a.href = url
-        a.download = `whiteboard-${timestamp}.webm`
-        a.click()
-        setTimeout(() => URL.revokeObjectURL(url), 1000)
+        downloadBlob(blob, `whiteboard-${timestamp}.webm`)
 
         resolve()
       }
@@ -284,9 +284,7 @@ function recordMP4(
         }
 
         const progress = getProgress()
-        const label = isComplete()
-          ? 'Muxing MP4…'
-          : `Encoding MP4… ${Math.round(progress * 100)}%`
+        const label = isComplete() ? 'Muxing MP4…' : `Encoding MP4… ${Math.round(progress * 100)}%`
         onProgress(progress * 0.88, label)
 
         if (isComplete() && !encodingDone) {
@@ -304,13 +302,8 @@ function recordMP4(
               onProgress(1, 'Muxing MP4…')
 
               const blob = new Blob([target.buffer], { type: 'video/mp4' })
-              const url = URL.createObjectURL(blob)
-              const a = document.createElement('a')
               const tsString = new Date().toISOString().slice(0, 19).replace(/:/g, '-')
-              a.href = url
-              a.download = `whiteboard-${tsString}.mp4`
-              a.click()
-              setTimeout(() => URL.revokeObjectURL(url), 2000)
+              downloadBlob(blob, `whiteboard-${tsString}.mp4`, 2000)
               resolve()
             } catch (finalErr) {
               reject(finalErr)
@@ -337,14 +330,21 @@ function exportPNG(handles: CanvasHandles, state: LegacyInkplainerState): Promis
 
     exportCanvas.toBlob((blob) => {
       if (!blob) return resolve()
-      const url = URL.createObjectURL(blob)
-      const a = document.createElement('a')
       const timestamp = new Date().toISOString().slice(0, 19).replace(/:/g, '-')
-      a.href = url
-      a.download = `whiteboard-${timestamp}.png`
-      a.click()
-      setTimeout(() => URL.revokeObjectURL(url), 1000)
+      downloadBlob(blob, `whiteboard-${timestamp}.png`)
       resolve()
     }, 'image/png')
   })
+}
+
+function downloadBlob(blob: Blob, filename: string, revokeDelay = 1000): void {
+  const url = URL.createObjectURL(blob)
+  const anchor = document.createElement('a')
+  anchor.href = url
+  anchor.download = filename
+  anchor.style.display = 'none'
+  document.body.appendChild(anchor)
+  anchor.click()
+  anchor.remove()
+  setTimeout(() => URL.revokeObjectURL(url), revokeDelay)
 }

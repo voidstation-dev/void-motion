@@ -38,6 +38,7 @@ export interface LayerState {
 
   /** Push current layers onto undo stack before a mutating action. */
   pushUndo(): void
+  syncHistoryDepth(undoDepth: number, redoDepth: number): void
   undo(): void
   redo(): void
   canUndo(): boolean
@@ -113,6 +114,16 @@ export const useLayerStore = create<LayerState>()(
           s.undoStack.shift()
         }
         s.redoStack = []
+      })
+    },
+    syncHistoryDepth(undoDepth, redoDepth) {
+      set((s) => {
+        const boundedUndo = Math.min(MAX_UNDO_DEPTH, Math.max(0, Math.trunc(undoDepth)))
+        const boundedRedo = Math.min(MAX_UNDO_DEPTH, Math.max(0, Math.trunc(redoDepth)))
+        while (s.undoStack.length > boundedUndo) s.undoStack.pop()
+        while (s.undoStack.length < boundedUndo) s.undoStack.push([...s.layers])
+        while (s.redoStack.length > boundedRedo) s.redoStack.pop()
+        while (s.redoStack.length < boundedRedo) s.redoStack.push([...s.layers])
       })
     },
     undo() {

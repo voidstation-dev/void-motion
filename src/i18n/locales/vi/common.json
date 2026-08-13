@@ -1,0 +1,31 @@
+{
+  "brand": "Void Motion",
+  "language": "Ngôn ngữ",
+  "languages": { "en": "English", "vi": "Tiếng Việt" },
+  "actions": {
+    "close": "Đóng",
+    "cancel": "Hủy",
+    "delete": "Xóa",
+    "apply": "Áp dụng",
+    "reset": "Đặt lại",
+    "undo": "Hoàn tác",
+    "redo": "Làm lại",
+    "play": "Phát",
+    "pause": "Tạm dừng",
+    "restart": "Phát lại"
+  },
+  "nav": {
+    "tutorial": "Hướng dẫn",
+    "about": "Giới thiệu",
+    "privacy": "Quyền riêng tư",
+    "source": "Mã nguồn mở",
+    "support": "Hỗ trợ",
+    "backToEditor": "Quay lại trình chỉnh sửa",
+    "informationPages": "Các trang thông tin"
+  },
+  "loading": "Đang tải…",
+  "meta": {
+    "editorTitle": "Void Motion — Trình tạo hoạt ảnh bảng trắng",
+    "editorDescription": "Tạo hoạt ảnh bảng trắng bằng nét vẽ từ hình ảnh và văn bản ngay trong trình duyệt."
+  }
+}
