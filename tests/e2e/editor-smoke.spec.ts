@@ -13,7 +13,7 @@ test('editor boots with the production runtime and branded metadata', async ({ p
   await expect(page.locator('meta[name="creator"]')).toHaveAttribute('content', 'Void Station')
   await expect(page.locator('link[rel="canonical"]')).toHaveAttribute(
     'href',
-    'https://void-motion.vercel.app/',
+    'https://void-motion-phong-vus-projects-82e2aa07.vercel.app/',
   )
 
   const runtime = page.locator('iframe[src^="/legacy/index.html"]')

@@ -73,4 +73,4 @@ jobs:
           echo "## Void Motion production deployment" >> "$GITHUB_STEP_SUMMARY"
           echo "- Commit: \`${{ inputs.commit || github.sha }}\`" >> "$GITHUB_STEP_SUMMARY"
           echo "- Verified deployment: ${{ steps.deploy.outputs.url }}" >> "$GITHUB_STEP_SUMMARY"
-          echo "- Production: https://void-motion.vercel.app" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Production: https://void-motion-phong-vus-projects-82e2aa07.vercel.app" >> "$GITHUB_STEP_SUMMARY"

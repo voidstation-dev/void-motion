@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://void-motion.vercel.app/sitemap.xml
+Sitemap: https://void-motion-phong-vus-projects-82e2aa07.vercel.app/sitemap.xml
