@@ -1,6 +1,6 @@
 import { useEffect } from 'react'
 
-const PRODUCTION_ORIGIN = 'https://void-motion-phong-vus-projects-82e2aa07.vercel.app'
+const PRODUCTION_ORIGIN = 'https://void-motion.vercel.app'
 
 function setMeta(
   selector: string,

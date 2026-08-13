@@ -6,8 +6,8 @@
 </p>
 
 <p align="center">
-  <a href="https://void-motion-phong-vus-projects-82e2aa07.vercel.app">Live app</a> ·
-  <a href="https://void-motion-phong-vus-projects-82e2aa07.vercel.app/tutorial">Tutorial</a> ·
+  <a href="https://void-motion.vercel.app">Live app</a> ·
+  <a href="https://void-motion.vercel.app/tutorial">Tutorial</a> ·
   <a href="https://github.com/voidstation-dev/void-motion/issues">Support</a>
 </p>
 
@@ -101,7 +101,7 @@ Create `VERCEL_TOKEN` from the Vercel Dashboard with an explicit expiry and proj
 
 ## Privacy
 
-Void Motion stores editor projects locally in the browser. Export processing happens on the user's device. Review the current policy on the [live privacy page](https://void-motion-phong-vus-projects-82e2aa07.vercel.app/privacy) or in [`PRIVACY.md`](./PRIVACY.md).
+Void Motion stores editor projects locally in the browser. Export processing happens on the user's device. Review the current policy on the [live privacy page](https://void-motion.vercel.app/privacy) or in [`PRIVACY.md`](./PRIVACY.md).
 
 ## Contributing and support
 
