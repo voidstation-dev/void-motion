@@ -15,6 +15,7 @@ import { CanvasRegion } from './regions/CanvasRegion'
 import { Sidebar } from './regions/Sidebar'
 import { BottomBar } from './regions/BottomBar'
 import { ProjectsSheet } from './components/project/ProjectsSheet'
+import { ExportFeature } from './features/export/ExportFeature'
 import { useProjectBoot } from './hooks/useProjectBoot'
 import { useGlobalShortcuts } from './hooks/useGlobalShortcuts'
 
@@ -36,6 +37,7 @@ export function App(): ReactElement {
         <BottomBar />
       </div>
       <ProjectsSheet />
+      <ExportFeature />
     </Providers>
   )
 }

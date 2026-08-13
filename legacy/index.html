@@ -5635,7 +5635,7 @@ function _cacheElements() {
 // multiplied by this so they behave identically at every resolution.
 // 720p → 1.0 · 1080p → 1.5 · 1440p → 2.0
 function resScale() {
-  return Math.sqrt((state.canvasW * state.canvasH) / (1280 * 720));
+  return 1 // Delegated to M19 renderer
 }
 
 // Sub-linear scale used for perimeter point density.
@@ -5644,7 +5644,7 @@ function resScale() {
 // outline smooth at all resolutions while still adding enough points for clarity.
 //   720p → 1.0 · 1080p → 1.31 · 1440p → 1.57
 function resPointScale() {
-  return Math.pow(resScale(), 0.6);
+  return 1 // Delegated to M19 renderer
 }
 
 // Stroke softening blur — the tiny amount of shadowBlur that restores the
@@ -5652,7 +5652,7 @@ function resPointScale() {
 // but loses at higher resolutions where lines become pixel-crisp.
 //   720p → 0 · 1080p → 0.75 · 1440p → 1.5
 function resSoftBlur() {
-  return Math.max(0, (resScale() - 1) * 1.5);
+  return 0 // Delegated to M19 renderer
 }
 
 function initCanvas(w,h) {
@@ -5688,19 +5688,7 @@ function initCanvas(w,h) {
   redrawLayersOnCanvas();
 }
 function fitCanvas() {
-  const canvasArea = document.getElementById('canvas-area');
-  if (!canvasArea) return;
-  const styles = getComputedStyle(canvasArea);
-  const padX = parseFloat(styles.paddingLeft || '0') + parseFloat(styles.paddingRight || '0');
-  const padY = parseFloat(styles.paddingTop || '0') + parseFloat(styles.paddingBottom || '0');
-  const safeMargin = 24;
-  const availableW = Math.max(160, canvasArea.clientWidth - padX - safeMargin);
-  const availableH = Math.max(160, canvasArea.clientHeight - padY - safeMargin);
-  const s = Math.min(availableW/state.canvasW, availableH/state.canvasH, 1);
-  const sw=(state.canvasW*s)+'px', sh=(state.canvasH*s)+'px';
-  canvas.style.width=sw; canvas.style.height=sh;
-  handCanvas.style.width=sw; handCanvas.style.height=sh;
-  selectCanvas.style.width=sw; selectCanvas.style.height=sh;
+  // Delegated to M19 engine adapter resize()
 }
 // ─── BACKGROUND GRADIENTS (drawn on canvas) ───
 const BG_GRADIENTS = {
@@ -5759,26 +5747,7 @@ const BG_GRADIENTS = {
 };
 
 function fillBg(c) {
-  // In slot mode each slot canvas is transparent — only the strokes/fills for that
-  // layer are drawn onto it.  The real background (+ bgCanvas) is composited once
-  // per frame in _tickAllSlots at the _mainCtx level.
-  if (state._slotMode) { c.clearRect(0,0,state.canvasW,state.canvasH); return; }
-  const bg = state.canvasBg;
-  if (bg.type === 'solid') {
-    if (bg.val === 'transparent') { c.clearRect(0,0,state.canvasW,state.canvasH); }
-    else { c.fillStyle = (bg.val === 'white') ? '#ffffff' : bg.val; c.fillRect(0,0,state.canvasW,state.canvasH); }
-  } else if (bg.type === 'gradient' && BG_GRADIENTS[bg.key]) {
-    c.save(); BG_GRADIENTS[bg.key](c); c.restore();
-  } else if (bg.type === 'custom') {
-    c.fillStyle = bg.val; c.fillRect(0,0,state.canvasW,state.canvasH);
-  } else {
-    c.fillStyle='#fff'; c.fillRect(0,0,state.canvasW,state.canvasH);
-  }
-  // Always composite completed layers — this ensures edgeCanvas/revealCanvas
-  // intermediates also carry previous layers when blitted to ctx
-  if (state.bgCanvas) {
-    c.drawImage(state.bgCanvas, 0, 0);
-  }
+  // Delegated to M19 background-renderer
 }
 function fillBgOnCtx(c) { fillBg(c); }
 
@@ -6586,66 +6555,18 @@ function onDragEnd(e) {
 
 // ── Redraw all layers composited on canvas ──
 function redrawLayersOnCanvas() {
-  // Early exit if no layers to draw
-  if (!state.layers || state.layers.length === 0) {
-    fillBg(ctx);
-    return;
+  // Delegated to M19 layer-compositor
+  // M03 engine interface triggers the React layer-change event instead,
+  // which causes the React shell to invoke `renderStatic()`.
+  if (window.engine) {
+    window.engine.renderStatic();
   }
-  
-  // Batch canvas operations for better performance
-  ctx.save();
-  fillBg(ctx);
-  
-  state.layers.forEach(layer => {
-    if (layer.visible === false) return;
-    if (!layer.img) return; // Skip if image not loaded
-    // Hide the layer being edited — the overlay textarea is the live preview
-    if (_ts.active && _ts.editingId !== null && layer.id === _ts.editingId) return;
-    
-    ctx.save();
-    ctx.globalAlpha = (layer.opacity !== undefined) ? layer.opacity : 1;
-    
-    // Use faster rendering for small images
-    if (layer.w < 100 && layer.h < 100) {
-      ctx.imageSmoothingEnabled = false;
-    }
-    
-    ctx.drawImage(layer.img, layer.x, layer.y, layer.w, layer.h);
-    ctx.restore();
-  });
-  
-  ctx.restore();
 }
 
 // ── Selection handles on selectCanvas ──
 const HANDLE_R = 6;
 function drawSelectionHandles() {
-  sctx.clearRect(0,0,state.canvasW,state.canvasH);
-  const layer = getSelectedLayer();
-  if (!layer || state.playing) return;
-  const {x,y,w,h} = layer;
-  sctx.save();
-  // Selection rect
-  sctx.strokeStyle='#6c63ff';
-  sctx.lineWidth=2;
-  sctx.setLineDash([5,3]);
-  sctx.strokeRect(x,y,w,h);
-  sctx.setLineDash([]);
-  // Corner handles
-  const corners = [[x,y],[x+w,y],[x+w,y+h],[x,y+h]];
-  corners.forEach(([cx2,cy2])=>{
-    sctx.fillStyle='#6c63ff';
-    sctx.beginPath(); sctx.arc(cx2,cy2,HANDLE_R,0,Math.PI*2); sctx.fill();
-    sctx.strokeStyle='#fff'; sctx.lineWidth=1.5; sctx.stroke();
-  });
-  // Edge midpoint handles
-  const mids = [[x+w/2,y],[x+w,y+h/2],[x+w/2,y+h],[x,y+h/2]];
-  mids.forEach(([cx2,cy2])=>{
-    sctx.fillStyle='#fff';
-    sctx.beginPath(); sctx.arc(cx2,cy2,4,0,Math.PI*2); sctx.fill();
-    sctx.strokeStyle='#6c63ff'; sctx.lineWidth=1.5; sctx.stroke();
-  });
-  sctx.restore();
+  // Delegated to M19 selection-renderer via React shell renderStatic()
 }
 
 // ── Canvas pointer interaction: move + resize ──

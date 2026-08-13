@@ -20,10 +20,40 @@
  * - window.setProgress() (progress bar update)
  */
 
-(function(window) {
+window.createLegacyAnimationEngine = function(context) {
   'use strict';
 
-  console.log('🎨 Loading Animation Engine...');
+  console.log('🎨 Loading Animation Engine (M17 Context Extracted)...');
+
+  const state = context.state;
+  let ctx = context.main;
+  let _mainCtx = context.main;
+  let hctx = context.hand;
+  let offscreen = context.offscreen;
+  const fillBg = context.fillBackground;
+  const drawHand = context.drawHand;
+  const setProgress = context.setProgress;
+  const resScale = context.resScale;
+  const resPointScale = context.resPointScale;
+  const resSoftBlur = context.resSoftBlur;
+
+  const Math = Object.create(window.Math);
+  Math.random = () => context.random.next();
+
+  const document = {
+    getElementById: (id) => {
+      const val = context.getSetting(id);
+      return {
+        get value() { return val; },
+        get checked() { return val === true; },
+        classList: { add: () => {}, remove: () => {} },
+        style: {},
+        textContent: ''
+      };
+    },
+    createElement: (tag) => window.document.createElement(tag),
+    querySelectorAll: () => []
+  };
 
 function buildPresenceMap() {
   const cb = state.contentBounds;
@@ -3526,11 +3556,7 @@ function setOutlineOpacity(val) {
 }
 
 
-  // ============================================================
-  // PUBLIC API - Export all animation functions
-  // ============================================================
-
-  window.AnimationEngine = {
+  return {
     // Setup functions (called before animation starts)
     setupScanner,
     setupContour,
@@ -3569,7 +3595,4 @@ function setOutlineOpacity(val) {
     _tickSlot,
     _tickAllSlots,
   };
-
-  console.log('✓ Animation Engine loaded');
-
-})(window);
+};

@@ -118,15 +118,15 @@ export interface LegacyLayer {
   specChunks: number
   hasPngAlpha: boolean
   // Optional per-layer overrides (undefined unless set).
-  readonly zigzag?: boolean
-  readonly outlineDetect?: number
-  readonly outlineAlgorithm?: LegacyDetectionAlgorithm
-  readonly outlineStrokeStyle?: LegacyStrokeStyle
-  readonly colorStyle?: LegacyColoringStyle
-  readonly outlineColor?: string
-  readonly outlineThickness?: number
-  readonly textAnimDir?: LegacyDrawDirection
-  readonly textDrawStyle?: LegacyTextDrawStyle
+  zigzag?: boolean
+  outlineDetect?: number
+  outlineAlgorithm?: LegacyDetectionAlgorithm
+  outlineStrokeStyle?: LegacyStrokeStyle
+  colorStyle?: LegacyColoringStyle
+  outlineColor?: string
+  outlineThickness?: number
+  textAnimDir?: LegacyDrawDirection
+  textDrawStyle?: LegacyTextDrawStyle
   // Text-layer metadata (present iff kind === 'text').
   readonly kind?: 'text'
   readonly _textContent?: string
@@ -209,6 +209,11 @@ export interface LegacyInkplainerState {
   recording: boolean
   mediaRecorder: MediaRecorder | null
   chunks: Blob[]
+
+  // Internal playback progress state needed for export progress
+  _animGroups?: unknown[]
+  _groupPos?: number
+  _animProgress?: number
 
   // Per-style runtime tick state (slot-swapped). Typed `unknown` because the
   // legacy engine swaps ~60 of these keys in/out per slot and most are

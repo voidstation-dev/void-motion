@@ -52,3 +52,10 @@ if (typeof Element.prototype.scrollIntoView === 'undefined') {
     // no-op
   }
 }
+
+// Mock the legacy engine context factory for UI tests (M17)
+if (typeof (globalThis as any).createLegacyAnimationEngine === 'undefined') {
+  ;(globalThis as any).createLegacyAnimationEngine = () => ({
+    // Mock the engine exports returned by the factory
+  })
+}

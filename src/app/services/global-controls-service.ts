@@ -30,7 +30,7 @@
  */
 
 import { useLayerStore } from '@/app/store'
-import { useExportStore } from '@/app/store'
+import { exportService } from './export-service'
 
 /** Guarded legacy function call. Throws a typed error if not booted. */
 function callLegacy(
@@ -97,19 +97,16 @@ export const globalControlsService = {
   },
 
   /**
-   * Open the export banner. Delegates to the legacy `openExportBanner` and
-   * flips the export store's job status to reflect the banner opening.
+   * Open the export banner. Delegates to the new export service (M15).
    */
   openExport(): void {
     if (!legacyReady()) return
-    callLegacy('openExportBanner')
-    useExportStore.getState().setJobStatus('preparing')
+    exportService.openDialog()
   },
 
   /** Close the export banner (also stops in-flight recording). */
   closeExport(): void {
-    if (legacyReady()) callLegacy('closeExportBanner')
-    useExportStore.getState().resetJob()
+    exportService.closeDialog()
   },
 
   /**

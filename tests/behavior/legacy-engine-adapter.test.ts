@@ -15,7 +15,7 @@
  * tests stub `window.state` / `window.togglePlay` / `window.restartAnim`
  * because jsdom does not load the legacy app.
  */
-import { afterEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { LegacyEngineAdapter, type CanvasHandles } from '../../src/engine/legacy/legacy-adapter'
 import { buildLegacyState } from '../../src/test-utils/fixtures'
 
@@ -45,6 +45,14 @@ afterEach(() => {
   delete (window as unknown as { state?: unknown }).state
   delete (window as unknown as { togglePlay?: unknown }).togglePlay
   delete (window as unknown as { restartAnim?: unknown }).restartAnim
+  delete (window as unknown as { createLegacyAnimationEngine?: unknown }).createLegacyAnimationEngine
+})
+
+beforeEach(() => {
+  // Mock the M17 context factory injected by legacy/animations.js
+  ;(window as unknown as { createLegacyAnimationEngine: unknown }).createLegacyAnimationEngine = () => ({
+    // Mock the engine exports returned by the factory
+  })
 })
 
 describe('M03 LegacyEngineAdapter — transport delegation', () => {

@@ -30,6 +30,7 @@ import type {
   RevealStyle,
   StrokeStyle,
   TextDrawStyle,
+  ActiveAnimationMode,
 } from './animation'
 
 /** The current project document schema version. */
@@ -141,7 +142,7 @@ export interface ProjectSummary {
  * `captureCurrentSettings` (`legacy/index.html:7059`) captures.
  */
 export interface PresetSettings {
-  readonly animationStyle: AnimationStyle
+  readonly animationStyle: ActiveAnimationMode
   readonly handStyle: HandStyle
   readonly zigzag: boolean
   readonly speed: number

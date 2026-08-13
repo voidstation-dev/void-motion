@@ -78,13 +78,19 @@ export function useCanvasInteraction(
       interactionService.pointerUp()
     }
 
+    const onDoubleClick = (e: MouseEvent): void => {
+      interactionService.doubleClick(e.clientX, e.clientY, rectOf(), canvasWidth)
+    }
+
     overlay.addEventListener('mousedown', onPointerDown)
     overlay.addEventListener('mousemove', onPointerMove)
+    overlay.addEventListener('dblclick', onDoubleClick)
     document.addEventListener('mouseup', onPointerUp)
 
     return () => {
       overlay.removeEventListener('mousedown', onPointerDown)
       overlay.removeEventListener('mousemove', onPointerMove)
+      overlay.removeEventListener('dblclick', onDoubleClick)
       document.removeEventListener('mouseup', onPointerUp)
     }
   }, [overlayRef, viewportRef, canvas?.size.width])

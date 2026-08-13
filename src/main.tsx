@@ -10,6 +10,8 @@ import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import { App } from './app/App'
 import './app/globals.css'
+import './engine/legacy/legacy-boot'
+import '../legacy/animations.js'
 
 const rootElement = document.getElementById('root')
 if (!rootElement) {

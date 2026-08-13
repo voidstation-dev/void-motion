@@ -34,6 +34,7 @@ import { useCanvasHost } from '@/app/hooks/useCanvasHost'
 import { useCanvasInteraction } from '@/app/hooks/useCanvasInteraction'
 import { CropFeature } from '@/app/features/crop/CropFeature'
 import { SlicerFeature } from '@/app/features/slicer/SlicerFeature'
+import { TextFeature } from '@/app/features/text/TextFeature'
 import { cropService } from '@/app/services/crop-service'
 import { slicerService } from '@/app/services/slicer-service'
 import { playbackService } from '@/app/services/playback-service'
@@ -73,6 +74,7 @@ export function CanvasRegion(): ReactElement {
       <CanvasViewport viewportRef={refs.viewport}>
         <CanvasStage mainRef={refs.main} handRef={refs.hand} />
         <CanvasOverlay selectionRef={refs.selection} outlineOverlayRef={refs.outlineOverlay} />
+        <TextFeature />
         {cropActive && <CropFeature />}
         {slicerActive && <SlicerFeature />}
         <span className="relative text-lg text-muted-foreground">Canvas</span>

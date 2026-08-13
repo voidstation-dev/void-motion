@@ -18,7 +18,12 @@
 import type { ProjectDocument } from '../../types/project'
 import { requireLegacyState, applyProjectToLegacyState } from './legacy-state.adapter'
 import type { CanvasHandles, PlaybackStatus } from './legacy-types'
+import { renderStaticFrame } from '../renderer/canvas-renderer'
+import { resScale, resPointScale, resSoftBlur } from '../renderer/resolution'
+import { renderBackground } from '../renderer/background-renderer'
 import { LegacyEventBus, type LegacyEngineListener } from './legacy-events'
+import type { VideoExportConfig } from '@/types/export'
+import { runLegacyExport, type ExportCallbacks } from './legacy-export'
 
 /**
  * The engine surface new React code consumes. Mirrors the M03 plan contract:
@@ -69,6 +74,12 @@ export interface InkplainerEngine {
   subscribe(listener: LegacyEngineListener): () => void
 
   /**
+   * Run a video export utilizing the legacy MediaRecorder / mp4-muxer pipeline.
+   * Throws if the engine is destroyed or missing handles.
+   */
+  exportVideo(config: VideoExportConfig, callbacks: ExportCallbacks): Promise<void>
+
+  /**
    * Hard teardown: release all held references and mark the adapter
    * permanently dead. Subsequent calls throw via {@link assertAlive}. Use
    * only when the engine singleton will never be used again.
@@ -112,6 +123,12 @@ export class LegacyEngineAdapter implements InkplainerEngine {
   attachCanvases(canvases: CanvasHandles): void {
     this.assertAlive()
     this.canvases = canvases
+    const context = buildAnimationContext(this.canvases)
+    const factory = (window as any).createLegacyAnimationEngine
+    if (typeof factory !== 'function') {
+      throw new Error('Legacy AnimationEngine factory not found. Did legacy/animations.js load?')
+    }
+    ;(window as any).AnimationEngine = factory(context)
   }
 
   async loadProject(project: ProjectDocument): Promise<void> {
@@ -131,26 +148,52 @@ export class LegacyEngineAdapter implements InkplainerEngine {
 
   renderStatic(): void {
     this.assertAlive()
-    // The legacy runtime renders the static frame as part of setupStyle/reset
-    // before playback. There is no standalone legacy `renderStatic`; M03 only
-    // surfaces the contract. The concrete call is wired in M19 (renderer
-    // migration). For now we require canvases to be attached (so the
-    // contract is honest) and no-op the actual draw until the renderer is
-    // migrated.
-    if (this.canvases === null) {
+    if (!this.canvases) {
       throw new Error('LegacyEngineAdapter.renderStatic: canvases not attached.')
     }
+    const legacy = requireLegacyState()
+    
+    // The inline text editor overlay acts as the live preview for the currently
+    // editing text layer. The legacy engine needs to know to hide that layer
+    // during static frame rendering to avoid double-rendering text.
+    const w = window as any
+    const editingId = w._ts?.active ? w._ts.editingId : null
+
+    renderStaticFrame(this.canvases, legacy, editingId)
   }
 
   resize(displayWidth: number, displayHeight: number): void {
     this.assertAlive()
-    // No-op until canvases are attached (M09 contract honesty). The legacy
-    // `fitCanvas` (legacy/index.html ~5660) scales the canvas-wrapper to the
-    // viewport while keeping the internal bitmap at state.canvasW/H; the
-    // concrete resize is wired in M19 (renderer migration).
-    if (this.canvases === null) return
-    void displayWidth
-    void displayHeight
+    if (!this.canvases) return
+
+    const legacy = requireLegacyState()
+    
+    // Extract padding/margins based on what `fitCanvas` does in legacy.
+    // The viewport container naturally handles padding, so we just use the provided
+    // content-box display dimensions (displayWidth x displayHeight) from the ResizeObserver
+    // minus the legacy safe margin (24px).
+    const safeMargin = 24
+    const availableW = Math.max(160, displayWidth - safeMargin)
+    const availableH = Math.max(160, displayHeight - safeMargin)
+    
+    const s = Math.min(availableW / legacy.canvasW, availableH / legacy.canvasH, 1)
+    
+    const sw = (legacy.canvasW * s) + 'px'
+    const sh = (legacy.canvasH * s) + 'px'
+    
+    this.canvases.main.style.width = sw
+    this.canvases.main.style.height = sh
+    this.canvases.hand.style.width = sw
+    this.canvases.hand.style.height = sh
+    this.canvases.selection.style.width = sw
+    this.canvases.selection.style.height = sh
+    this.canvases.outlineOverlay.style.width = sw
+    this.canvases.outlineOverlay.style.height = sh
+    
+    // Only redraw the static scene if we aren't playing
+    if (!legacy.playing) {
+      this.renderStatic()
+    }
   }
 
   play(): void {
@@ -203,6 +246,14 @@ export class LegacyEngineAdapter implements InkplainerEngine {
     return this.events.subscribe(listener)
   }
 
+  async exportVideo(config: VideoExportConfig, callbacks: ExportCallbacks): Promise<void> {
+    this.assertAlive()
+    if (!this.canvases) throw new Error('Cannot export: canvases not attached')
+    if (typeof window === 'undefined') throw new Error('Cannot export: window undefined')
+    
+    await runLegacyExport(this.canvases, requireLegacyState(), config, callbacks, () => this.restart())
+  }
+
   destroy(): void {
     if (this.destroyed) return
     this.events.clear()
@@ -226,6 +277,117 @@ export class LegacyEngineAdapter implements InkplainerEngine {
     }
   }
 }
+
+/**
+ * A pass-through random source for production that delegates to the global Math.random.
+ * In tests, Math.random is patched by withSeededRandom.
+ */
+class NativeRandomSource {
+  get seed(): number {
+    return 0
+  }
+  next(): number {
+    return Math.random()
+  }
+  nextInt(n: number): number {
+    return Math.floor(Math.random() * n)
+  }
+  reset(): void {
+    // No-op for native random
+  }
+}
+
+/**
+ * Builds the `AnimationContext` bridge (M17) for the legacy animation engine.
+ * Maps DOM interactions (e.g. `document.getElementById('hand-speed-slider').value`)
+ * to their corresponding values in the legacy state / active slot.
+ */
+function buildAnimationContext(canvases: CanvasHandles) {
+  const w = window as any
+  return {
+    get state() { return requireLegacyState() },
+    main: canvases.main.getContext('2d', { willReadFrequently: true }),
+    hand: canvases.hand.getContext('2d', { willReadFrequently: true }),
+    get offscreen() { return w.offscreen },
+    get canvasWidth() { return w.state?.canvasW ?? 1280 },
+    get canvasHeight() { return w.state?.canvasH ?? 720 },
+
+    fillBackground: (c: CanvasRenderingContext2D) => {
+      const state = w.state
+      renderBackground(c, state?.canvasBg, state?.canvasW ?? 1280, state?.canvasH ?? 720, !!state?._slotMode, state?.bgCanvas)
+    },
+    drawHand: (c: CanvasRenderingContext2D, x: number, y: number, dir: number, hand: string) => {
+      if (typeof w.drawHand === 'function') w.drawHand(c, x, y, dir, hand)
+    },
+    setProgress: (p: number) => {
+      if (typeof w.setProgress === 'function') w.setProgress(p)
+    },
+    finish: () => {
+      if (typeof w.finishAnim === 'function') w.finishAnim()
+    },
+    resScale: () => {
+      const state = w.state
+      return resScale(state?.canvasW ?? 1280, state?.canvasH ?? 720)
+    },
+    resPointScale: () => {
+      const state = w.state
+      return resPointScale(state?.canvasW ?? 1280, state?.canvasH ?? 720)
+    },
+    resSoftBlur: (c: CanvasRenderingContext2D) => {
+      const state = w.state
+      const blur = resSoftBlur(state?.canvasW ?? 1280, state?.canvasH ?? 720)
+      if (blur > 0) {
+        c.shadowBlur = blur
+        c.shadowColor = 'black' // Or whatever default is assumed
+      }
+    },
+    random: new NativeRandomSource(),
+
+    getSetting: (id: string) => {
+      const state = w.state
+      if (!state) return undefined
+      const layer = state._currentSlot?.layer
+
+      switch (id) {
+        case 'hand-speed-slider': return layer?.handSpeed ?? state.handSpeed ?? 6
+        case 'speed-slider': return layer?.speed ?? state.speed ?? 40
+        case 'tile-slider': return layer?.chunks ?? state.chunks ?? 30
+        case 'spec-tile-slider': return layer?.specChunks ?? state.specChunks ?? 35
+        case 'image-reveal': return state._revealStyle !== 'instant'
+        case 'reveal-duration-slider': return state.revealDuration ?? 1.2
+
+        // Outline settings
+        case 'of-outline-autocolor':
+        case 'text-outline-autocolor':
+        case 'outlineonly-autocolor':
+          return (layer?.outlineAutoColor ?? state.outlineAutoColor) !== false
+          
+        case 'of-outline-color':
+        case 'text-outline-color':
+        case 'outlineonly-color':
+          return layer?.outlineColor ?? state.outlineColor ?? '#000000'
+          
+        case 'of-outline-thickness':
+        case 'text-outline-thickness':
+        case 'outlineonly-thickness':
+          return layer?.outlineThickness ?? state.outlineThickness ?? 2
+
+        case 'outlineonly-colorregion':
+          return (layer?.outlineMode ?? state.outlineMode) === 'colorregion'
+        case 'outlineonly-realimage':
+          return (layer?.outlineMode ?? state.outlineMode) === 'realimage'
+
+        case 'outline-opacity':
+        case 'outline-opacity-val':
+          return layer?.outlineOpacity ?? state.outlineOpacity ?? 100
+        case 'outline-visible':
+          return (layer?.outlineVisible ?? state.outlineVisible) !== false
+      }
+      return undefined
+    }
+  }
+}
+
 
 /**
  * Resolve the legacy canvas elements by ID. Used by the adapter until M09

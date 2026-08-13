@@ -33,6 +33,7 @@
  * Per M10 "no new animation logic": this is interaction only.
  */
 import { useLayerStore, useSelectionStore, usePlaybackStore } from '@/app/store'
+import { textService } from '@/app/services/text-service'
 import type { LayerId } from '@/types/brand'
 import type { Layer, LayerTransform } from '@/types/layer'
 import {
@@ -133,7 +134,19 @@ export const interactionService = {
     if (usePlaybackStore.getState().status === 'playing') {
       return { type: 'blocked' }
     }
+
     const { x, y } = toCanvasCoords(clientX, clientY, rect, canvasWidth)
+
+    // Text tool takes precedence (legacy 6696-6699).
+    if (textService.isActive()) {
+      textService.closeEditor(true)
+      return { type: 'blocked' }
+    }
+    if (textService.isPlacing()) {
+      textService.openEditor(x, y, null)
+      return { type: 'blocked' } // Consumes the click
+    }
+
     const layers = useLayerStore.getState().layers
     const selectedId = useSelectionStore.getState().selectedLayerId
     const selected = selectedId !== null ? (layers.find((l) => l.id === selectedId) ?? null) : null
@@ -187,8 +200,14 @@ export const interactionService = {
     rect: { readonly width: number; readonly left: number; readonly top: number },
     canvasWidth: number,
     shiftKey: boolean,
-  ): { readonly cursor: 'nwse-resize' | 'move' | 'default' } {
+  ): { readonly cursor: 'nwse-resize' | 'move' | 'default' | 'text' } {
     if (usePlaybackStore.getState().status === 'playing') {
+      return { cursor: 'default' }
+    }
+    if (textService.isPlacing()) {
+      return { cursor: 'text' }
+    }
+    if (textService.isActive()) {
       return { cursor: 'default' }
     }
     const { x, y } = toCanvasCoords(clientX, clientY, rect, canvasWidth)
@@ -251,6 +270,33 @@ export const interactionService = {
   /** Cancel any in-flight session (e.g. on Escape). Legacy has no such path. */
   cancel(): void {
     this.session = null
+  },
+
+  /**
+   * Double-click on the canvas overlay. Mirrors the legacy dblclick handler
+   * (`legacy/index.html:6773-6781`):
+   *   - If hit a text layer → switch to text tab, open text editor.
+   */
+  doubleClick(
+    clientX: number,
+    clientY: number,
+    rect: { readonly width: number; readonly left: number; readonly top: number },
+    canvasWidth: number,
+  ): void {
+    if (usePlaybackStore.getState().status === 'playing') return
+    if (textService.isActive() || textService.isPlacing()) return
+    
+    const { x, y } = toCanvasCoords(clientX, clientY, rect, canvasWidth)
+    const layers = useLayerStore.getState().layers
+    const hitId = hitTestLayer(x, y, layers)
+    
+    if (hitId !== null) {
+      const hit = layers.find((l) => l.id === hitId)
+      if (hit && hit.type === 'text') {
+        useSelectionStore.getState().setEditorMode('text')
+        textService.openEditor(hit.transform.x, hit.transform.y, hit)
+      }
+    }
   },
 
   /** True when a pointer session is in flight. */

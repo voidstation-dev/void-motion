@@ -7,6 +7,13 @@
  * the legacy frame without redesigning it. Per M02 rule: match legacy layout
  * and hierarchy first; no UX redesign, no feature logic.
  */
+
+/* M13: Hide legacy text UI since React replaces it */
+#text-editor { display: none !important; }
+
+/* M15: Hide legacy export banner since React ExportFeature replaces it */
+#export-banner { display: none !important; }
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;

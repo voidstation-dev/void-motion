@@ -8,7 +8,7 @@
  */
 import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest'
 import { globalControlsService } from '@/app/services/global-controls-service'
-import { useLayerStore, useExportStore } from '@/app/store'
+import { useLayerStore, useExportStore, useUiStore } from '@/app/store'
 import { makeLayer } from './helpers/layers'
 
 function installLegacyUndoRedo(
@@ -83,17 +83,21 @@ describe('M06 globalControlsService', () => {
     expect(undoFn).not.toHaveBeenCalled()
   })
 
-  it('openExport delegates to window.openExportBanner and sets job status', () => {
-    const open = vi.fn()
-    installLegacyUndoRedo({ openExportBanner: open })
+  it('openExport delegates to exportService (M15) and opens the UI dialog', () => {
+    installLegacyUndoRedo({}) // Mock legacy boot
+    useExportStore.setState({ jobStatus: 'failed' })
+    useUiStore.setState({ exportDialogOpen: false })
+
     globalControlsService.openExport()
-    expect(open).toHaveBeenCalled()
-    expect(useExportStore.getState().jobStatus).toBe('preparing')
+    
+    expect(useUiStore.getState().exportDialogOpen).toBe(true)
+    expect(useExportStore.getState().jobStatus).toBe('idle')
   })
 
   it('openExport is a no-op when legacy not booted', () => {
+    useUiStore.setState({ exportDialogOpen: false })
     globalControlsService.openExport()
-    expect(useExportStore.getState().jobStatus).toBe('idle')
+    expect(useUiStore.getState().exportDialogOpen).toBe(false)
   })
 
   it('undoDepth/redoDepth read the typed store mirror', () => {

@@ -11,9 +11,11 @@
  */
 import type { ReactElement } from 'react'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/app/components/ui/tabs'
-import { ScrollArea } from '@/app/components/ui/scroll-area'
+
 import { Separator } from '@/app/components/ui/separator'
 import { LayerPanel } from '@/app/components/layer/LayerPanel'
+import { TextPanel } from '@/app/features/text/TextPanel'
+import { AnimationPanel } from '@/app/features/animation/AnimationPanel'
 import { layerService } from '@/app/services/layer-service'
 import { useSelectionStore } from '@/app/store'
 
@@ -46,19 +48,12 @@ export function Sidebar(): ReactElement {
             </p>
           </TabsContent>
           <TabsContent value="text">
-            <p className="rounded-md border border-dashed border-border bg-surface-1 px-3 py-3 text-sm text-muted-foreground">
-              Add text — font, size, align, color
-            </p>
+            <TextPanel />
           </TabsContent>
         </Tabs>
       </section>
-      <section aria-label="Animation" className="flex-1">
-        <h2 className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-          Animation
-        </h2>
-        <ScrollArea className="h-[300px] rounded-md border border-border bg-surface-1 p-3">
-          <p className="text-sm text-muted-foreground">Animation controls</p>
-        </ScrollArea>
+      <section aria-label="Animation" className="flex-1 min-h-0 flex flex-col">
+        <AnimationPanel />
       </section>
     </aside>
   )

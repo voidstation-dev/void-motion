@@ -77,7 +77,7 @@ export interface LegacyStateAdapter {
  *
  * Legacy shape (`legacy/index.html:5572`): `{ type, val, key? }`.
  */
-function mapCanvasBackground(legacy: LegacyCanvasBackground): CanvasBackground {
+export function mapCanvasBackground(legacy: LegacyCanvasBackground): CanvasBackground {
   if (legacy.type === 'solid') {
     return { type: 'solid', val: legacy.val }
   }
