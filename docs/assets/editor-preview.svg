@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1440" height="810" viewBox="0 0 1440 810" role="img" aria-labelledby="title description">
+  <title id="title">Void Motion editor workbench</title>
+  <desc id="description">Diagram of the editor with animation settings, canvas, and layers docks</desc>
+  <rect width="1440" height="810" rx="30" fill="#DFE1DC"/>
+  <rect x="18" y="18" width="1404" height="66" rx="16" fill="#FFFDF9" stroke="#171918" stroke-opacity=".1"/>
+  <rect x="32" y="31" width="40" height="40" rx="12" fill="#171918"/>
+  <path d="m44 61 7-19c1-3 5-2 5 1l-1 9 8-9c2-2 5 0 4 3l-9 20" fill="none" stroke="#F8F7F2" stroke-width="4" stroke-linecap="round"/>
+  <text x="87" y="59" font-family="Arial, sans-serif" font-size="22" font-weight="700" fill="#171918">Void Motion</text>
+  <path d="M420 83h160l20-19 22 29 28-30 24 20h230" fill="none" stroke="#D3A13A" stroke-width="3"/>
+  <rect x="18" y="96" width="250" height="696" rx="16" fill="#FFFDF9" stroke="#171918" stroke-opacity=".1"/>
+  <rect x="280" y="96" width="826" height="696" rx="16" fill="#E3E4DF" stroke="#171918" stroke-opacity=".1"/>
+  <rect x="1118" y="96" width="304" height="696" rx="16" fill="#FFFDF9" stroke="#171918" stroke-opacity=".1"/>
+  <rect x="314" y="132" width="758" height="502" rx="16" fill="white" stroke="#171918" stroke-opacity=".1"/>
+  <rect x="532" y="606" width="322" height="54" rx="27" fill="#FFFDF9" stroke="#171918" stroke-opacity=".12"/>
+  <circle cx="582" cy="633" r="18" fill="#171918"/>
+  <path d="m577 623 14 10-14 10Z" fill="white"/>
+  <rect x="620" y="629" width="170" height="8" rx="4" fill="#E2E3DE"/>
+  <rect x="620" y="629" width="92" height="8" rx="4" fill="#D3A13A"/>
+  <rect x="294" y="682" width="798" height="94" rx="12" fill="#FFFDF9" stroke="#171918" stroke-opacity=".08"/>
+  <g fill="#E7E7E2"><rect x="36" y="122" width="214" height="54" rx="10"/><rect x="36" y="192" width="99" height="48" rx="10"/><rect x="151" y="192" width="99" height="48" rx="10"/><rect x="36" y="252" width="214" height="82" rx="10"/><rect x="1138" y="122" width="264" height="145" rx="12"/><rect x="1138" y="282" width="264" height="176" rx="12"/><rect x="1138" y="474" width="264" height="188" rx="12"/></g>
+  <text x="36" y="758" font-family="Arial, sans-serif" font-size="15" font-weight="700" fill="#53605A" letter-spacing="2">CREATED BY VOID STATION</text>
+</svg>

@@ -1,22 +1,40 @@
 {
   "name": "void-motion",
-  "version": "0.0.0-m12",
+  "version": "1.0.0",
   "private": true,
   "type": "module",
-  "description": "Void Motion — behavior-preserving modernization of Inkplainer-OS. M00 establishes the TypeScript foundation and behavior lock.",
+  "description": "Browser-native whiteboard animation workbench created by Void Station.",
+  "author": "Void Station",
+  "homepage": "https://void-motion.vercel.app",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/voidstation-dev/void-motion.git"
+  },
+  "bugs": {
+    "url": "https://github.com/voidstation-dev/void-motion/issues"
+  },
+  "packageManager": "pnpm@10.11.0",
+  "engines": {
+    "node": ">=22 <25"
+  },
   "scripts": {
     "dev": "vite",
-    "build": "tsc -b && vite build",
+    "build": "tsc -b && vite build && pnpm verify:production",
+    "preview": "vite preview --host 127.0.0.1",
+    "verify:production": "node scripts/verify-production-build.mjs",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:e2e": "playwright test",
     "lint": "eslint .",
     "format": "prettier --check .",
-    "format:fix": "prettier --write ."
+    "format:fix": "prettier --write .",
+    "i18n:check": "node scripts/check-i18n.mjs",
+    "ci": "pnpm i18n:check && pnpm typecheck && pnpm lint && pnpm format && pnpm test && pnpm build"
   },
   "devDependencies": {
-    "@eslint/js": "^10.0.1",
+    "@eslint/js": "^9.39.5",
+    "@playwright/test": "1.62.1",
     "@testing-library/jest-dom": "^7.0.1",
     "@testing-library/react": "^16.3.2",
     "@types/node": "^26.2.0",
@@ -57,10 +75,14 @@
     "@radix-ui/react-toggle": "^1.1.18",
     "@radix-ui/react-toggle-group": "^1.1.19",
     "@radix-ui/react-tooltip": "^1.2.16",
+    "i18next": "^26.3.6",
+    "i18next-browser-languagedetector": "^8.2.1",
+    "i18next-resources-to-backend": "^1.2.3",
     "immer": "^11.1.16",
     "lucide-react": "^1.31.0",
     "react": "18.3.1",
     "react-dom": "18.3.1",
+    "react-i18next": "^17.0.11",
     "zustand": "^5.0.14"
   }
 }

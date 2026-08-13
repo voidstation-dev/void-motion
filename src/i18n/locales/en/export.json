@@ -1,0 +1,23 @@
+{
+  "title": "Export Animation",
+  "format": "Format",
+  "allBrowsers": "All browsers",
+  "recommended": "Recommended",
+  "chromeEdge": "Chrome & Edge only",
+  "mp4Warning": "MP4 may not work in Firefox or Safari. When in doubt, use WebM.",
+  "mp4Unsupported": "MP4 requires Chrome or Edge. Your browser doesn't support it.",
+  "quality": "Quality",
+  "high": "High",
+  "medium": "Medium",
+  "low": "Low",
+  "includePng": "Also export final frame as PNG",
+  "start": "Start Recording",
+  "failed": "Export failed: {{error}}",
+  "retry": "Try Again",
+  "preparing": "Preparing...",
+  "recording": "Recording animation...",
+  "encoding": "Encoding {{format}}... {{progress}}%",
+  "finalizing": "Finalizing...",
+  "success": "{{format}}{{png}} exported successfully!",
+  "pngSuffix": " + PNG"
+}

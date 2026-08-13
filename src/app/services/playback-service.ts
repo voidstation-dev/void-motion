@@ -27,6 +27,39 @@
 
 import { usePlaybackStore } from '@/app/store'
 import { useLayerStore } from '@/app/store'
+import type { LegacyInkplainerState } from '@/engine/legacy/legacy-state.types'
+
+function clampProgress(value: unknown): number {
+  return typeof value === 'number' && Number.isFinite(value) ? Math.min(Math.max(value, 0), 1) : 0
+}
+
+function activeGroupProgress(state: LegacyInkplainerState): number {
+  const slots = Array.isArray(state._activeSlots) ? state._activeSlots : []
+  if (slots.length === 0) return clampProgress(state._animProgress)
+
+  const total = slots.reduce((sum, candidate) => {
+    if (!candidate || typeof candidate !== 'object') return sum
+    const slot = candidate as { done?: unknown; _state?: { _animProgress?: unknown } }
+    return sum + (slot.done ? 1 : clampProgress(slot._state?._animProgress))
+  }, 0)
+  return total / slots.length
+}
+
+/**
+ * Convert the current per-group legacy progress to a monotonic whole-sequence
+ * progress value. Parallel slots are averaged so one faster slot cannot make
+ * the UI jump forward and then backwards when another slot ticks.
+ */
+export function computeOverallPlaybackProgress(state: LegacyInkplainerState): number {
+  if (state.done) return 1
+  const groups = Array.isArray(state._animGroups) ? state._animGroups : []
+  const groupProgress = activeGroupProgress(state)
+  if (groups.length <= 1) return groupProgress
+
+  const rawIndex = typeof state._groupPos === 'number' ? state._groupPos : 0
+  const groupIndex = Math.min(Math.max(Math.trunc(rawIndex), 0), groups.length - 1)
+  return Math.min(Math.max((groupIndex + groupProgress) / groups.length, 0), 1)
+}
 
 /** True when the legacy playback globals are present. */
 function legacyReady(): boolean {
@@ -84,6 +117,14 @@ export const playbackService = {
     }
   },
 
+  /** Read live progress for the compositor-paced React progress indicator. */
+  getVisualProgress(): number {
+    if (typeof window !== 'undefined' && window.state) {
+      return computeOverallPlaybackProgress(window.state)
+    }
+    return usePlaybackStore.getState().progress
+  },
+
   /**
    * Read the live legacy playback status into the typed store. The legacy
    * `state.playing` / `state.done` / `state._animProgress` are the source of
@@ -95,12 +136,10 @@ export const playbackService = {
     const s = window.state
     const playing = !!s.playing
     const done = !!s.done
-    const progress =
-      typeof s._animProgress === 'number' ? Math.min(Math.max(s._animProgress, 0), 1) : 0
+    const progress = computeOverallPlaybackProgress(s)
     // Map legacy status to the domain PlaybackStatus union. Legacy has no
     // distinct "paused" state — `!playing && !done` is the idle/paused case.
     const status = done ? 'completed' : playing ? 'playing' : 'idle'
-    usePlaybackStore.getState().setStatus(status)
-    usePlaybackStore.getState().setProgress(progress)
+    usePlaybackStore.getState().setSnapshot(status, progress)
   },
 }

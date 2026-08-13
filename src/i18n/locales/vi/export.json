@@ -1,0 +1,23 @@
+{
+  "title": "Xuất chuyển động",
+  "format": "Định dạng",
+  "allBrowsers": "Mọi trình duyệt",
+  "recommended": "Khuyên dùng",
+  "chromeEdge": "Chỉ Chrome và Edge",
+  "mp4Warning": "MP4 có thể không hoạt động trên Firefox hoặc Safari. Khi chưa chắc chắn, hãy dùng WebM.",
+  "mp4Unsupported": "MP4 cần Chrome hoặc Edge. Trình duyệt hiện tại không hỗ trợ.",
+  "quality": "Chất lượng",
+  "high": "Cao",
+  "medium": "Vừa",
+  "low": "Thấp",
+  "includePng": "Xuất thêm khung hình cuối dạng PNG",
+  "start": "Bắt đầu ghi",
+  "failed": "Xuất thất bại: {{error}}",
+  "retry": "Thử lại",
+  "preparing": "Đang chuẩn bị...",
+  "recording": "Đang ghi chuyển động...",
+  "encoding": "Đang mã hóa {{format}}... {{progress}}%",
+  "finalizing": "Đang hoàn tất...",
+  "success": "Đã xuất {{format}}{{png}} thành công!",
+  "pngSuffix": " + PNG"
+}

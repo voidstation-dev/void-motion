@@ -27,17 +27,30 @@ import {
 } from '@/app/components/ui/sheet'
 import { Button } from '@/app/components/ui/button'
 import { ScrollArea } from '@/app/components/ui/scroll-area'
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/app/components/ui/alert-dialog'
 import { useProjectStore, useUiStore } from '@/app/store'
 import type { ProjectSummary } from '@/types/project'
 import type { ProjectId } from '@/types/brand'
 import { projectService } from '@/app/services/project-service'
 import { formatSizeBytes, formatTimeAgo } from '@/app/services/time-ago'
+import { useTranslation } from 'react-i18next'
 
 export function ProjectsSheet(): ReactElement {
+  const { t } = useTranslation(['projects', 'common'])
   const open = useUiStore((s) => s.projectListOpen)
   const summaries = useProjectStore((s) => s.summaries)
   const currentId = useProjectStore((s) => s.current?.id ?? null)
   const [, setTick] = useState(0)
+  const [pendingDelete, setPendingDelete] = useState<ProjectSummary | null>(null)
 
   // Re-render once a minute so the relative-time labels stay fresh. The
   // legacy list re-computes on every open; this matches that liveness.
@@ -48,60 +61,88 @@ export function ProjectsSheet(): ReactElement {
   }, [open])
 
   const close = useCallback(() => projectService.closeProjects(), [])
-  const onSelect = useCallback((id: ProjectId) => {
-    projectService.load(id)
+  const onSelect = useCallback(async (id: ProjectId) => {
+    await projectService.load(id)
     projectService.closeProjects()
   }, [])
   const onCreate = useCallback(async () => {
     await projectService.createNew()
     projectService.closeProjects()
   }, [])
-  const onDelete = useCallback(async (id: ProjectId) => {
-    // Legacy uses `confirm()` (legacy/index.html:4687). Keep that exact UX.
-    if (typeof window !== 'undefined' && typeof window.confirm === 'function') {
-      if (!window.confirm('Delete this project? This cannot be undone.')) return
-    }
-    await projectService.delete(id)
+  const onDelete = useCallback((id: ProjectId) => {
+    setPendingDelete(
+      useProjectStore.getState().summaries.find((summary) => summary.id === id) ?? null,
+    )
   }, [])
+
+  const confirmDelete = useCallback(async () => {
+    if (!pendingDelete) return
+    await projectService.delete(pendingDelete.id)
+    setPendingDelete(null)
+  }, [pendingDelete])
 
   const now = Date.now()
 
   return (
-    <Sheet open={open} onOpenChange={(v) => (v ? projectService.openProjects() : close())}>
-      <SheetContent side="left" className="w-[380px] p-0 sm:max-w-[380px]">
-        <SheetHeader className="px-4 pt-4">
-          <SheetTitle>My Projects</SheetTitle>
-          <SheetDescription className="sr-only">Open, create, or delete projects.</SheetDescription>
-        </SheetHeader>
-        <div className="px-4 py-2">
-          <Button variant="outline" size="sm" className="w-full" onClick={onCreate}>
-            <Plus className="mr-1 h-4 w-4" />
-            New Project
-          </Button>
-        </div>
-        <ScrollArea className="h-[calc(100vh-120px)] px-4 pb-4">
-          {summaries.length === 0 ? (
-            <div className="py-12 text-center text-sm text-muted-foreground">
-              <p>No projects yet</p>
-              <small className="text-xs">Create your first project to get started</small>
-            </div>
-          ) : (
-            <ul className="space-y-1">
-              {summaries.map((s) => (
-                <ProjectRow
-                  key={s.id}
-                  summary={s}
-                  active={s.id === currentId}
-                  now={now}
-                  onSelect={onSelect}
-                  onDelete={onDelete}
-                />
-              ))}
-            </ul>
-          )}
-        </ScrollArea>
-      </SheetContent>
-    </Sheet>
+    <>
+      <Sheet open={open} onOpenChange={(v) => (v ? projectService.openProjects() : close())}>
+        <SheetContent side="left" className="w-[380px] p-0 sm:max-w-[380px]">
+          <SheetHeader className="px-4 pt-4">
+            <SheetTitle>{t('title')}</SheetTitle>
+            <SheetDescription className="sr-only">{t('description')}</SheetDescription>
+          </SheetHeader>
+          <div className="px-4 py-2">
+            <Button variant="outline" size="sm" className="w-full" onClick={onCreate}>
+              <Plus className="mr-1 h-4 w-4" />
+              {t('new')}
+            </Button>
+          </div>
+          <ScrollArea className="h-[calc(100vh-120px)] px-4 pb-4">
+            {summaries.length === 0 ? (
+              <div className="py-12 text-center text-sm text-muted-foreground">
+                <p>{t('empty')}</p>
+                <small className="text-xs">{t('emptyHint')}</small>
+              </div>
+            ) : (
+              <ul className="space-y-1">
+                {summaries.map((s) => (
+                  <ProjectRow
+                    key={s.id}
+                    summary={s}
+                    active={s.id === currentId}
+                    now={now}
+                    onSelect={onSelect}
+                    onDelete={onDelete}
+                  />
+                ))}
+              </ul>
+            )}
+          </ScrollArea>
+        </SheetContent>
+      </Sheet>
+      <AlertDialog
+        open={pendingDelete !== null}
+        onOpenChange={(nextOpen) => {
+          if (!nextOpen) setPendingDelete(null)
+        }}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{t('confirmTitle', { name: pendingDelete?.name })}</AlertDialogTitle>
+            <AlertDialogDescription>{t('confirmDescription')}</AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>{t('actions.cancel', { ns: 'common' })}</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              onClick={() => void confirmDelete()}
+            >
+              {t('confirmAction')}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
   )
 }
 
@@ -114,8 +155,9 @@ interface ProjectRowProps {
 }
 
 function ProjectRow({ summary, active, now, onSelect, onDelete }: ProjectRowProps): ReactElement {
-  const ago = formatTimeAgo(now, summary.modifiedAt)
-  const size = formatSizeBytes(summary.sizeBytes)
+  const { t, i18n } = useTranslation('projects')
+  const ago = formatTimeAgo(now, summary.modifiedAt, i18n.resolvedLanguage)
+  const size = formatSizeBytes(summary.sizeBytes, i18n.resolvedLanguage)
   // Legacy canvas size read: `project.state.canvasW × project.state.canvasH`
   // (legacy/index.html:4761). The summary carries no canvas dims yet, so we
   // omit that segment until M08 populates canvas dims on summaries.
@@ -129,7 +171,7 @@ function ProjectRow({ summary, active, now, onSelect, onDelete }: ProjectRowProp
         type="button"
         onClick={() => onSelect(summary.id)}
         className="flex-1 min-w-0 text-left"
-        aria-label={`Open project ${summary.name}`}
+        aria-label={t('open', { name: summary.name })}
       >
         <div className="truncate text-sm font-medium">{summary.name}</div>
         <div className="flex items-center gap-1 text-xs text-muted-foreground">
@@ -142,7 +184,7 @@ function ProjectRow({ summary, active, now, onSelect, onDelete }: ProjectRowProp
         variant="ghost"
         size="icon"
         className="h-7 w-7 shrink-0"
-        aria-label={`Delete project ${summary.name}`}
+        aria-label={t('delete', { name: summary.name })}
         onClick={(e) => {
           e.stopPropagation()
           onDelete(summary.id)

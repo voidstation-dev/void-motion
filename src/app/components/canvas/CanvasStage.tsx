@@ -25,12 +25,12 @@ export function CanvasStage({ mainRef, handRef }: CanvasStageProps): ReactElemen
         ref={mainRef}
         id="main-canvas"
         data-testid="main-canvas"
-        className="absolute left-0 top-0 h-full w-full"
+        className="absolute inset-0 !h-full !w-full"
       />
       <canvas
         ref={handRef}
         data-testid="hand-canvas"
-        className="pointer-events-none absolute left-0 top-0 h-full w-full"
+        className="pointer-events-none absolute inset-0 !h-full !w-full"
       />
     </>
   )

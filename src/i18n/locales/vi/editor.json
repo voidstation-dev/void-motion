@@ -1,0 +1,85 @@
+{
+  "header": {
+    "projects": "Dự án",
+    "openProjects": "Mở danh sách dự án",
+    "projectName": "Tên dự án",
+    "renameProject": "Tên dự án — nhấn để đổi tên",
+    "clickToRename": "Nhấn để đổi tên",
+    "settings": "Thiết lập chuyển động",
+    "openSettings": "Mở thiết lập chuyển động",
+    "layers": "Lớp",
+    "openLayers": "Mở bảng lớp",
+    "helpExport": "Trợ giúp và xuất video",
+    "exportVideo": "Xuất video",
+    "undoShortcut": "Hoàn tác (Ctrl+Z)",
+    "redoShortcut": "Làm lại (Ctrl+Shift+Z)"
+  },
+  "runtimeTitle": "Runtime hoạt ảnh Void Motion",
+  "canvas": {
+    "surface": "Khung vẽ",
+    "animation": "Chuyển động",
+    "crop": "Cắt ảnh",
+    "slice": "Chia lớp",
+    "progress": "Tiến trình chuyển động",
+    "timeDisplay": "Phần trăm tiến trình"
+  },
+  "settings": {
+    "editingSelected": "Đang chỉnh thiết lập cho lớp được chọn.",
+    "selectLayer": "Chọn một lớp ở bên phải để chỉnh chuyển động.",
+    "generate": "Tạo chuyển động",
+    "sheetDescription": "Cấu hình chuyển động cho lớp được chọn."
+  },
+  "bottom": {
+    "handStyle": "Kiểu bàn tay",
+    "ghost": "Ẩn tay",
+    "hand1": "Tay 1",
+    "hand2": "Tay 2",
+    "hand3": "Tay 3",
+    "pen": "Bút",
+    "speed": "Tốc độ",
+    "reveal": "Hiện nét",
+    "hand": "Bàn tay",
+    "revealSpeed": "Tốc độ hiện nét",
+    "handSpeed": "Tốc độ bàn tay",
+    "canvasSize": "Kích thước khung",
+    "aspectRatio": "Tỷ lệ khung",
+    "resolution": "Độ phân giải"
+  },
+  "input": {
+    "title": "Lớp",
+    "subtitle": "Tải lên và sắp xếp nội dung",
+    "mode": "Chế độ nhập",
+    "image": "Hình ảnh",
+    "text": "Văn bản",
+    "drop": "Thả ảnh hoặc chọn tệp",
+    "formats": "PNG, JPG, GIF, SVG, WEBP · Có thể chọn nhiều tệp",
+    "background": "Nền khung vẽ",
+    "white": "Trắng",
+    "black": "Đen",
+    "none": "Trong suốt",
+    "customColor": "Màu nền tùy chỉnh",
+    "presets": "Mẫu nền",
+    "backgrounds": {
+      "notebook": "Sổ kẻ ngang",
+      "graph": "Giấy ô vuông",
+      "cream": "Màu kem",
+      "chalk": "Bảng phấn",
+      "softgrad": "Chuyển sắc nhẹ",
+      "warmwhite": "Trắng ấm",
+      "blueprint": "Bản vẽ kỹ thuật",
+      "kraft": "Giấy kraft",
+      "dark": "Nền tối",
+      "linen": "Vải linen"
+    },
+    "layerList": "Danh sách lớp",
+    "sheetTitle": "Lớp và nội dung",
+    "sheetDescription": "Thêm và sắp xếp các lớp nội dung."
+  },
+  "project": {
+    "saving": "Đang lưu…",
+    "savingLabel": "Đang lưu dự án",
+    "unsaved": "● chưa lưu",
+    "unsavedLabel": "Có thay đổi chưa lưu",
+    "lastSaved": "Lưu lần cuối lúc {{time}}"
+  }
+}

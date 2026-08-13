@@ -1,0 +1,31 @@
+{
+  "brand": "Void Motion",
+  "language": "Language",
+  "languages": { "en": "English", "vi": "Tiếng Việt" },
+  "actions": {
+    "close": "Close",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "apply": "Apply",
+    "reset": "Reset",
+    "undo": "Undo",
+    "redo": "Redo",
+    "play": "Play",
+    "pause": "Pause",
+    "restart": "Restart"
+  },
+  "nav": {
+    "tutorial": "Tutorial",
+    "about": "About",
+    "privacy": "Privacy",
+    "source": "Open source",
+    "support": "Support",
+    "backToEditor": "Back to editor",
+    "informationPages": "Information pages"
+  },
+  "loading": "Loading…",
+  "meta": {
+    "editorTitle": "Void Motion — Whiteboard animation editor",
+    "editorDescription": "Create hand-drawn whiteboard animations from images and text directly in your browser."
+  }
+}

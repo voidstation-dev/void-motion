@@ -28,6 +28,7 @@
 import { useEffect, useRef } from 'react'
 import { engine } from '@/engine/engine'
 import type { CanvasHandles } from '@/engine/legacy/legacy-types'
+import { registerLegacyCanvasMirror } from '@/engine/legacy/legacy-runtime-bridge'
 
 export interface CanvasHostRefs {
   readonly viewport: React.RefObject<HTMLDivElement>
@@ -62,6 +63,7 @@ export function useCanvasHost(): CanvasHostRefs {
       outlineOverlay: ovEl,
     }
     engine.attachCanvases(handles)
+    const stopMirror = registerLegacyCanvasMirror(handles)
 
     // Resize the engine when the viewport changes. Legacy `fitCanvas`
     // (legacy/index.html ~5660) scales the wrapper to the viewport; we
@@ -79,6 +81,7 @@ export function useCanvasHost(): CanvasHostRefs {
 
     return () => {
       ro.disconnect()
+      stopMirror()
       engine.dispose()
     }
   }, [])

@@ -1,0 +1,40 @@
+{
+  "about": {
+    "eyebrow": "About the project",
+    "title": "Whiteboard motion, without the black box.",
+    "description": "Void Motion is the modern React interface for an open, browser-based animation engine. It keeps the immediacy of drawing tools while making the workflow easier to understand, test, and extend.",
+    "purpose": "What it is",
+    "localTitle": "A local-first animation editor",
+    "localBody": "Void Motion creates hand-drawn reveal animations from images and text. Projects are stored locally in the browser, editing requires no account, and exported files remain under the creator’s control.",
+    "migration": "The migration",
+    "reactTitle": "React-owned interface",
+    "reactBody": "The visible editor, project management, text tools, crop, slicer, playback, and export workflow are implemented as typed React features.",
+    "behaviorTitle": "Behavior preservation",
+    "behaviorBody": "The established rendering and animation behavior is preserved behind a tested adapter while each subsystem moves to the new architecture. The hidden compatibility runtime is never a user-facing page.",
+    "openSource": "Open source",
+    "buildTitle": "Build with it",
+    "buildBody": "The project descends from Inkplainer-OS and remains connected to its open-source community. Review the source, report issues, or contribute improvements on GitHub.",
+    "repository": "Open the repository ↗"
+  },
+  "privacy": {
+    "eyebrow": "Privacy",
+    "title": "Your project stays on your device.",
+    "description": "Void Motion is designed as a local-first editor. This page explains what the app stores, when data leaves the browser, and how you can remove it.",
+    "storage": "Local project storage",
+    "storedTitle": "What is stored",
+    "storedBody1": "Project names, imported images, text layers, layout, animation settings, backgrounds, groups, and undo-related project state are stored in your browser using IndexedDB. Custom settings presets may use browser local storage.",
+    "storedBody2": "This data is tied to this browser profile and origin. It is not automatically synchronized to another device.",
+    "network": "Network activity",
+    "leavesTitle": "What leaves the browser",
+    "leavesBody1": "The editor does not upload project content to an application server as part of normal editing or export. External font files may be requested from Google Fonts, and following GitHub links takes you to GitHub under its own privacy terms.",
+    "leavesBody2": "Video and PNG export are produced in the browser and downloaded directly to your device.",
+    "controls": "Your controls",
+    "deleteTitle": "Delete a project",
+    "deleteBody": "Open Projects, choose the delete action, and confirm. Deletion is permanent and removes that saved project from the app’s local database.",
+    "clearTitle": "Clear all local data",
+    "clearBody": "Use your browser’s site-data settings for this origin to remove all projects and preferences at once. Export anything you want to keep first.",
+    "security": "Security and responsibility",
+    "profileTitle": "Use an appropriate device profile",
+    "profileBody": "Anyone with access to the same unlocked browser profile may be able to open locally saved projects. For sensitive work, use an encrypted device and a private user profile."
+  }
+}

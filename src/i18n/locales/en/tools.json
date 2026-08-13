@@ -1,0 +1,52 @@
+{
+  "text": {
+    "add": "Add Text",
+    "placing": "Click canvas to place text…",
+    "editing": "Editing text…",
+    "font": "Font",
+    "size": "Size",
+    "bold": "Toggle bold",
+    "italic": "Toggle italic",
+    "alignLeft": "Align left",
+    "alignCenter": "Align center",
+    "alignRight": "Align right",
+    "color": "Color",
+    "selectColor": "Select color {{color}}",
+    "lineHeight": "Line Height",
+    "letterSpacing": "Letter Spacing",
+    "placeholder": "Enter text…",
+    "shortcut": "Ctrl/Cmd+Enter to save, Esc to cancel"
+  },
+  "crop": {
+    "actions": "Crop actions",
+    "reset": "Reset crop",
+    "apply": "Apply Crop",
+    "applyLabel": "Apply crop",
+    "cancel": "Cancel crop"
+  },
+  "slicer": {
+    "title": "Image Slicer",
+    "description": "Slice the selected image into multiple layers.",
+    "grid": "Grid",
+    "rectangles": "Rectangles",
+    "freehand": "Freehand",
+    "columns": "Columns",
+    "rows": "Rows",
+    "gridHelp": "Divides the image into a uniform grid. Each cell becomes its own layer.",
+    "rectHelp": "Draw rectangles on the preview to define slice regions. Each rectangle becomes a layer.",
+    "freehandHelp": "Draw a freehand lasso region. The bounding box of your drawing becomes a slice.",
+    "slices": "Slices ({{count}})",
+    "removeSlice": "Remove slice {{number}}",
+    "removeRegion": "Remove region {{number}}",
+    "clearAll": "Clear All",
+    "apply": "Apply Slices",
+    "footer": {
+      "grid_one": "Will create {{count}} layer from this image.",
+      "grid_other": "Will create {{count}} layers from this image.",
+      "rectEmpty": "Draw at least 2 rectangles",
+      "rect": "{{count}} rectangle slices",
+      "freehandEmpty": "Draw at least 2 regions",
+      "freehand": "{{count}} freehand regions"
+    }
+  }
+}

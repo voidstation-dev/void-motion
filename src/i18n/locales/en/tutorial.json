@@ -1,0 +1,213 @@
+{
+  "eyebrow": "Product guide · React edition",
+  "title": "Draw an idea. Watch it move.",
+  "description": "A complete guide to building hand-drawn whiteboard animations in Void Motion—from the first layer to a finished WebM or MP4. All projects stay in your browser unless you export them.",
+  "navLabel": "Tutorial sections",
+  "onThisPage": "On this page",
+  "sections": [
+    {
+      "id": "concepts",
+      "title": "Core concepts",
+      "intro": "Void Motion turns images and text into a frame-by-frame drawing sequence suitable for explainers, lessons, and social content.",
+      "columns": 2,
+      "cards": [
+        {
+          "title": "The mental model",
+          "items": [
+            "Layers are the raw material. Every image or text block becomes one layer.",
+            "Settings belong to the selected layer, so every layer can use a different animation look.",
+            "Generate rebuilds the sequence from the current layer settings.",
+            "Export records exactly what appears on the canvas."
+          ]
+        },
+        {
+          "title": "Canvas",
+          "paragraphs": [
+            "The canvas is the final recording area. Choose 16:9, 9:16, or 1:1 and a 720p, 1080p, or 1440p resolution. Uploaded media is centered and scaled to fit, then remains freely positionable."
+          ]
+        },
+        {
+          "title": "Sequence",
+          "paragraphs": [
+            "Layers animate from the lowest order number upward. Finished layers remain visible behind later ones. Layers sharing the same order number animate in parallel."
+          ]
+        },
+        {
+          "title": "Animation versus Drawing",
+          "paragraphs": [
+            "Animation is the fast path: pick Scanner, Contour, Chunk Jump, Outline Chunks, or a subject-aware style. Drawing exposes outline detection, stroke, fill, reveal, and text-drawing controls. A layer uses one approach at a time."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "projects",
+      "title": "Projects and the interface",
+      "columns": 2,
+      "cards": [
+        {
+          "title": "Create, switch, rename",
+          "paragraphs": [
+            "The editor creates a project automatically. Use Projects to create another, switch projects, or delete one. Click the project name in the top bar to rename it."
+          ]
+        },
+        {
+          "title": "Local autosave",
+          "paragraphs": [
+            "Meaningful changes are saved automatically to IndexedDB on this device: layers, images, geometry, per-layer settings, groups, animation order, canvas size, and background."
+          ]
+        },
+        {
+          "title": "Keyboard shortcuts",
+          "items": [
+            "Space — play or pause.",
+            "Ctrl/Cmd + Z — undo; Ctrl/Cmd + Shift + Z — redo.",
+            "Delete / Backspace — remove the selected layer.",
+            "Escape — cancel crop, slicer, text placement, or close an active editor.",
+            "Ctrl/Cmd + Enter — commit text editing."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "layers",
+      "title": "Layers",
+      "columns": 2,
+      "cards": [
+        {
+          "title": "Images and text",
+          "paragraphs": [
+            "Drop or browse for PNG, JPG, GIF, SVG, or WEBP files; multiple files are accepted. The Text tab supports font, 10–400px size, bold, italic, alignment, line height, letter spacing, presets, and custom color.",
+            "Double-click placed text to edit it again."
+          ]
+        },
+        {
+          "title": "Layer list",
+          "paragraphs": [
+            "Use the drag handle to reorder, the eye to hide, the order field to schedule, and × to delete. Selecting a layer reveals resize (10–300%), opacity, position, and size controls."
+          ]
+        },
+        {
+          "title": "Crop, slice, and background",
+          "paragraphs": [
+            "Crop is non-destructive and can be reset. Slice turns one layer into independent pieces using grid, rectangle, or freehand modes. The canvas background can be white, black, transparent, custom solid, or one of ten notebook, graph, paper, gradient, blueprint, kraft, dark, and linen presets."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "animation",
+      "title": "Animation tab",
+      "intro": "The quickest route to a usable result. Choose a reveal behavior, adjust its detail, and generate.",
+      "columns": 2,
+      "cards": [
+        {
+          "title": "Basic styles",
+          "items": [
+            "Scanner reveals the image in a smooth scanning pass.",
+            "Contour follows the subject shape.",
+            "Outline Chunks builds from detected edge regions.",
+            "Chunk Jump assembles the image in spatial chunks.",
+            "The Chunks control ranges from coarse, fast blocks to many fine pieces."
+          ]
+        },
+        {
+          "title": "Subject-aware styles and presets",
+          "paragraphs": [
+            "Human, Animal, Portrait, Vehicle, Building, Landscape, and Spiral use spatial priority maps that begin with visually important regions. Built-in and custom presets restore a complete settings configuration; up to six custom presets can be stored."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "drawing",
+      "title": "Drawing tab",
+      "columns": 2,
+      "cards": [
+        {
+          "title": "Outline modes",
+          "paragraphs": [
+            "Outline Fill traces edges before filling, Illustrated Fill produces a colored illustration, Outline Only keeps line work, and Text Draw follows letterforms. Drawing reconstructs the image instead of simply uncovering the original."
+          ]
+        },
+        {
+          "title": "Detection and stroke",
+          "paragraphs": [
+            "Control detection from strict to detailed and choose Classic or alternative edge algorithms. Stroke style, outline color, auto-detected color, thickness (0.5–8px), overlay visibility, and opacity define the line character."
+          ]
+        },
+        {
+          "title": "Fill and reveal",
+          "paragraphs": [
+            "Choose sparse or filled coloring. Fill modes can reveal the original image at the end using instant, fade, directional, radial, or other reveal behaviors. Photo-oriented region and real-edge modes can help, though photographs generally work better in Animation."
+          ]
+        },
+        {
+          "title": "Text draw options",
+          "paragraphs": [
+            "Text can begin left-to-right, right-to-left, top-to-bottom, or bottom-to-top. Fill style can reveal the glyph, trace only its outline, or trace then fill."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "controls",
+      "title": "Bottom controls",
+      "columns": 3,
+      "cards": [
+        {
+          "title": "Hand style",
+          "paragraphs": [
+            "Ghost hides the drawing hand. Hand 1, Hand 2, Hand 3, and Pen provide different visual instruments without changing animation logic."
+          ]
+        },
+        {
+          "title": "Speed",
+          "paragraphs": [
+            "Reveal Speed (1–100) controls content progress. Hand Speed (1–20) controls the hand graphic independently."
+          ]
+        },
+        {
+          "title": "Canvas size",
+          "paragraphs": [
+            "Use 720p for quick, compact output; 1080p for full-size video; and 1440p only when higher detail justifies a longer render."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "export",
+      "title": "Generate and export",
+      "columns": 2,
+      "cards": [
+        {
+          "title": "Generate and playback",
+          "paragraphs": [
+            "Generate reads all current layers and settings, rebuilds the animation, and starts playback. Generate again after changing settings. Restart returns to frame zero, Play/Pause controls playback, and the progress track seeks through the result."
+          ]
+        },
+        {
+          "title": "Formats and quality",
+          "paragraphs": [
+            "WebM is the recommended open format. MP4/H.264 is available when supported by the browser. High, Medium, and Low quality map to progressively smaller bitrates. A final PNG frame can be downloaded alongside the video."
+          ]
+        },
+        {
+          "title": "Recording flow",
+          "paragraphs": [
+            "Start Recording restarts the animation and records until the final frame. Avoid editing during capture. The browser downloads the result when recording completes."
+          ]
+        },
+        {
+          "title": "Before exporting",
+          "items": [
+            "Confirm aspect ratio, resolution, background, and layer visibility.",
+            "Check animation order and watch one complete generated run.",
+            "Choose the destination-compatible format and quality.",
+            "Enable final-frame PNG if a thumbnail or still image is required."
+          ]
+        }
+      ]
+    }
+  ]
+}

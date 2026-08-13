@@ -1,9 +1,11 @@
 import type { ReactElement, KeyboardEvent } from 'react'
 import { useRef, useEffect, useSyncExternalStore } from 'react'
 import { textService } from '@/app/services/text-service'
+import { useTranslation } from 'react-i18next'
 import { useCanvasStore } from '@/app/store'
 
 export function TextFeature(): ReactElement | null {
+  const { t } = useTranslation('tools')
   useSyncExternalStore(textService.subscribe, textService.getSnapshot)
   const active = textService.isActive()
   const style = textService.getTextStyle()
@@ -31,7 +33,7 @@ export function TextFeature(): ReactElement | null {
   // The CanvasStage itself uses `width: 100%` but its internal size is logical.
   // But actually, we can render the textarea with absolute positioning inside a container that exactly matches the canvas scale,
   // OR we can render it inside the CanvasViewport and rely on % positioning.
-  
+
   // Actually, CanvasViewport provides a `relative` container that matches the DOM element size.
   // `pos.x`, `pos.y` are logical canvas coordinates. We need to scale them to % of the logical width/height.
   const canvasW = canvas.size.width
@@ -43,7 +45,7 @@ export function TextFeature(): ReactElement | null {
   // Alternatively, we use CSS `transform: scale(...)` or render inside a div that uses viewBox-like scaling.
   // The simplest way to perfectly match canvas scale is to render the textarea in a container with the same aspect ratio
   // and logical size as the canvas, scaled with CSS, similar to how the SVG outline overlay might do it.
-  
+
   const onKeyDown = (e: KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === 'Escape') {
       textService.closeEditor(false)
@@ -55,11 +57,11 @@ export function TextFeature(): ReactElement | null {
   }
 
   // To make the textarea scale exactly like the canvas, we can apply a transform.
-  // Or we can just render a full logical-sized div absolute, scaled to 100% width/height, 
+  // Or we can just render a full logical-sized div absolute, scaled to 100% width/height,
   // and put the textarea inside it using logical px values.
-  
+
   return (
-    <div 
+    <div
       style={{
         position: 'absolute',
         top: 0,
@@ -83,8 +85,8 @@ export function TextFeature(): ReactElement | null {
           top: `${topPct}%`,
           pointerEvents: 'auto',
           transform: 'translate(-50%, -50%)', // center it roughly for now or top-left?
-          // Legacy editor is usually top-left or center? 
-          // Legacy: 8140-8153 `textarea.style.left = ...` 
+          // Legacy editor is usually top-left or center?
+          // Legacy: 8140-8153 `textarea.style.left = ...`
           // We'll refine the exact CSS matching shortly.
         }}
         className="flex flex-col gap-1 items-start"
@@ -94,10 +96,14 @@ export function TextFeature(): ReactElement | null {
           value={style.text}
           onChange={(e) => textService.setText(e.target.value)}
           onKeyDown={onKeyDown}
-          onBlur={() => textService.closeEditor(true)}
+          onBlur={(event) => {
+            const next = event.relatedTarget
+            if (next instanceof Element && next.closest('[data-text-controls]')) return
+            textService.closeEditor(true)
+          }}
           style={{
             fontFamily: style.fontFamily,
-            fontSize: `${style.fontSize}px`, // This needs to be scaled by viewport scale! 
+            fontSize: `${style.fontSize}px`, // This needs to be scaled by viewport scale!
             // Wait, we can use a CSS transform to scale the whole textarea down by the inverse of its logical size
             fontWeight: style.bold ? 'bold' : 'normal',
             fontStyle: style.italic ? 'italic' : 'normal',
@@ -115,10 +121,10 @@ export function TextFeature(): ReactElement | null {
             whiteSpace: 'pre',
             overflow: 'hidden',
           }}
-          placeholder="Enter text..."
+          placeholder={t('text.placeholder')}
         />
         <div className="text-xs bg-black/50 text-white px-2 py-1 rounded shadow-sm pointer-events-none whitespace-nowrap">
-          Ctrl+Enter to save, Esc to cancel
+          {t('text.shortcut')}
         </div>
       </div>
     </div>

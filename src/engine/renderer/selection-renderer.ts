@@ -8,7 +8,7 @@ const HANDLE_R = 6
 
 /**
  * Draws the selection box and 8 resize handles for the currently selected layer.
- * 
+ *
  * @param sctx The selection canvas 2D rendering context
  * @param layer The currently selected legacy layer (or null if none)
  * @param isPlaying Whether the animation is currently playing (selection should be hidden during playback)
@@ -16,11 +16,9 @@ const HANDLE_R = 6
 export function renderSelection(
   sctx: CanvasRenderingContext2D,
   layer: LegacyLayer | null,
-  isPlaying: boolean
+  isPlaying: boolean,
 ): void {
   // Clear the selection surface first
-  sctx.canvas.width = sctx.canvas.width // fastest way to clear and reset context state
-  // Or if we want to be safe and just clear:
   sctx.clearRect(0, 0, sctx.canvas.width, sctx.canvas.height)
 
   if (!layer || isPlaying) return
@@ -41,7 +39,7 @@ export function renderSelection(
     [x, y],
     [x + w, y],
     [x + w, y + h],
-    [x, y + h]
+    [x, y + h],
   ]
   corners.forEach(([cx, cy]) => {
     sctx.fillStyle = '#6c63ff'
@@ -58,7 +56,7 @@ export function renderSelection(
     [x + w / 2, y],
     [x + w, y + h / 2],
     [x + w / 2, y + h],
-    [x, y + h / 2]
+    [x, y + h / 2],
   ]
   mids.forEach(([cx, cy]) => {
     sctx.fillStyle = '#fff'

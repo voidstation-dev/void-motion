@@ -94,7 +94,7 @@ describe('M13 textService.openEditor (legacy 8129-8160)', () => {
       textStyle: { ...DEFAULT_TEXT_STYLE, text: 'Hello World', color: '#ff0000' },
     }
     useLayerStore.getState().setLayers([textLayer])
-    
+
     expect(textService.openEditor(100, 200, textLayer)).toBe(true)
     expect(textService.getTextStyle()?.text).toBe('Hello World')
     expect(textService.getTextStyle()?.color).toBe('#ff0000')
@@ -140,11 +140,11 @@ describe('M13 textService.commitText (legacy 8261-8373)', () => {
       textStyle: { ...DEFAULT_TEXT_STYLE, text: 'Hello World' },
     }
     useLayerStore.getState().setLayers([textLayer])
-    
+
     textService.openEditor(100, 200, textLayer)
     textService.setText('Updated Text')
     textService.commitText('Updated Text')
-    
+
     expect(useLayerStore.getState().layers.length).toBe(1)
     const layer = useLayerStore.getState().layers[0] as TextLayer
     expect(layer.textStyle.text).toBe('Updated Text')
@@ -163,7 +163,7 @@ describe('M13 textService style setters', () => {
     textService.setFont('Roboto')
     expect(textService.getTextStyle()?.fontFamily).toBe('Roboto')
   })
-  
+
   it('updates font size with clamp', () => {
     textService.activatePlacement()
     textService.setSize(5) // below min

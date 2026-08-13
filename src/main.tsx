@@ -6,12 +6,13 @@
  * The legacy runtime remains authoritative; this shell is a structural
  * scaffold for later migrations to fill in.
  */
-import { StrictMode } from 'react'
+import { StrictMode, Suspense } from 'react'
 import { createRoot } from 'react-dom/client'
 import { App } from './app/App'
 import './app/globals.css'
 import './engine/legacy/legacy-boot'
 import '../legacy/animations.js'
+import './i18n'
 
 const rootElement = document.getElementById('root')
 if (!rootElement) {
@@ -20,6 +21,14 @@ if (!rootElement) {
 
 createRoot(rootElement).render(
   <StrictMode>
-    <App />
+    <Suspense
+      fallback={
+        <div className="flex h-full items-center justify-center" role="status" aria-busy="true">
+          <span className="h-5 w-5 animate-spin rounded-full border-2 border-current border-t-transparent" />
+        </div>
+      }
+    >
+      <App />
+    </Suspense>
   </StrictMode>,
 )

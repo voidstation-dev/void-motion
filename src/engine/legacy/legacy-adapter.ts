@@ -152,7 +152,7 @@ export class LegacyEngineAdapter implements InkplainerEngine {
       throw new Error('LegacyEngineAdapter.renderStatic: canvases not attached.')
     }
     const legacy = requireLegacyState()
-    
+
     // The inline text editor overlay acts as the live preview for the currently
     // editing text layer. The legacy engine needs to know to hide that layer
     // during static frame rendering to avoid double-rendering text.
@@ -167,7 +167,7 @@ export class LegacyEngineAdapter implements InkplainerEngine {
     if (!this.canvases) return
 
     const legacy = requireLegacyState()
-    
+
     // Extract padding/margins based on what `fitCanvas` does in legacy.
     // The viewport container naturally handles padding, so we just use the provided
     // content-box display dimensions (displayWidth x displayHeight) from the ResizeObserver
@@ -175,12 +175,12 @@ export class LegacyEngineAdapter implements InkplainerEngine {
     const safeMargin = 24
     const availableW = Math.max(160, displayWidth - safeMargin)
     const availableH = Math.max(160, displayHeight - safeMargin)
-    
+
     const s = Math.min(availableW / legacy.canvasW, availableH / legacy.canvasH, 1)
-    
-    const sw = (legacy.canvasW * s) + 'px'
-    const sh = (legacy.canvasH * s) + 'px'
-    
+
+    const sw = legacy.canvasW * s + 'px'
+    const sh = legacy.canvasH * s + 'px'
+
     this.canvases.main.style.width = sw
     this.canvases.main.style.height = sh
     this.canvases.hand.style.width = sw
@@ -189,7 +189,7 @@ export class LegacyEngineAdapter implements InkplainerEngine {
     this.canvases.selection.style.height = sh
     this.canvases.outlineOverlay.style.width = sw
     this.canvases.outlineOverlay.style.height = sh
-    
+
     // Only redraw the static scene if we aren't playing
     if (!legacy.playing) {
       this.renderStatic()
@@ -250,8 +250,10 @@ export class LegacyEngineAdapter implements InkplainerEngine {
     this.assertAlive()
     if (!this.canvases) throw new Error('Cannot export: canvases not attached')
     if (typeof window === 'undefined') throw new Error('Cannot export: window undefined')
-    
-    await runLegacyExport(this.canvases, requireLegacyState(), config, callbacks, () => this.restart())
+
+    await runLegacyExport(this.canvases, requireLegacyState(), config, callbacks, () =>
+      this.restart(),
+    )
   }
 
   destroy(): void {
@@ -305,16 +307,31 @@ class NativeRandomSource {
 function buildAnimationContext(canvases: CanvasHandles) {
   const w = window as any
   return {
-    get state() { return requireLegacyState() },
+    get state() {
+      return requireLegacyState()
+    },
     main: canvases.main.getContext('2d', { willReadFrequently: true }),
     hand: canvases.hand.getContext('2d', { willReadFrequently: true }),
-    get offscreen() { return w.offscreen },
-    get canvasWidth() { return w.state?.canvasW ?? 1280 },
-    get canvasHeight() { return w.state?.canvasH ?? 720 },
+    get offscreen() {
+      return w.offscreen
+    },
+    get canvasWidth() {
+      return w.state?.canvasW ?? 1280
+    },
+    get canvasHeight() {
+      return w.state?.canvasH ?? 720
+    },
 
     fillBackground: (c: CanvasRenderingContext2D) => {
       const state = w.state
-      renderBackground(c, state?.canvasBg, state?.canvasW ?? 1280, state?.canvasH ?? 720, !!state?._slotMode, state?.bgCanvas)
+      renderBackground(
+        c,
+        state?.canvasBg,
+        state?.canvasW ?? 1280,
+        state?.canvasH ?? 720,
+        !!state?._slotMode,
+        state?.bgCanvas,
+      )
     },
     drawHand: (c: CanvasRenderingContext2D, x: number, y: number, dir: number, hand: string) => {
       if (typeof w.drawHand === 'function') w.drawHand(c, x, y, dir, hand)
@@ -349,24 +366,30 @@ function buildAnimationContext(canvases: CanvasHandles) {
       const layer = state._currentSlot?.layer
 
       switch (id) {
-        case 'hand-speed-slider': return layer?.handSpeed ?? state.handSpeed ?? 6
-        case 'speed-slider': return layer?.speed ?? state.speed ?? 40
-        case 'tile-slider': return layer?.chunks ?? state.chunks ?? 30
-        case 'spec-tile-slider': return layer?.specChunks ?? state.specChunks ?? 35
-        case 'image-reveal': return state._revealStyle !== 'instant'
-        case 'reveal-duration-slider': return state.revealDuration ?? 1.2
+        case 'hand-speed-slider':
+          return layer?.handSpeed ?? state.handSpeed ?? 6
+        case 'speed-slider':
+          return layer?.speed ?? state.speed ?? 40
+        case 'tile-slider':
+          return layer?.chunks ?? state.chunks ?? 30
+        case 'spec-tile-slider':
+          return layer?.specChunks ?? state.specChunks ?? 35
+        case 'image-reveal':
+          return state._revealStyle !== 'instant'
+        case 'reveal-duration-slider':
+          return state.revealDuration ?? 1.2
 
         // Outline settings
         case 'of-outline-autocolor':
         case 'text-outline-autocolor':
         case 'outlineonly-autocolor':
           return (layer?.outlineAutoColor ?? state.outlineAutoColor) !== false
-          
+
         case 'of-outline-color':
         case 'text-outline-color':
         case 'outlineonly-color':
           return layer?.outlineColor ?? state.outlineColor ?? '#000000'
-          
+
         case 'of-outline-thickness':
         case 'text-outline-thickness':
         case 'outlineonly-thickness':
@@ -384,10 +407,9 @@ function buildAnimationContext(canvases: CanvasHandles) {
           return (layer?.outlineVisible ?? state.outlineVisible) !== false
       }
       return undefined
-    }
+    },
   }
 }
-
 
 /**
  * Resolve the legacy canvas elements by ID. Used by the adapter until M09

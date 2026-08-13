@@ -29,10 +29,16 @@ import { buildLegacyState } from '@/test-utils/fixtures'
 
 interface FakeLegacyGlobals {
   saveProject?: (id?: number) => void
-  loadProject?: (id: number) => void
+  loadProject?: (id: number, onLoaded?: () => void) => void
   createNewProject?: () => Promise<void>
-  deleteProject?: (id: number, ev?: { stopPropagation: () => void }) => void
+  deleteProject?: (
+    id: number,
+    ev?: { stopPropagation: () => void },
+    onDeleted?: (deleted: boolean) => void,
+    skipConfirm?: boolean,
+  ) => void
   refreshProjectsList?: () => void
+  renameProject?: (id: number, name: string) => Promise<boolean> | boolean
   updateProjectNameDisplay?: (name: string) => void
   currentProjectId?: number | null
   state?: unknown
@@ -44,6 +50,7 @@ function installLegacy(globals: FakeLegacyGlobals): void {
   ;(window as unknown as Record<string, unknown>).createNewProject = globals.createNewProject
   ;(window as unknown as Record<string, unknown>).deleteProject = globals.deleteProject
   ;(window as unknown as Record<string, unknown>).refreshProjectsList = globals.refreshProjectsList
+  ;(window as unknown as Record<string, unknown>).renameProject = globals.renameProject
   ;(window as unknown as Record<string, unknown>).updateProjectNameDisplay =
     globals.updateProjectNameDisplay
   window.currentProjectId = globals.currentProjectId ?? null
@@ -56,6 +63,7 @@ function clearLegacy(): void {
   delete (window as unknown as Record<string, unknown>).createNewProject
   delete (window as unknown as Record<string, unknown>).deleteProject
   delete (window as unknown as Record<string, unknown>).refreshProjectsList
+  delete (window as unknown as Record<string, unknown>).renameProject
   delete (window as unknown as Record<string, unknown>).updateProjectNameDisplay
   delete (window as unknown as Record<string, unknown>).currentProjectId
   window.currentProjectId = null
@@ -94,11 +102,18 @@ describe('M05 LegacyStorageAdapter', () => {
     expect(save).toHaveBeenCalledWith()
   })
 
-  it('load delegates to window.loadProject', () => {
-    const load = vi.fn()
+  it('load waits for the legacy completion callback', async () => {
+    const load = vi.fn((_id: number, onLoaded?: () => void) => onLoaded?.())
     installLegacy({ loadProject: load })
-    new LegacyStorageAdapter().load(13)
-    expect(load).toHaveBeenCalledWith(13)
+    await new LegacyStorageAdapter().load(13)
+    expect(load).toHaveBeenCalledWith(13, expect.any(Function))
+  })
+
+  it('persists rename through the legacy storage boundary', async () => {
+    const rename = vi.fn(async () => true)
+    installLegacy({ renameProject: rename })
+    await expect(new LegacyStorageAdapter().rename(13, 'New Name')).resolves.toBe(true)
+    expect(rename).toHaveBeenCalledWith(13, 'New Name')
   })
 
   it('createNew awaits the legacy async create', async () => {
@@ -108,13 +123,17 @@ describe('M05 LegacyStorageAdapter', () => {
     expect(create).toHaveBeenCalled()
   })
 
-  it('delete passes a stopPropagation stub (no DOM event in adapter path)', () => {
-    const del = vi.fn()
+  it('delete waits for completion and skips the duplicate legacy confirmation', async () => {
+    const del = vi.fn((_id: number, _event: unknown, onDeleted?: (deleted: boolean) => void) =>
+      onDeleted?.(true),
+    )
     installLegacy({ deleteProject: del })
-    new LegacyStorageAdapter().delete(99)
+    await expect(new LegacyStorageAdapter().delete(99)).resolves.toBe(true)
     expect(del).toHaveBeenCalledWith(
       99,
       expect.objectContaining({ stopPropagation: expect.any(Function) }),
+      expect.any(Function),
+      true,
     )
   })
 

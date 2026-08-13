@@ -12,7 +12,7 @@ import { renderSelection } from './selection-renderer'
 export function renderStaticFrame(
   handles: CanvasHandles,
   state: LegacyInkplainerState,
-  editingId: number | null
+  editingId: number | null,
 ): void {
   const { main, selection } = handles
   const mainCtx = main.getContext('2d')
@@ -34,7 +34,7 @@ export function renderStaticFrame(
     state.canvasW,
     state.canvasH,
     !!state._slotMode, // boolean flag for slot mode
-    state.bgCanvas as HTMLCanvasElement | undefined
+    state.bgCanvas as HTMLCanvasElement | undefined,
   )
 
   // 3. Render static layers
@@ -43,6 +43,6 @@ export function renderStaticFrame(
 
   // 4. Render selection overlay
   // selection layer finding
-  const selectedLayer = state.layers?.find(l => l.id === state.selectedLayerId) || null
+  const selectedLayer = state.layers?.find((l) => l.id === state.selectedLayerId) || null
   renderSelection(selectCtx, selectedLayer, !!state.playing)
 }

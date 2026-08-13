@@ -1,0 +1,18 @@
+{
+  "title": "Layers",
+  "list": "Layer list",
+  "count_one": "{{count}} layer",
+  "count_other": "{{count}} layers",
+  "empty": "No layers",
+  "layer": "Layer {{name}}",
+  "hide": "Hide layer",
+  "show": "Show layer",
+  "order": "Order",
+  "animationOrder": "Animation order",
+  "remove": "Remove layer",
+  "resize": "Resize",
+  "resizePercent": "Resize percentage",
+  "opacity": "Opacity",
+  "opacityPercent": "Opacity percentage",
+  "positionSize": "Position & Size"
+}

@@ -55,6 +55,26 @@ export default [
     },
   },
   {
-    ignores: ['legacy/**', 'node_modules/**', 'dist/**', '*.md'],
+    // Compatibility boundaries intentionally model dynamic browser APIs and
+    // frozen legacy behavior. Keep strict rules everywhere else while
+    // allowing faithful interop and concise test fixtures here.
+    files: ['src/engine/legacy/**/*.ts', 'tests/**/*.ts', 'tests/**/*.tsx'],
+    rules: {
+      '@typescript-eslint/no-explicit-any': 'off',
+      '@typescript-eslint/no-non-null-assertion': 'off',
+      '@typescript-eslint/no-unused-vars': 'off',
+      'preserve-caught-error': 'off',
+    },
+  },
+  {
+    ignores: [
+      'legacy/**',
+      'node_modules/**',
+      'dist/**',
+      '.vercel/**',
+      'playwright-report/**',
+      'test-results/**',
+      '*.md',
+    ],
   },
 ]

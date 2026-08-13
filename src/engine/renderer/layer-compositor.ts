@@ -7,7 +7,7 @@ import type { LegacyLayer } from '../legacy/legacy-state.types'
 /**
  * Redraws all layers composited on the given canvas context.
  * This is the static frame rendering used when the animation is not playing.
- * 
+ *
  * @param ctx The canvas 2D rendering context
  * @param layers The array of legacy layers to draw (in bottom-to-top visual stack order)
  * @param editingId The ID of the layer currently being edited inline (which should be hidden as the overlay textarea acts as its live preview)
@@ -15,7 +15,7 @@ import type { LegacyLayer } from '../legacy/legacy-state.types'
 export function renderStaticLayers(
   ctx: CanvasRenderingContext2D,
   layers: LegacyLayer[],
-  editingId: number | null
+  editingId: number | null,
 ): void {
   // Early exit if no layers to draw
   if (!layers || layers.length === 0) {
@@ -27,7 +27,7 @@ export function renderStaticLayers(
   layers.forEach((layer) => {
     if (layer.visible === false) return
     if (!layer.img) return // Skip if image not loaded
-    
+
     // Hide the layer being edited — the overlay textarea is the live preview
     if (editingId !== null && layer.id === editingId) return
 

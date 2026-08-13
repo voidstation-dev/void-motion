@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=Caveat:wght@500;600;700&family=DM+Sans:wght@400;500;600;700&display=swap');
+
 /*
  * Void Motion global stylesheet (M02).
  *
@@ -9,10 +11,14 @@
  */
 
 /* M13: Hide legacy text UI since React replaces it */
-#text-editor { display: none !important; }
+#text-editor {
+  display: none !important;
+}
 
 /* M15: Hide legacy export banner since React ExportFeature replaces it */
-#export-banner { display: none !important; }
+#export-banner {
+  display: none !important;
+}
 
 @tailwind base;
 @tailwind components;
@@ -34,10 +40,10 @@
      *   --accent2   #dc2626 → 0 72.2% 50.6%
      *   --success   #16a34a → 142.1 70.6% 35.3%
      */
-    --background: 0 0% 84.7%;
-    --foreground: 0 0% 6.7%;
+    --background: 72 7% 87%;
+    --foreground: 120 4% 9%;
 
-    --card: 0 0% 100%;
+    --card: 48 30% 99%;
     --card-foreground: 0 0% 6.7%;
 
     --popover: 0 0% 100%;
@@ -73,9 +79,9 @@
 
     /* Direct legacy token aliases (kept as plain HSL channels, no alpha). */
     --panel: 0 0% 96.1%;
-    --sidebar: 0 0% 100%;
-    --surface-1: 0 0% 98%;
-    --surface-2: 0 0% 89.4%;
+    --sidebar: 48 30% 99%;
+    --surface-1: 45 23% 97%;
+    --surface-2: 60 6% 90%;
 
     --radius: 0.5rem;
   }
@@ -124,8 +130,54 @@
     /* Legacy fills the viewport (legacy/index.html line 41: height: 100vh). */
     height: 100vh;
     overflow: hidden;
+    margin: 0;
+    background: #dfe1dc;
   }
   #root {
     height: 100%;
   }
+}
+
+@layer utilities {
+  .canvas-workspace {
+    background-color: #e3e4df;
+    background-image:
+      linear-gradient(rgba(24, 61, 89, 0.035) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(24, 61, 89, 0.035) 1px, transparent 1px),
+      radial-gradient(circle, rgba(23, 25, 24, 0.12) 1px, transparent 1.2px);
+    background-size:
+      72px 72px,
+      72px 72px,
+      18px 18px;
+  }
+
+  .editor-shell > div:nth-child(2) {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  @media (min-width: 1360px) {
+    .editor-shell > div:nth-child(2) {
+      grid-template-columns: 292px minmax(0, 1fr) 336px;
+    }
+  }
+
+  .motion-trace::after {
+    content: '';
+    position: absolute;
+    right: 18%;
+    bottom: 0;
+    left: 18%;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, #d3a13a 22%, #d3a13a 78%, transparent);
+    opacity: 0.9;
+  }
+
+  .motion-range {
+    accent-color: #d3a13a;
+  }
+}
+
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(0, 0, 0, 0.18) transparent;
 }

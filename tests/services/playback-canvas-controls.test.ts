@@ -9,7 +9,7 @@
  * into the animation + canvas + playback stores.
  */
 import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest'
-import { playbackService } from '@/app/services/playback-service'
+import { computeOverallPlaybackProgress, playbackService } from '@/app/services/playback-service'
 import {
   canvasControlsService,
   legacyResToPresetExport,
@@ -202,6 +202,42 @@ describe('M07 playbackService', () => {
     installLegacyState({ playing: true, done: false, _animProgress: 1.5 })
     playbackService.syncStatusFromLegacy()
     expect(usePlaybackStore.getState().progress).toBe(1)
+  })
+
+  it('maps per-group progress to monotonic whole-sequence progress', () => {
+    installLegacyState({ playing: true, done: false, _animProgress: 0.5 })
+    const state = window.state!
+    state._animGroups = [[], [], [], []]
+    state._groupPos = 1
+    expect(computeOverallPlaybackProgress(state)).toBeCloseTo(0.375)
+
+    state._groupPos = 0
+    state._animProgress = 1
+    const previousBoundary = computeOverallPlaybackProgress(state)
+    state._groupPos = 1
+    state._animProgress = 0
+    expect(computeOverallPlaybackProgress(state)).toBe(previousBoundary)
+  })
+
+  it('averages parallel slot progress instead of exposing the last slot tick', () => {
+    installLegacyState({ playing: true, done: false, _animProgress: 0.95 })
+    const state = window.state!
+    state._animGroups = [[], [], [], []]
+    state._groupPos = 1
+    state._activeSlots = [
+      { done: false, _state: { _animProgress: 0.2 } },
+      { done: false, _state: { _animProgress: 0.6 } },
+    ]
+    expect(computeOverallPlaybackProgress(state)).toBeCloseTo(0.35)
+  })
+
+  it('syncs status and whole-sequence progress in one snapshot', () => {
+    installLegacyState({ playing: true, done: false, _animProgress: 0.5 })
+    window.state!._animGroups = [[], [], [], []]
+    window.state!._groupPos = 1
+    playbackService.syncStatusFromLegacy()
+    expect(usePlaybackStore.getState().status).toBe('playing')
+    expect(usePlaybackStore.getState().progress).toBeCloseTo(0.375)
   })
 })
 

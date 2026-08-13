@@ -35,6 +35,7 @@ export interface PlaybackState {
   // ── actions ──
   setStatus(status: DomainPlaybackStatus): void
   setProgress(progress: number): void
+  setSnapshot(status: DomainPlaybackStatus, progress: number): void
   setCurrentGroupIndex(index: number): void
   setRevealSpeed(speed: number): void
   setHandSpeed(speed: number): void
@@ -58,6 +59,12 @@ export const usePlaybackStore = create<PlaybackState>()(
     },
     setProgress(progress) {
       set((s) => {
+        s.progress = Math.min(Math.max(progress, 0), 1)
+      })
+    },
+    setSnapshot(status, progress) {
+      set((s) => {
+        s.status = status
         s.progress = Math.min(Math.max(progress, 0), 1)
       })
     },

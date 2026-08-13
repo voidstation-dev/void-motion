@@ -1,0 +1,85 @@
+{
+  "header": {
+    "projects": "Projects",
+    "openProjects": "Open projects list",
+    "projectName": "Project name",
+    "renameProject": "Project name — click to rename",
+    "clickToRename": "Click to rename",
+    "settings": "Animation settings",
+    "openSettings": "Open animation settings",
+    "layers": "Layers",
+    "openLayers": "Open layers panel",
+    "helpExport": "Help and export",
+    "exportVideo": "Export Video",
+    "undoShortcut": "Undo (Ctrl+Z)",
+    "redoShortcut": "Redo (Ctrl+Shift+Z)"
+  },
+  "runtimeTitle": "Void Motion animation runtime",
+  "canvas": {
+    "surface": "Canvas surface",
+    "animation": "Animation",
+    "crop": "Crop",
+    "slice": "Slice",
+    "progress": "Animation progress",
+    "timeDisplay": "Time display"
+  },
+  "settings": {
+    "editingSelected": "Editing settings for the selected layer.",
+    "selectLayer": "Select a layer on the right to edit its animation settings.",
+    "generate": "Generate Animation",
+    "sheetDescription": "Configure the selected layer animation."
+  },
+  "bottom": {
+    "handStyle": "Hand style",
+    "ghost": "Ghost",
+    "hand1": "Hand 1",
+    "hand2": "Hand 2",
+    "hand3": "Hand 3",
+    "pen": "Pen",
+    "speed": "Speed",
+    "reveal": "Reveal",
+    "hand": "Hand",
+    "revealSpeed": "Reveal speed",
+    "handSpeed": "Hand speed",
+    "canvasSize": "Canvas size",
+    "aspectRatio": "Aspect ratio",
+    "resolution": "Resolution"
+  },
+  "input": {
+    "title": "Layers",
+    "subtitle": "Upload & arrange your content",
+    "mode": "Input mode",
+    "image": "Image",
+    "text": "Text",
+    "drop": "Drop images or browse",
+    "formats": "PNG, JPG, GIF, SVG, WEBP · Multiple files OK",
+    "background": "Canvas background",
+    "white": "White",
+    "black": "Black",
+    "none": "None",
+    "customColor": "Custom solid color",
+    "presets": "Presets",
+    "backgrounds": {
+      "notebook": "Notebook",
+      "graph": "Graph",
+      "cream": "Cream",
+      "chalk": "Chalkboard",
+      "softgrad": "Soft gradient",
+      "warmwhite": "Warm white",
+      "blueprint": "Blueprint",
+      "kraft": "Kraft",
+      "dark": "Dark",
+      "linen": "Linen"
+    },
+    "layerList": "Layer list",
+    "sheetTitle": "Layers and input",
+    "sheetDescription": "Add and arrange content layers."
+  },
+  "project": {
+    "saving": "Saving…",
+    "savingLabel": "Saving project",
+    "unsaved": "● unsaved",
+    "unsavedLabel": "Unsaved changes",
+    "lastSaved": "Last saved {{time}}"
+  }
+}

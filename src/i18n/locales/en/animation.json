@@ -1,0 +1,105 @@
+{
+  "tabs": { "presets": "Settings presets", "animation": "Animation", "drawing": "Drawing" },
+  "basic": "Basic",
+  "styles": {
+    "scanner": "Scanner",
+    "contour": "Contour",
+    "outlineChunks": "Outline Chunks",
+    "chunkJump": "Chunk Jump",
+    "human": "Human",
+    "animal": "Animal",
+    "portrait": "Portrait",
+    "vehicle": "Vehicle",
+    "building": "Building",
+    "landscape": "Landscape",
+    "spiral": "Spiral"
+  },
+  "zigzag": "Zigzag scan",
+  "chunks": "Chunks",
+  "moreFiner": "more = finer",
+  "specialized": "Specialized",
+  "subjectAware": "Subject-aware drawing order.",
+  "presets": {
+    "title": "Settings Presets",
+    "builtIn": "Built-in",
+    "custom": "Custom",
+    "empty": "No custom presets yet. Save your current settings below.",
+    "delete": "Delete preset",
+    "name": "Preset name...",
+    "save": "Save",
+    "saveCurrent": "+ Save current settings",
+    "builtIns": {
+      "preset-quick-reveal": {
+        "name": "Quick Reveal",
+        "description": "Fast scanner, ghost hand, high speed — ideal for fast demos."
+      },
+      "preset-sketch-artist": {
+        "name": "Sketch Artist",
+        "description": "Contour animation with charcoal stroke and natural hand speed."
+      },
+      "preset-blueprint": {
+        "name": "Blueprint",
+        "description": "Outline only with blueprint stroke — best on dark backgrounds."
+      },
+      "preset-illustrated": {
+        "name": "Illustrated",
+        "description": "Illustrated fill with full color coverage and a visible hand."
+      }
+    }
+  },
+  "drawing": {
+    "mode": "Drawing Mode",
+    "outlineFill": "Outline Fill",
+    "illustFill": "Illust Fill",
+    "outlineOnly": "Outline Only",
+    "text": "✏ Text",
+    "strokeStyle": "Stroke Style",
+    "coloringStyle": "Coloring Style",
+    "outlineDetection": "Outline Detection",
+    "detectionHint": "Strict = bold lines only · Fine = catches thin & light strokes",
+    "detectionAlgorithm": "Detection Algorithm",
+    "fillOptions": "Fill Options",
+    "revealAnimation": "Reveal Animation",
+    "duration": "Duration",
+    "outlineOnlyOptions": "Outline Only Options",
+    "outlineColor": "Outline Color",
+    "pickColor": "Pick a color",
+    "textOptions": "Text Draw Options",
+    "startDirection": "Start Direction",
+    "fillStyle": "Fill Style",
+    "exportOutlines": "Export Outlines",
+    "showOutlines": "Show outlines on export",
+    "opacity": "Opacity",
+    "options": {
+      "default": "Default",
+      "charcoal": "Charcoal",
+      "sketch": "Sketch",
+      "fountain": "Fountain",
+      "blueprint": "Blueprint",
+      "sparse": "Sparse",
+      "filled": "Filled",
+      "watercolor": "Watercolor",
+      "classic": "Classic",
+      "adaptive": "Adaptive",
+      "morphShell": "Morph Shell",
+      "cannyPlus": "Canny+",
+      "darkNeutral": "dark + neutral",
+      "localContrast": "local contrast",
+      "erosionBorder": "erosion border",
+      "edgeLinking": "edge linking",
+      "instant": "Instant",
+      "fade": "Fade",
+      "dissolve": "Dissolve",
+      "wipe": "Wipe",
+      "iris": "Iris",
+      "scanlines": "Scanlines",
+      "leftRight": "← Left → Right",
+      "rightLeft": "Right → Left →",
+      "topBottom": "↓ Top → Bottom",
+      "bottomTop": "↑ Bottom → Top",
+      "reveal": "Reveal",
+      "outline": "Outline",
+      "outlineAndFill": "Outline + Fill"
+    }
+  }
+}

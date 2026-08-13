@@ -89,7 +89,7 @@ describe('M06 globalControlsService', () => {
     useUiStore.setState({ exportDialogOpen: false })
 
     globalControlsService.openExport()
-    
+
     expect(useUiStore.getState().exportDialogOpen).toBe(true)
     expect(useExportStore.getState().jobStatus).toBe('idle')
   })

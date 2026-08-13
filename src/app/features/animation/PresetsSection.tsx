@@ -1,23 +1,22 @@
 import { useState, useEffect } from 'react'
 import { Button } from '@/app/components/ui/button'
 import { Input } from '@/app/components/ui/input'
-import {
-  presetService,
-  BUILT_IN_PRESETS,
-} from '@/app/services/preset-service'
+import { presetService, BUILT_IN_PRESETS } from '@/app/services/preset-service'
 import { useAnimationStore } from '@/app/store'
 import type { Preset } from '@/types/project'
 import { MAX_CUSTOM_PRESETS } from '@/types/project'
 import { X, Lock } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 
 export function PresetsSection() {
+  const { t } = useTranslation('animation')
   const [customPresets, setCustomPresets] = useState<Preset[]>([])
   const [isSaving, setIsSaving] = useState(false)
   const [saveName, setSaveName] = useState('')
 
   // The active preset isn't strictly tracked in domain state, but we could highlight if the settings match.
-  // For parity, legacy just sets activePresetId and clears it when any setting changes. 
-  // We'll skip the exact highlight for now or just trust the user. 
+  // For parity, legacy just sets activePresetId and clears it when any setting changes.
+  // We'll skip the exact highlight for now or just trust the user.
   // We can just rely on the UI.
 
   const refreshCustom = () => {
@@ -58,11 +57,13 @@ export function PresetsSection() {
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="text-sm font-semibold">Settings Presets</div>
+      <div className="text-sm font-semibold">{t('presets.title')}</div>
 
       {/* Built-in Presets */}
       <div className="flex flex-col gap-2">
-        <div className="text-xs text-muted-foreground uppercase tracking-wider">Built-in</div>
+        <div className="text-xs text-muted-foreground uppercase tracking-wider">
+          {t('presets.builtIn')}
+        </div>
         <div className="grid grid-cols-2 gap-2">
           {BUILT_IN_PRESETS.map((p) => (
             <Button
@@ -70,10 +71,10 @@ export function PresetsSection() {
               variant="outline"
               size="sm"
               className="justify-between group relative"
-              title={p.desc}
+              title={t(`presets.builtIns.${p.id}.description`)}
               onClick={() => handleApply(p)}
             >
-              <span className="truncate">{p.name}</span>
+              <span className="truncate">{t(`presets.builtIns.${p.id}.name`)}</span>
               <Lock className="w-3 h-3 text-muted-foreground" />
             </Button>
           ))}
@@ -82,11 +83,11 @@ export function PresetsSection() {
 
       {/* Custom Presets */}
       <div className="flex flex-col gap-2">
-        <div className="text-xs text-muted-foreground uppercase tracking-wider">Custom</div>
+        <div className="text-xs text-muted-foreground uppercase tracking-wider">
+          {t('presets.custom')}
+        </div>
         {customPresets.length === 0 ? (
-          <div className="text-xs text-muted-foreground py-2">
-            No custom presets yet. Save your current settings below.
-          </div>
+          <div className="text-xs text-muted-foreground py-2">{t('presets.empty')}</div>
         ) : (
           <div className="flex flex-col gap-1">
             {customPresets.map((p) => (
@@ -104,7 +105,7 @@ export function PresetsSection() {
                     e.stopPropagation()
                     handleDelete(p.id)
                   }}
-                  title="Delete preset"
+                  title={t('presets.delete')}
                 >
                   <X className="w-4 h-4" />
                 </Button>
@@ -118,7 +119,7 @@ export function PresetsSection() {
             <Input
               value={saveName}
               onChange={(e) => setSaveName(e.target.value)}
-              placeholder="Preset name..."
+              placeholder={t('presets.name')}
               className="h-8 text-sm"
               maxLength={28}
               autoFocus
@@ -128,7 +129,7 @@ export function PresetsSection() {
               }}
             />
             <Button size="sm" onClick={handleSave} className="h-8">
-              Save
+              {t('presets.save')}
             </Button>
           </div>
         ) : (
@@ -139,7 +140,7 @@ export function PresetsSection() {
               className="w-full mt-2"
               onClick={() => setIsSaving(true)}
             >
-              + Save current settings
+              {t('presets.saveCurrent')}
             </Button>
           )
         )}

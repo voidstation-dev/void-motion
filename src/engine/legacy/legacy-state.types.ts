@@ -320,6 +320,8 @@ export interface LegacyControlElement {
 
 declare global {
   interface Window {
+    /** True once the cohost runtime has opened IndexedDB and loaded its startup project. */
+    __VOID_MOTION_STORAGE_READY__?: boolean
     state?: LegacyInkplainerState
     AnimationEngine?: LegacyAnimationEngineApi
     selectLayer?: (id: number) => void
@@ -338,11 +340,21 @@ declare global {
     /** Save the current project. Legacy `saveProject` (`legacy/index.html:4272`). */
     saveProject?: (projectId?: number) => void
     /** Load a project by IndexedDB key. Legacy `loadProject` (`legacy/index.html:4376`). */
-    loadProject?: (projectId: number) => void
+    loadProject?: (
+      projectId: number,
+      onLoaded?: (project: LegacyProjectRecord | null) => void,
+    ) => void
     /** Create + load a fresh project. Legacy `createNewProject` (`legacy/index.html:4639`). */
     createNewProject?: () => Promise<void> | void
+    /** Persist a project name independently of the debounced state save. */
+    renameProject?: (projectId: number, name: string) => Promise<boolean> | boolean
     /** Delete a project by key. Legacy `deleteProject` (`legacy/index.html:4685`). */
-    deleteProject?: (projectId: number, event?: { stopPropagation: () => void }) => void
+    deleteProject?: (
+      projectId: number,
+      event?: { stopPropagation: () => void },
+      onDeleted?: (deleted: boolean) => void,
+      skipConfirm?: boolean,
+    ) => void
     /** Rebuild the project list UI. Legacy `refreshProjectsList` (`legacy/index.html:4709`). */
     refreshProjectsList?: () => void
     /** Show the projects modal. Legacy `openProjectsModal` (`legacy/index.html:5210`). */

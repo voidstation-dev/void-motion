@@ -8,18 +8,26 @@
  * owns rendering (attached via `useCanvasHost`).
  */
 import type { ReactElement, ReactNode } from 'react'
+import { useTranslation } from 'react-i18next'
 
 export interface CanvasViewportProps {
   readonly viewportRef: React.RefObject<HTMLDivElement>
   readonly children: ReactNode
+  readonly aspectRatio?: string
 }
 
-export function CanvasViewport({ viewportRef, children }: CanvasViewportProps): ReactElement {
+export function CanvasViewport({
+  viewportRef,
+  children,
+  aspectRatio = '16 / 9',
+}: CanvasViewportProps): ReactElement {
+  const { t } = useTranslation('editor')
   return (
     <div
       ref={viewportRef}
-      aria-label="Canvas surface"
-      className="relative flex flex-1 items-center justify-center overflow-hidden rounded-md border border-border bg-card min-h-0"
+      aria-label={t('canvas.surface')}
+      className="relative max-h-full max-w-full overflow-hidden rounded-[15px] border border-black/10 bg-card shadow-[0_18px_45px_rgba(24,28,26,0.16)]"
+      style={{ aspectRatio, width: 'auto', height: '100%', maxWidth: '100%' }}
       data-testid="canvas-viewport"
     >
       {children}

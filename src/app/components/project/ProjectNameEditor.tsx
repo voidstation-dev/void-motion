@@ -19,8 +19,10 @@ import { Input } from '@/app/components/ui/input'
 import { projectService } from '@/app/services/project-service'
 import { useProjectStore } from '@/app/store'
 import { selectProjectName } from '@/app/store/project.store'
+import { useTranslation } from 'react-i18next'
 
 export function ProjectNameEditor(): ReactElement {
+  const { t } = useTranslation('editor')
   // Subscribe to the project name via the store selector.
   const name = useProjectStore((s) => selectProjectName(s))
   const [editing, setEditing] = useState(false)
@@ -83,7 +85,7 @@ export function ProjectNameEditor(): ReactElement {
         onBlur={commit}
         onKeyDown={onKeyDown}
         className="h-7 w-[200px] text-sm"
-        aria-label="Project name"
+        aria-label={t('header.projectName')}
       />
     )
   }
@@ -93,8 +95,8 @@ export function ProjectNameEditor(): ReactElement {
       type="button"
       onClick={start}
       className="flex-1 truncate rounded px-1 py-0.5 text-left text-sm hover:bg-surface-1 focus:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-      aria-label="Project name — click to rename"
-      title="Click to rename"
+      aria-label={t('header.renameProject')}
+      title={t('header.clickToRename')}
     >
       {name}
     </button>

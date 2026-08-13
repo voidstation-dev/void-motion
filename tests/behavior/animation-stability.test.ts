@@ -14,10 +14,12 @@ import { buildLegacyState, buildLegacyImageLayer } from '../../src/test-utils/fi
 /** Creates a mock canvas that spies on 2D API calls. */
 function createSpyCanvas(): { el: HTMLCanvasElement; commands: any[] } {
   const commands: any[] = []
-  
-  const record = (name: string) => (...args: any[]) => {
-    commands.push({ cmd: name, args })
-  }
+
+  const record =
+    (name: string) =>
+    (...args: any[]) => {
+      commands.push({ cmd: name, args })
+    }
 
   const ctx = {
     save: record('save'),
@@ -70,10 +72,10 @@ describe('M18 Deterministic Runtime', () => {
           animOrder: 1,
           w: 100,
           h: 100,
-        })
-      ]
+        }),
+      ],
     })
-    
+
     // Legacy event bus and internal state require these to not throw
     ;(window as any).togglePlay = vi.fn()
     ;(window as any).restartAnim = vi.fn()
@@ -87,7 +89,7 @@ describe('M18 Deterministic Runtime', () => {
     // To do this without running the full 3500-line animations.js inside jsdom
     // (which fails due to missing real ImageData APIs), we verify the adapter's
     // context factory is injecting the NativeRandomSource correctly.
-    
+
     const contextReceiver = vi.fn()
     ;(window as any).createLegacyAnimationEngine = (ctx: any) => {
       contextReceiver(ctx)
@@ -101,23 +103,23 @@ describe('M18 Deterministic Runtime', () => {
     const { el: hand } = createSpyCanvas()
     const { el: selection } = createSpyCanvas()
     const { el: outline } = createSpyCanvas()
-    
+
     adapter.attachCanvases({ main, hand, selection, outlineOverlay: outline })
 
     const injectedContext = contextReceiver.mock.calls[0]![0]
 
     expect(injectedContext).toBeDefined()
     expect(injectedContext.random).toBeDefined()
-    
+
     // 3. Verify the NativeRandomSource behaves deterministically when wrapped
     // by withSeededRandom.
     withSeededRandom(42, () => {
       const v1 = injectedContext.random!.next()
       const v2 = injectedContext.random!.next()
-      
+
       // Should be deterministic
       expect(v1).not.toBe(v2)
-      
+
       // A new seeded random should produce the exact same sequence
       withSeededRandom(42, () => {
         expect(injectedContext.random!.next()).toBe(v1)

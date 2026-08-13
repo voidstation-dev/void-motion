@@ -1,0 +1,18 @@
+{
+  "title": "Lớp",
+  "list": "Danh sách lớp",
+  "count_one": "{{count}} lớp",
+  "count_other": "{{count}} lớp",
+  "empty": "Chưa có lớp",
+  "layer": "Lớp {{name}}",
+  "hide": "Ẩn lớp",
+  "show": "Hiện lớp",
+  "order": "Thứ tự",
+  "animationOrder": "Thứ tự chuyển động",
+  "remove": "Xóa lớp",
+  "resize": "Đổi kích thước",
+  "resizePercent": "Phần trăm kích thước",
+  "opacity": "Độ trong suốt",
+  "opacityPercent": "Phần trăm độ trong suốt",
+  "positionSize": "Vị trí và kích thước"
+}

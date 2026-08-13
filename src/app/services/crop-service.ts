@@ -44,6 +44,7 @@ import {
   type CropHandle,
   type CropSource,
 } from '@/engine/image-processing/crop'
+import { callLegacyRuntime, getLegacyRuntimeWindow } from '@/engine/legacy/legacy-runtime-bridge'
 
 /** Guarded legacy `confirmCrop` (rasterize + redraw + autosave). */
 function legacyConfirmCrop(): boolean {
@@ -207,7 +208,9 @@ export const cropService = {
   cancel(): void {
     this.session = null
     useSelectionStore.getState().setEditorMode('image')
-    legacyCancelCrop()
+    // The hidden migration runtime never enters its DOM-driven crop mode.
+    // Only call the original cancel path in the standalone/test fallback.
+    if (!getLegacyRuntimeWindow()) legacyCancelCrop()
   },
 
   /**
@@ -228,10 +231,17 @@ export const cropService = {
       this.cancel()
       return false
     }
+
+    const rect = session.rect
+    if (getLegacyRuntimeWindow()) {
+      callLegacyRuntime('applyMigrationCrop', legacyLayerId(session.layerId), { ...rect })
+      this.session = null
+      useSelectionStore.getState().setEditorMode('image')
+      return true
+    }
     // Push an undo snapshot before mutating (legacy 9506).
     useLayerStore.getState().pushUndo()
 
-    const rect = session.rect
     // Stash the original source geometry (non-destructive, first-crop only).
     // Mirrors `if (!layer._origImg)` (legacy 9510-9516).
     const img = layer as ImageLayer
@@ -270,6 +280,11 @@ export const cropService = {
   isActive(): boolean {
     return this.session !== null
   },
+}
+
+function legacyLayerId(id: LayerId): number {
+  const match = String(id).match(/(\d+)$/)
+  return match ? Number(match[1]) : Number(id)
 }
 
 /** Hit-test a crop handle (exposed for the overlay). */

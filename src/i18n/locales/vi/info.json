@@ -1,0 +1,40 @@
+{
+  "about": {
+    "eyebrow": "Về dự án",
+    "title": "Chuyển động bảng trắng, minh bạch từ bên trong.",
+    "description": "Void Motion là giao diện React hiện đại cho một công cụ hoạt ảnh mở chạy trên trình duyệt. Ứng dụng giữ sự trực quan của công cụ vẽ, đồng thời giúp quy trình dễ hiểu, dễ kiểm thử và dễ mở rộng hơn.",
+    "purpose": "Void Motion là gì",
+    "localTitle": "Trình tạo hoạt ảnh ưu tiên dữ liệu cục bộ",
+    "localBody": "Void Motion tạo hoạt ảnh nét vẽ từ hình ảnh và văn bản. Dự án được lưu cục bộ trong trình duyệt, không cần tài khoản để chỉnh sửa và tệp xuất luôn thuộc quyền kiểm soát của người tạo.",
+    "migration": "Quá trình chuyển đổi",
+    "reactTitle": "Giao diện do React quản lý",
+    "reactBody": "Toàn bộ trình chỉnh sửa hiển thị, quản lý dự án, công cụ chữ, cắt ảnh, chia ảnh, phát lại và quy trình xuất đều được triển khai bằng các tính năng React có kiểu dữ liệu rõ ràng.",
+    "behaviorTitle": "Giữ nguyên hành vi",
+    "behaviorBody": "Hành vi kết xuất và hoạt ảnh đã có được giữ phía sau một lớp tương thích có kiểm thử trong khi từng hệ thống chuyển sang kiến trúc mới. Runtime tương thích ẩn không bao giờ là trang dành cho người dùng.",
+    "openSource": "Mã nguồn mở",
+    "buildTitle": "Cùng phát triển",
+    "buildBody": "Dự án kế thừa Inkplainer-OS và tiếp tục gắn kết với cộng đồng mã nguồn mở. Bạn có thể xem mã nguồn, báo lỗi hoặc đóng góp cải tiến trên GitHub.",
+    "repository": "Mở kho mã nguồn ↗"
+  },
+  "privacy": {
+    "eyebrow": "Quyền riêng tư",
+    "title": "Dự án của bạn nằm trên thiết bị của bạn.",
+    "description": "Void Motion được thiết kế theo hướng ưu tiên dữ liệu cục bộ. Trang này giải thích ứng dụng lưu gì, khi nào dữ liệu rời trình duyệt và cách bạn xóa dữ liệu.",
+    "storage": "Lưu trữ dự án cục bộ",
+    "storedTitle": "Dữ liệu được lưu",
+    "storedBody1": "Tên dự án, hình ảnh đã nhập, lớp văn bản, bố cục, thiết lập hoạt ảnh, nền, nhóm và trạng thái dự án phục vụ hoàn tác được lưu trong trình duyệt bằng IndexedDB. Preset tùy chỉnh có thể dùng bộ nhớ cục bộ của trình duyệt.",
+    "storedBody2": "Dữ liệu này gắn với hồ sơ trình duyệt và nguồn trang hiện tại. Dữ liệu không tự động đồng bộ sang thiết bị khác.",
+    "network": "Hoạt động mạng",
+    "leavesTitle": "Dữ liệu rời trình duyệt",
+    "leavesBody1": "Trình chỉnh sửa không tải nội dung dự án lên máy chủ ứng dụng trong quá trình chỉnh sửa hoặc xuất thông thường. Tệp phông chữ bên ngoài có thể được tải từ Google Fonts; khi mở liên kết GitHub, bạn chịu điều khoản riêng tư của GitHub.",
+    "leavesBody2": "Video và ảnh PNG được tạo ngay trong trình duyệt rồi tải trực tiếp xuống thiết bị của bạn.",
+    "controls": "Quyền kiểm soát của bạn",
+    "deleteTitle": "Xóa một dự án",
+    "deleteBody": "Mở Dự án, chọn thao tác xóa và xác nhận. Việc xóa là vĩnh viễn và loại bỏ dự án đó khỏi cơ sở dữ liệu cục bộ của ứng dụng.",
+    "clearTitle": "Xóa toàn bộ dữ liệu cục bộ",
+    "clearBody": "Dùng phần cài đặt dữ liệu trang web của trình duyệt cho nguồn này để xóa toàn bộ dự án và tùy chọn cùng lúc. Hãy xuất những nội dung bạn muốn giữ trước.",
+    "security": "Bảo mật và trách nhiệm",
+    "profileTitle": "Dùng hồ sơ thiết bị phù hợp",
+    "profileBody": "Bất kỳ ai truy cập được hồ sơ trình duyệt đang mở khóa đều có thể mở các dự án lưu cục bộ. Với nội dung nhạy cảm, hãy dùng thiết bị được mã hóa và hồ sơ người dùng riêng."
+  }
+}
