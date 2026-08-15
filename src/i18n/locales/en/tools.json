@@ -1,8 +1,13 @@
 {
   "text": {
     "add": "Add Text",
+    "addLayer": "Add Text to Canvas",
+    "content": "Text Content",
+    "style": "Style",
     "placing": "Click canvas to place text…",
     "editing": "Editing text…",
+    "done": "Done",
+    "cancel": "Cancel",
     "font": "Font",
     "size": "Size",
     "bold": "Toggle bold",
@@ -14,7 +19,7 @@
     "selectColor": "Select color {{color}}",
     "lineHeight": "Line Height",
     "letterSpacing": "Letter Spacing",
-    "placeholder": "Enter text…",
+    "placeholder": "Type here…",
     "shortcut": "Ctrl/Cmd+Enter to save, Esc to cancel"
   },
   "crop": {

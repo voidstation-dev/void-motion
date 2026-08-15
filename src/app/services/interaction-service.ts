@@ -86,9 +86,13 @@ function applyGeometry(id: LayerId, next: SessionGeometry): void {
     rotation: 0,
   }
   useLayerStore.getState().updateLayer(id, { transform })
-  // Delegate the redraw without pushing undo snapshots on every frame
-  // (which legacy setLayerPos would do). We mutate the legacy layer directly.
-  if (typeof window !== 'undefined' && window.state) {
+  if (typeof window !== 'undefined' && typeof (window as any).setLayerPos === 'function') {
+    const legacyId = layerIdToLegacyNum(id)
+    ;(window as any).setLayerPos(legacyId, 'x', next.x)
+    ;(window as any).setLayerPos(legacyId, 'y', next.y)
+    ;(window as any).setLayerPos(legacyId, 'w', next.w)
+    ;(window as any).setLayerPos(legacyId, 'h', next.h)
+  } else if (typeof window !== 'undefined' && window.state) {
     const legacyId = layerIdToLegacyNum(id)
     const legacyLayer = window.state.layers?.find((l: any) => l.id === legacyId)
     if (legacyLayer) {
@@ -139,7 +143,7 @@ export const interactionService = {
 
     const { x, y } = toCanvasCoords(clientX, clientY, rect, canvasWidth)
 
-    // Text tool takes precedence (legacy 6696-6699).
+    // Text tool takes precedence if active (legacy 6696-6699).
     if (textService.isActive()) {
       textService.closeEditor(true)
       return { type: 'blocked' }
@@ -306,7 +310,7 @@ export const interactionService = {
     canvasWidth: number,
   ): void {
     if (usePlaybackStore.getState().status === 'playing') return
-    if (textService.isActive() || textService.isPlacing()) return
+    if (textService.isActive()) return
 
     const { x, y } = toCanvasCoords(clientX, clientY, rect, canvasWidth)
     const layers = useLayerStore.getState().layers
@@ -317,8 +321,13 @@ export const interactionService = {
       if (hit && hit.type === 'text') {
         useSelectionStore.getState().setEditorMode('text')
         textService.openEditor(hit.transform.x, hit.transform.y, hit)
+        return
       }
     }
+
+    // Double-clicking canvas space immediately opens the text editor at the click point
+    useSelectionStore.getState().setEditorMode('text')
+    textService.openEditor(x, y, null)
   },
 
   /** True when a pointer session is in flight. */

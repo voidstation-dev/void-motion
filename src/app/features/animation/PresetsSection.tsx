@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { Button } from '@/app/components/ui/button'
 import { Input } from '@/app/components/ui/input'
 import { presetService, BUILT_IN_PRESETS } from '@/app/services/preset-service'
-import { useAnimationStore } from '@/app/store'
+import { useAnimationStore, usePlaybackStore } from '@/app/store'
 import type { Preset } from '@/types/project'
 import { MAX_CUSTOM_PRESETS } from '@/types/project'
 import { X, Lock } from 'lucide-react'
@@ -39,8 +39,8 @@ export function PresetsSection() {
   const handleSave = () => {
     if (!saveName.trim()) return
     const currentSettings = useAnimationStore.getState().defaults
-    const speed = 40 // Default fallbacks since speed isn't in AnimationStore
-    const handSpeed = 6
+    const speed = usePlaybackStore.getState().revealSpeed
+    const handSpeed = usePlaybackStore.getState().handSpeed
     const success = presetService.saveCustomPreset(saveName, {
       ...currentSettings,
       speed,
@@ -56,38 +56,36 @@ export function PresetsSection() {
   const canSaveMore = customPresets.length < MAX_CUSTOM_PRESETS
 
   return (
-    <div className="flex flex-col gap-4 p-3">
-      <div className="text-sm font-semibold">{t('presets.title')}</div>
+    <div className="flex flex-col gap-4">
 
       {/* Built-in Presets */}
       <div className="flex flex-col gap-2">
-        <div className="text-xs text-muted-foreground uppercase tracking-wider">
+        <div className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground">
           {t('presets.builtIn')}
         </div>
         <div className="grid grid-cols-2 gap-2">
           {BUILT_IN_PRESETS.map((p) => (
-            <Button
+            <button
               key={p.id}
-              variant="outline"
-              size="sm"
-              className="justify-between group relative"
+              type="button"
+              className="flex items-center justify-between rounded-[8px] border border-black/10 border-l-[3.5px] border-l-foreground bg-[#f8f9fa] px-3 py-2 text-[12px] font-semibold text-foreground transition-colors hover:bg-[#f1f3f5]"
               title={t(`presets.builtIns.${p.id}.description`)}
               onClick={() => handleApply(p)}
             >
               <span className="truncate">{t(`presets.builtIns.${p.id}.name`)}</span>
-              <Lock className="w-3 h-3 text-muted-foreground" />
-            </Button>
+              <Lock className="w-3.5 h-3.5 text-muted-foreground opacity-40" />
+            </button>
           ))}
         </div>
       </div>
 
       {/* Custom Presets */}
-      <div className="flex flex-col gap-2">
-        <div className="text-xs text-muted-foreground uppercase tracking-wider">
+      <div className="flex flex-col gap-2 mt-2">
+        <div className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground">
           {t('presets.custom')}
         </div>
         {customPresets.length === 0 ? (
-          <div className="text-xs text-muted-foreground py-2">{t('presets.empty')}</div>
+          <div className="text-[11px] text-muted-foreground leading-relaxed">{t('presets.empty')}</div>
         ) : (
           <div className="flex flex-col gap-1">
             {customPresets.map((p) => (

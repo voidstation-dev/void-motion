@@ -4439,7 +4439,7 @@ function loadProject(projectId, onLoaded) {
                 baseW: layerData.baseW !== undefined ? layerData.baseW : layerData.w,
                 baseH: layerData.baseH !== undefined ? layerData.baseH : layerData.h,
                 resizePct: layerData.resizePct !== undefined ? layerData.resizePct : 100,
-                animStyle: layerData.animStyle || 'scanner',
+                animStyle: layerData.animStyle || 'chunk-jump',
                 hand: layerData.hand || 'custom1',
                 animOrder: layerData.animOrder !== undefined ? layerData.animOrder : null,
                 opacity: layerData.opacity !== undefined ? layerData.opacity : 1,
@@ -5044,7 +5044,7 @@ function _applySnapshot(snap, label) {
           baseW: ld.baseW !== undefined ? ld.baseW : ld.w,
           baseH: ld.baseH !== undefined ? ld.baseH : ld.h,
           resizePct: ld.resizePct !== undefined ? ld.resizePct : 100,
-          animStyle: ld.animStyle || 'scanner',
+          animStyle: ld.animStyle || 'chunk-jump',
           hand: ld.hand || 'custom1',
           animOrder: ld.animOrder !== undefined ? ld.animOrder : idx + 1,
           opacity: ld.opacity !== undefined ? ld.opacity : 1,
@@ -5457,7 +5457,7 @@ window.addEventListener('load', () => {
       const zigzagVal2 = (layer.zigzag !== undefined) ? layer.zigzag : state.zigzag;
       document.getElementById('zigzag-toggle').classList.toggle('on', zigzagVal2);
 
-      const anim = layer.animStyle || state.animStyle || 'scanner';
+      const anim = layer.animStyle || state.animStyle || 'chunk-jump';
       // Keep state.animStyle in sync with the selected layer — prevents the fallback
       // in slot building from picking up a stale previous-layer style
       state.animStyle = anim;
@@ -5798,7 +5798,7 @@ function addLayer(img, name) {
     baseW: w,
     baseH: h,
     resizePct: 100,
-    animStyle: state.animStyle || 'scanner',  // inherit current global style, never null
+    animStyle: state.animStyle || 'chunk-jump',  // inherit current global style, never null
     hand: state.hand || 'custom1',
     animOrder: null,  // null = follow visual stack order (state.layers index); user can set manually
     opacity: 1,
@@ -5886,7 +5886,7 @@ function syncSidebarToLayer(id) {
   const zigzagVal = (layer.zigzag !== undefined) ? layer.zigzag : state.zigzag;
   document.getElementById('zigzag-toggle').classList.toggle('on', zigzagVal);
   // BUG FIX: anim was used but never declared — derive it from the layer or global state
-  const anim = layer.animStyle || state.animStyle || 'scanner';
+  const anim = layer.animStyle || state.animStyle || 'chunk-jump';
   // Keep state.animStyle in sync with the selected layer
   state.animStyle = anim;
   document.querySelectorAll('.anim-opt').forEach(el => {
@@ -7039,7 +7039,7 @@ const BUILT_IN_PRESETS = [
 // ── Capture current settings into a plain object ──────────────────────────────
 function captureCurrentSettings() {
   return {
-    animStyle:          state.animStyle          || 'scanner',
+    animStyle:          state.animStyle          || 'chunk-jump',
     hand:               state.hand               || 'custom1',
     zigzag:             state.zigzag             ?? true,
     speed:              +(document.getElementById('speed-slider')?.value      ?? 40),

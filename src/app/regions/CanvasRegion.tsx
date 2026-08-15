@@ -1,5 +1,5 @@
-import type { ReactElement } from 'react'
-import { Crop, Scissors } from 'lucide-react'
+import { type ReactElement, useRef, useState, useLayoutEffect } from 'react'
+import { Crop, Grid3X3 } from 'lucide-react'
 import { CanvasViewport } from '@/app/components/canvas/CanvasViewport'
 import { CanvasStage } from '@/app/components/canvas/CanvasStage'
 import { CanvasOverlay } from '@/app/components/canvas/CanvasOverlay'
@@ -56,15 +56,42 @@ export function CanvasRegion(): ReactElement {
   const slicerActive = editorMode === 'slicer'
   const canPlay = hasLayers && playbackService.canPlay()
 
+  const containerRef = useRef<HTMLDivElement>(null)
+  const [displaySize, setDisplaySize] = useState<{ width: number; height: number }>({
+    width: 0,
+    height: 0,
+  })
+
+  useLayoutEffect(() => {
+    const el = containerRef.current
+    if (!el) return
+    const updateSize = () => {
+      const rect = el.getBoundingClientRect()
+      if (rect.width > 0 && rect.height > 0 && size.width > 0 && size.height > 0) {
+        const scale = Math.min(rect.width / size.width, rect.height / size.height)
+        setDisplaySize({
+          width: Math.max(1, Math.floor(size.width * scale)),
+          height: Math.max(1, Math.floor(size.height * scale)),
+        })
+      }
+    }
+    updateSize()
+    const ro = new ResizeObserver(updateSize)
+    ro.observe(el)
+    return () => ro.disconnect()
+  }, [size.width, size.height])
+
   return (
     <main
       data-region="canvas"
       className="flex min-w-0 flex-1 flex-col overflow-hidden rounded-[14px] border border-black/10 bg-background shadow-[0_8px_24px_rgba(24,28,26,0.06)]"
     >
       <div className="canvas-workspace relative flex min-h-0 flex-1 items-center justify-center overflow-hidden p-3 pb-10 sm:p-5 sm:pb-12 2xl:p-7">
-        <div className="relative flex h-full w-full items-center justify-center">
+        <div ref={containerRef} className="relative flex h-full w-full items-center justify-center">
           <CanvasViewport
             viewportRef={refs.viewport}
+            width={displaySize.width}
+            height={displaySize.height}
             aspectRatio={`${size.width} / ${size.height}`}
           >
             <CanvasStage mainRef={refs.main} handRef={refs.hand} />
@@ -85,27 +112,28 @@ export function CanvasRegion(): ReactElement {
           {!isPlaying && (
             <div
               data-testid="canvas-edit-toolbar"
-              className={`absolute left-3 top-3 z-10 flex gap-1.5 ${hasLayers ? '' : 'pointer-events-none opacity-0'}`}
+              className={`absolute left-1/2 top-3 z-10 flex -translate-x-1/2 gap-2 rounded-full border border-black/5 bg-white p-2 shadow-lg transition-opacity duration-300 ${hasLayers ? '' : 'pointer-events-none opacity-0'}`}
             >
               <button
                 type="button"
                 onClick={() => cropService.activate()}
                 disabled={!hasLayers || cropActive || slicerActive}
                 data-testid="crop-activate-btn"
-                className="inline-flex h-8 items-center gap-1.5 rounded-[9px] border border-border bg-[#fffdf8]/95 px-3 text-[11px] shadow-sm transition hover:-translate-y-px disabled:opacity-40"
+                className="inline-flex h-9 items-center gap-2 rounded-full border border-black/10 bg-[#f8f9fa] px-4 text-[13px] font-semibold text-foreground transition hover:bg-black/5 hover:border-black/20 disabled:opacity-40"
               >
-                <Crop className="h-3.5 w-3.5" />
+                <Crop className="h-4 w-4 opacity-70" />
                 {t('canvas.crop')}
               </button>
+              <div className="my-1 w-px bg-black/10" />
               <button
                 type="button"
                 onClick={() => slicerService.activate()}
                 disabled={!hasLayers || cropActive || slicerActive}
                 data-testid="slicer-activate-btn"
-                className="inline-flex h-8 items-center gap-1.5 rounded-[9px] border border-border bg-[#fffdf8]/95 px-3 text-[11px] shadow-sm transition hover:-translate-y-px disabled:opacity-40"
+                className="inline-flex h-9 items-center gap-2 rounded-full border border-black/10 bg-[#f8f9fa] px-4 text-[13px] font-semibold text-foreground transition hover:bg-black/5 hover:border-black/20 disabled:opacity-40"
               >
-                <Scissors className="h-3.5 w-3.5" />
-                {t('canvas.slice')}
+                <Grid3X3 className="h-4 w-4 opacity-70" />
+                {t('canvas.slicer', 'Slicer')}
               </button>
             </div>
           )}

@@ -32,22 +32,22 @@ export function SaveIndicator(): ReactElement {
 
   if (saving) {
     return (
-      <span className="text-xs text-muted-foreground" aria-label={t('project.savingLabel')}>
+      <span className="text-[11px] font-medium text-muted-foreground tabular-nums" aria-label={t('project.savingLabel')}>
         {t('project.saving')}
       </span>
     )
   }
   if (dirty) {
     return (
-      <span className="text-xs text-muted-foreground" aria-label={t('project.unsavedLabel')}>
+      <span className="text-[11px] font-medium text-muted-foreground tabular-nums" aria-label={t('project.unsavedLabel')}>
         {t('project.unsaved')}
       </span>
     )
   }
-  if (!label) return <span className="text-xs text-muted-foreground">●</span>
+  if (!label) return <span className="text-[11px] font-medium text-muted-foreground tabular-nums">00:00:00</span>
   return (
     <span
-      className="text-xs text-muted-foreground"
+      className="text-[11px] font-medium text-muted-foreground tabular-nums"
       aria-label={t('project.lastSaved', { time: label })}
     >
       {label}

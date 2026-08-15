@@ -93,4 +93,55 @@ describe('M07 useGlobalShortcuts — undo blocked while playing', () => {
     undoSpy.mockRestore()
     unmount()
   })
+
+  it('Ctrl+Y and Ctrl+Shift+Z dispatch redo', async () => {
+    const redoSpy = vi.spyOn(globalControlsService, 'redo').mockImplementation(() => {})
+    const unmount = await mountShortcuts()
+    window.dispatchEvent(new KeyboardEvent('keydown', { key: 'y', ctrlKey: true }))
+    expect(redoSpy).toHaveBeenCalledTimes(1)
+
+    window.dispatchEvent(new KeyboardEvent('keydown', { key: 'z', ctrlKey: true, shiftKey: true }))
+    expect(redoSpy).toHaveBeenCalledTimes(2)
+
+    redoSpy.mockRestore()
+    unmount()
+  })
+})
+
+describe('useGlobalShortcuts — Delete / Backspace layer deletion', () => {
+  it('Delete and Backspace dispatch layerService.removeLayer for selected layer', async () => {
+    const { layerService } = await import('@/app/services/layer-service')
+    const { useSelectionStore } = await import('@/app/store')
+    const removeSpy = vi.spyOn(layerService, 'removeLayer').mockImplementation(() => {})
+    const unmount = await mountShortcuts()
+
+    useSelectionStore.getState().selectLayer('layer-1' as any)
+    window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Delete' }))
+    expect(removeSpy).toHaveBeenCalledWith('layer-1')
+
+    window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Backspace' }))
+    expect(removeSpy).toHaveBeenCalledTimes(2)
+
+    removeSpy.mockRestore()
+    unmount()
+  })
+
+  it('Delete is ignored when typing in an INPUT', async () => {
+    const { layerService } = await import('@/app/services/layer-service')
+    const { useSelectionStore } = await import('@/app/store')
+    const removeSpy = vi.spyOn(layerService, 'removeLayer').mockImplementation(() => {})
+    const unmount = await mountShortcuts()
+
+    useSelectionStore.getState().selectLayer('layer-1' as any)
+    const input = document.createElement('input')
+    document.body.appendChild(input)
+    input.focus()
+
+    window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Delete' }))
+    expect(removeSpy).not.toHaveBeenCalled()
+
+    removeSpy.mockRestore()
+    unmount()
+    document.body.removeChild(input)
+  })
 })

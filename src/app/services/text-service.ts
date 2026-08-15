@@ -64,6 +64,8 @@ import { DEFAULT_ANIMATION_STYLE } from '@/types/animation'
 
 import { commitLegacyTextLayer } from '@/engine/legacy/legacy-text'
 
+type Mutable<T> = { -readonly [P in keyof T]: T[P] };
+
 /** Guarded legacy `scheduleAutoSave`. */
 function legacyScheduleAutoSave(): void {
   if (typeof window !== 'undefined' && typeof window.scheduleAutoSave === 'function') {
@@ -109,7 +111,7 @@ function notify(): void {
  */
 export interface TextSession {
   /** The live text style being edited (mirrors `_ts` font/size/bold/etc). */
-  textStyle: TextStyle
+  textStyle: Mutable<TextStyle>
   /** True while waiting for a canvas click to place new text (`_ts.placing`). */
   placing: boolean
   /** True while the editor overlay is open (`_ts.active`). */
@@ -140,6 +142,8 @@ function currentAnimStyle(): LayerAnimationOverrides['animationStyle'] {
 export const textService = {
   /** The in-flight text session (null when idle). */
   session: null as TextSession | null,
+  /** The global default style that persists between sessions. */
+  globalStyle: { ...DEFAULT_TEXT_STYLE } as Mutable<TextStyle>,
 
   /** `useSyncExternalStore` subscribe callback. */
   subscribe(listener: () => void): () => void {
@@ -163,7 +167,7 @@ export const textService = {
   activatePlacement(): boolean {
     if (usePlaybackStore.getState().status === 'playing') return false
     this.session = {
-      textStyle: { ...DEFAULT_TEXT_STYLE },
+      textStyle: { ...this.globalStyle },
       placing: true,
       active: false,
       editingId: null,
@@ -203,9 +207,9 @@ export const textService = {
     if (session) session.placing = false
 
     const editingId = existingLayer ? existingLayer.id : null
-    const textStyle: TextStyle = existingLayer
-      ? { ...existingLayer.textStyle }
-      : { ...(session?.textStyle ?? DEFAULT_TEXT_STYLE) }
+    const textStyle: Mutable<TextStyle> = existingLayer
+      ? ({ ...existingLayer.textStyle } as Mutable<TextStyle>)
+      : ({ ...this.globalStyle } as Mutable<TextStyle>)
 
     this.session = {
       textStyle,
@@ -313,9 +317,14 @@ export const textService = {
     const newId = `layer-${maxN + 1}` as LayerId
 
     // Position: edit preserves the old layer's x/y (legacy 8302-8304); new
-    // uses the placement click point (legacy 8331-8332).
-    const finalX = oldLayer ? oldLayer.transform.x : Math.round(session.canvasX)
-    const finalY = oldLayer ? oldLayer.transform.y : Math.round(session.canvasY)
+    // uses the placement click point or centers on canvas if not set.
+    const canvasHeight = useCanvasStore.getState().canvas?.size.height ?? 720
+    const finalX = oldLayer
+      ? oldLayer.transform.x
+      : (session.canvasX !== 0 ? Math.round(session.canvasX) : Math.round((canvasWidth - width) / 2))
+    const finalY = oldLayer
+      ? oldLayer.transform.y
+      : (session.canvasY !== 0 ? Math.round(session.canvasY) : Math.round((canvasHeight - height) / 2))
 
     const newLayer: TextLayer = {
       id: newId,
@@ -346,6 +355,9 @@ export const textService = {
     }
     useLayerStore.getState().setLayers(nextLayers)
     useSelectionStore.getState().selectLayer(newLayer.id)
+
+    // Persist to globalStyle so next session uses these settings.
+    this.globalStyle = { ...style, text: '' }
 
     // Delegate the rasterize + redraw + autosave to the legacy runtime when
     // present. We use our ported TS version of _commitTextLayer.
@@ -385,8 +397,10 @@ export const textService = {
   /** Set the font family. Mirrors `selectFont` (legacy 8077-8082). */
   setFont(family: string): void {
     const session = this.session
-    if (!session) return
-    session.textStyle = { ...session.textStyle, fontFamily: family }
+    if (session) {
+      session.textStyle = { ...session.textStyle, fontFamily: family }
+    }
+    this.globalStyle = { ...this.globalStyle, fontFamily: family }
     notify()
   },
 
@@ -396,40 +410,53 @@ export const textService = {
    * the UI input element, not this clamp.
    */
   setSize(raw: number | string): void {
+    const fontSize = clampFontSize(raw)
     const session = this.session
-    if (!session) return
-    session.textStyle = { ...session.textStyle, fontSize: clampFontSize(raw) }
+    if (session) {
+      session.textStyle = { ...session.textStyle, fontSize }
+    }
+    this.globalStyle = { ...this.globalStyle, fontSize }
     notify()
   },
 
   /** Toggle bold/italic. Mirrors `toggleTextStyle` (legacy 8084-8089). */
   toggleBold(): void {
     const session = this.session
-    if (!session) return
-    session.textStyle = { ...session.textStyle, bold: !session.textStyle.bold }
+    const bold = session ? !session.textStyle.bold : !this.globalStyle.bold
+    if (session) {
+      session.textStyle = { ...session.textStyle, bold }
+    }
+    this.globalStyle = { ...this.globalStyle, bold }
     notify()
   },
 
   toggleItalic(): void {
     const session = this.session
-    if (!session) return
-    session.textStyle = { ...session.textStyle, italic: !session.textStyle.italic }
+    const italic = session ? !session.textStyle.italic : !this.globalStyle.italic
+    if (session) {
+      session.textStyle = { ...session.textStyle, italic }
+    }
+    this.globalStyle = { ...this.globalStyle, italic }
     notify()
   },
 
   /** Set the alignment. Mirrors `setTextAlign` (legacy 8091-8096). */
   setAlign(align: 'left' | 'center' | 'right'): void {
     const session = this.session
-    if (!session) return
-    session.textStyle = { ...session.textStyle, align }
+    if (session) {
+      session.textStyle = { ...session.textStyle, align }
+    }
+    this.globalStyle = { ...this.globalStyle, align }
     notify()
   },
 
   /** Set the color. Mirrors `selectTextColor`/`onTextCustomColor` (8098-8106). */
   setColor(color: string): void {
     const session = this.session
-    if (!session) return
-    session.textStyle = { ...session.textStyle, color }
+    if (session) {
+      session.textStyle = { ...session.textStyle, color }
+    }
+    this.globalStyle = { ...this.globalStyle, color }
     notify()
   },
 
@@ -438,13 +465,13 @@ export const textService = {
    * `lineHeight = parseFloat(...) || 1.3`.
    */
   setLineHeight(raw: number | string): void {
-    const session = this.session
-    if (!session) return
     const n = typeof raw === 'number' ? raw : parseFloat(String(raw ?? ''))
-    session.textStyle = {
-      ...session.textStyle,
-      lineHeight: Number.isFinite(n) ? n : TEXT_LINEHEIGHT_DEFAULT,
+    const lineHeight = Number.isFinite(n) ? n : TEXT_LINEHEIGHT_DEFAULT
+    const session = this.session
+    if (session) {
+      session.textStyle = { ...session.textStyle, lineHeight }
     }
+    this.globalStyle = { ...this.globalStyle, lineHeight }
     notify()
   },
 
@@ -453,13 +480,13 @@ export const textService = {
    * `spacing = parseFloat(...) || 0`.
    */
   setLetterSpacing(raw: number | string): void {
-    const session = this.session
-    if (!session) return
     const n = typeof raw === 'number' ? raw : parseFloat(String(raw ?? ''))
-    session.textStyle = {
-      ...session.textStyle,
-      letterSpacing: Number.isFinite(n) ? n : TEXT_SPACING_DEFAULT,
+    const letterSpacing = Number.isFinite(n) ? n : TEXT_SPACING_DEFAULT
+    const session = this.session
+    if (session) {
+      session.textStyle = { ...session.textStyle, letterSpacing }
     }
+    this.globalStyle = { ...this.globalStyle, letterSpacing }
     notify()
   },
 
@@ -487,9 +514,9 @@ export const textService = {
     return this.session ? this.session.placing : false
   },
 
-  /** The current text style (null when no session). */
-  getTextStyle(): TextStyle | null {
-    return this.session ? this.session.textStyle : null
+  /** The current text style (session style if active, otherwise globalStyle defaults). */
+  getTextStyle(): TextStyle {
+    return this.session ? this.session.textStyle : this.globalStyle
   },
 
   /** The layer id being edited (null when no session / new layer). */

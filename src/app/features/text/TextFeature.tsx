@@ -1,5 +1,5 @@
 import type { ReactElement, KeyboardEvent } from 'react'
-import { useRef, useEffect, useSyncExternalStore } from 'react'
+import { useRef, useEffect, useState, useSyncExternalStore } from 'react'
 import { textService } from '@/app/services/text-service'
 import { useTranslation } from 'react-i18next'
 import { useCanvasStore } from '@/app/store'
@@ -12,119 +12,153 @@ export function TextFeature(): ReactElement | null {
   const pos = textService.getPosition()
   const canvas = useCanvasStore((s) => s.canvas)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
+  const containerRef = useRef<HTMLDivElement>(null)
+  const [scale, setScale] = useState(1)
+
+  const canvasW =
+    canvas?.size.width ??
+    (typeof window !== 'undefined' &&
+    (window as unknown as Record<string, unknown>).state &&
+    typeof ((window as unknown as Record<string, unknown>).state as Record<string, unknown>).canvasW === 'number'
+      ? (((window as unknown as Record<string, unknown>).state as Record<string, unknown>).canvasW as number)
+      : 1280)
+  const canvasH =
+    canvas?.size.height ??
+    (typeof window !== 'undefined' &&
+    (window as unknown as Record<string, unknown>).state &&
+    typeof ((window as unknown as Record<string, unknown>).state as Record<string, unknown>).canvasH === 'number'
+      ? (((window as unknown as Record<string, unknown>).state as Record<string, unknown>).canvasH as number)
+      : 720)
 
   useEffect(() => {
     if (active && textareaRef.current) {
       textareaRef.current.focus()
-      // Move cursor to the end
+      autoResize(textareaRef.current)
       const len = textareaRef.current.value.length
       textareaRef.current.setSelectionRange(len, len)
     }
   }, [active])
 
-  if (!active || !style || !pos || !canvas) return null
+  useEffect(() => {
+    const parent = containerRef.current?.closest('[data-testid="canvas-viewport"]') as HTMLElement | null
+    if (parent) {
+      const updateScale = () => {
+        const rect = parent.getBoundingClientRect()
+        if (rect.width > 0) {
+          setScale(rect.width / canvasW)
+        }
+      }
+      updateScale()
+      const ro = new ResizeObserver(updateScale)
+      ro.observe(parent)
+      return () => ro.disconnect()
+    }
+  }, [canvasW])
 
-  // We need to position the textarea over the canvas at pos.x, pos.y.
-  // The viewport CSS scales it, so we render the textarea absolutely positioned
-  // relative to the CanvasViewport using the same logical coordinates as the canvas width/height.
-  // To do this properly, the TextFeature should be rendered inside CanvasViewport which has `relative` positioning.
-  // Since the canvas scales visually via CSS `width: 100%; height: 100%`, we might need to map coordinates.
-  // Wait, CanvasViewport renders children inside a relative container.
-  // The CanvasStage itself uses `width: 100%` but its internal size is logical.
-  // But actually, we can render the textarea with absolute positioning inside a container that exactly matches the canvas scale,
-  // OR we can render it inside the CanvasViewport and rely on % positioning.
+  if (!active || !style || !pos) return null
 
-  // Actually, CanvasViewport provides a `relative` container that matches the DOM element size.
-  // `pos.x`, `pos.y` are logical canvas coordinates. We need to scale them to % of the logical width/height.
-  const canvasW = canvas.size.width
-  const canvasH = canvas.size.height
-  const leftPct = (pos.x / canvasW) * 100
-  const topPct = (pos.y / canvasH) * 100
-
-  // The font size in the textarea needs to be scaled by the current view scale.
-  // Alternatively, we use CSS `transform: scale(...)` or render inside a div that uses viewBox-like scaling.
-  // The simplest way to perfectly match canvas scale is to render the textarea in a container with the same aspect ratio
-  // and logical size as the canvas, scaled with CSS, similar to how the SVG outline overlay might do it.
+  const leftPct = Math.max(2, Math.min(92, (pos.x / canvasW) * 100))
+  const topPct = Math.max(2, Math.min(90, (pos.y / canvasH) * 100))
+  const scaledFontSize = Math.max(14, Math.min(80, Math.round(style.fontSize * scale)))
 
   const onKeyDown = (e: KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === 'Escape') {
       textService.closeEditor(false)
       e.stopPropagation()
-    } else if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
+    } else if (e.key === 'Enter' && (e.ctrlKey || e.metaKey || !e.shiftKey)) {
       textService.closeEditor(true)
       e.stopPropagation()
+      e.preventDefault()
     }
   }
 
-  // To make the textarea scale exactly like the canvas, we can apply a transform.
-  // Or we can just render a full logical-sized div absolute, scaled to 100% width/height,
-  // and put the textarea inside it using logical px values.
+  const autoResize = (el: HTMLTextAreaElement) => {
+    el.style.height = 'auto'
+    el.style.height = `${Math.max(24, el.scrollHeight)}px`
+  }
 
   return (
     <div
+      ref={containerRef}
       style={{
         position: 'absolute',
         top: 0,
         left: 0,
         right: 0,
         bottom: 0,
-        pointerEvents: 'none', // pass through
+        pointerEvents: 'none',
+        zIndex: 50,
       }}
     >
-      {/* We create a nested div with the exact logical size of the canvas, then scale it to fit.
-          Wait, if the parent is already exactly the same aspect ratio and we just want to match the CSS scale...
-          Actually, we can just position using % and use `calc` or CSS vars if we knew the scale.
-          Let's use a trick: the parent `CanvasViewport` is a flex container, but the `CanvasStage` is absolute inset-0.
-          We can render an SVG-like viewBox using a wrapper with `width: 100%; height: 100%` and a container inside with `transform: scale`.
-          Instead, since we only have the canvasW/H, let's just use CSS `container-type: size` or calculate the scale. 
-      */}
       <div
+        data-text-editor="true"
+        onMouseDown={(e) => e.stopPropagation()}
+        onClick={(e) => e.stopPropagation()}
+        onDoubleClick={(e) => e.stopPropagation()}
         style={{
           position: 'absolute',
           left: `${leftPct}%`,
           top: `${topPct}%`,
           pointerEvents: 'auto',
-          transform: 'translate(-50%, -50%)', // center it roughly for now or top-left?
-          // Legacy editor is usually top-left or center?
-          // Legacy: 8140-8153 `textarea.style.left = ...`
-          // We'll refine the exact CSS matching shortly.
+          minWidth: `${Math.max(120, 140 * scale)}px`,
+          maxWidth: `${Math.max(220, (canvasW - pos.x) * scale)}px`,
+          border: '1.5px dashed rgba(23, 25, 24, 0.45)',
+          borderRadius: '6px',
+          padding: '4px 8px',
+          background: 'rgba(255, 255, 255, 0.55)',
+          backdropFilter: 'blur(2px)',
+          boxSizing: 'border-box',
+          boxShadow: '0 2px 8px rgba(0, 0, 0, 0.06)',
         }}
         className="flex flex-col gap-1 items-start"
       >
         <textarea
           ref={textareaRef}
           value={style.text}
-          onChange={(e) => textService.setText(e.target.value)}
-          onKeyDown={onKeyDown}
-          onBlur={(event) => {
-            const next = event.relatedTarget
-            if (next instanceof Element && next.closest('[data-text-controls]')) return
-            textService.closeEditor(true)
+          onChange={(e) => {
+            textService.setText(e.target.value)
+            autoResize(e.target)
           }}
+          onKeyDown={onKeyDown}
           style={{
-            fontFamily: style.fontFamily,
-            fontSize: `${style.fontSize}px`, // This needs to be scaled by viewport scale!
-            // Wait, we can use a CSS transform to scale the whole textarea down by the inverse of its logical size
-            fontWeight: style.bold ? 'bold' : 'normal',
+            fontFamily: `'${style.fontFamily}', cursive, sans-serif`,
+            fontSize: `${scaledFontSize}px`,
+            fontWeight: style.bold ? '700' : '400',
             fontStyle: style.italic ? 'italic' : 'normal',
             textAlign: style.align,
-            color: style.color,
-            lineHeight: style.lineHeight,
-            letterSpacing: `${style.letterSpacing}px`,
+            color: style.color || '#171918',
+            lineHeight: 1.25,
+            letterSpacing: `${style.letterSpacing * scale}px`,
             background: 'transparent',
-            border: '1px dashed #888',
+            border: 'none',
             outline: 'none',
-            padding: '4px',
-            minWidth: '200px',
-            minHeight: '1em',
-            resize: 'both',
-            whiteSpace: 'pre',
-            overflow: 'hidden',
+            resize: 'none',
+            padding: 0,
+            margin: 0,
+            width: '100%',
+            minHeight: '1.2em',
+            whiteSpace: 'pre-wrap',
+            wordBreak: 'break-word',
+            caretColor: style.color || '#171918',
           }}
-          placeholder={t('text.placeholder')}
+          placeholder={t('text.placeholder', 'Type here...')}
         />
-        <div className="text-xs bg-black/50 text-white px-2 py-1 rounded shadow-sm pointer-events-none whitespace-nowrap">
-          {t('text.shortcut')}
+        <div className="flex items-center gap-1.5 bg-[#171918] text-white px-2 py-0.5 rounded-[5px] shadow-sm text-[10px] font-medium select-none pointer-events-auto mt-0.5">
+          <button
+            type="button"
+            className="px-1.5 py-0.5 rounded bg-white/20 hover:bg-white/30 text-white font-semibold cursor-pointer transition-colors"
+            onClick={() => textService.closeEditor(true)}
+          >
+            ✓ {t('text.done', 'Done')}
+          </button>
+          <button
+            type="button"
+            className="px-1.5 py-0.5 rounded hover:bg-white/10 text-white/80 cursor-pointer transition-colors"
+            onClick={() => textService.closeEditor(false)}
+          >
+            ✕ {t('text.cancel', 'Cancel')}
+          </button>
+          <span className="text-[9px] text-white/50 ml-0.5 font-mono">↵ Enter</span>
         </div>
       </div>
     </div>

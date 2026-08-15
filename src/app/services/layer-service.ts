@@ -41,6 +41,7 @@
  */
 import { useLayerStore } from '@/app/store'
 import { useSelectionStore } from '@/app/store'
+import { textService } from '@/app/services/text-service'
 import type { LayerId } from '@/types/brand'
 import type { AnimationOrder, Layer, ImageLayer, TextLayer } from '@/types/layer'
 
@@ -175,6 +176,16 @@ export const layerService = {
   },
 
   /**
+   * Group the currently selected layer.
+   */
+  createGroupFromSelected(): void {
+    if (legacyReady() && typeof (window as unknown as Record<string, unknown>).createGroupFromSelected === 'function') {
+      Reflect.apply((window as unknown as Record<string, unknown>).createGroupFromSelected as Function, window, [])
+    }
+    this.syncLayersFromLegacy()
+  },
+
+  /**
    * Rename a layer. The legacy `startLayerRename` is DOM-driven (replaces the
    * name div with an input), so it is not reusable from React. We set the
    * name directly in the typed store and reschedule autosave through the
@@ -203,6 +214,9 @@ export const layerService = {
       window.switchTab?.(mode)
     }
     useSelectionStore.getState().setEditorMode(mode)
+    if (mode === 'image' && textService.isPlacing()) {
+      textService.cancelPlacement()
+    }
   },
 
   /**

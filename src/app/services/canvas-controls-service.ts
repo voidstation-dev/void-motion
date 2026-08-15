@@ -99,6 +99,9 @@ export const canvasControlsService = {
   setAspectRatio(ratio: AspectRatio): void {
     if (legacyReady()) {
       window.selectRatio?.(stubElement({ ratio }))
+      if (typeof (window as any)._applyCanvasSizeImmediate === 'function') {
+        (window as any)._applyCanvasSizeImmediate()
+      }
     }
     // Mirror the derived size into the typed canvas store. The legacy
     // `_applyCanvasSize` is the source of truth for the actual canvas; this
@@ -125,6 +128,9 @@ export const canvasControlsService = {
     if (legacyReady()) {
       const resNum = preset === '720p' ? 720 : preset === '1080p' ? 1080 : 1440
       window.selectRes?.(stubElement({ res: String(resNum) }))
+      if (typeof (window as any)._applyCanvasSizeImmediate === 'function') {
+        (window as any)._applyCanvasSizeImmediate()
+      }
     }
     const canvas = useCanvasStore.getState().canvas
     const ratio = canvas?.aspectRatio ?? '16:9'

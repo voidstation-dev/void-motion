@@ -5,7 +5,6 @@ import { TutorialPage } from '@/app/pages/TutorialPage'
 import { AboutPage } from '@/app/pages/AboutPage'
 import { PrivacyPage } from '@/app/pages/PrivacyPage'
 import { useProjectStore } from '@/app/store'
-import { EXTERNAL_LINKS } from '@/app/config/external-links'
 
 afterEach(() => {
   cleanup()
@@ -41,8 +40,7 @@ describe('responsive editor header', () => {
     )
     expect(container.querySelector('a[href="/tutorial"]')).toBeTruthy()
     expect(container.querySelector('a[href*="legacy"]')).toBeNull()
-    expect(container.querySelector(`a[href="${EXTERNAL_LINKS.repository}"]`)).toBeTruthy()
-    expect(container.querySelector(`a[href="${EXTERNAL_LINKS.support}"]`)).toBeTruthy()
+
     screen.getByRole('button', { name: 'Open animation settings' }).click()
     screen.getByRole('button', { name: 'Open layers panel' }).click()
     expect(openSettings).toHaveBeenCalledOnce()

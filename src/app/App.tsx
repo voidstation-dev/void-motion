@@ -1,9 +1,3 @@
-/**
- * Void Motion application shell.
- *
- * React owns every visible editor region. The preserved production runtime is
- * mounted separately by the legacy adapter and never becomes user-facing UI.
- */
 import { lazy, useState, type ReactElement } from 'react'
 import { Providers } from './providers'
 import { Header } from './regions/Header'
@@ -50,24 +44,28 @@ function currentPage(): 'editor' | 'tutorial' | 'about' | 'privacy' {
 
 export function App(): ReactElement {
   const page = currentPage()
+
   if (page === 'tutorial')
     return (
       <Providers>
         <TutorialPage />
       </Providers>
     )
+
   if (page === 'about')
     return (
       <Providers>
         <AboutPage />
       </Providers>
     )
+
   if (page === 'privacy')
     return (
       <Providers>
         <PrivacyPage />
       </Providers>
     )
+
   return <EditorApp />
 }
 
@@ -85,13 +83,13 @@ function EditorApp(): ReactElement {
   return (
     <Providers>
       <LegacyRuntimeHost />
-      <div className="editor-shell flex h-full min-w-0 flex-col overflow-hidden bg-background text-foreground gap-2">
+      <div className="editor-shell flex h-full min-w-0 flex-col overflow-hidden bg-background text-foreground">
         <Header
           compact={!desktopPanels}
           onOpenSettings={() => setMobilePanel('settings')}
           onOpenLayers={() => setMobilePanel('layers')}
         />
-        <div className="grid min-h-0 flex-1 gap-2 p-2 pt-0 xl:gap-2.5 xl:px-2.5 xl:pb-2.5">
+        <div className="grid min-h-0 flex-1 gap-2 p-2 xl:gap-2.5 xl:p-2.5">
           {desktopPanels && <SettingsSidebar />}
           <CanvasRegion />
           {desktopPanels && <Sidebar />}

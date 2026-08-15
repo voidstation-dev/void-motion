@@ -1,5 +1,5 @@
 import type { ReactElement } from 'react'
-import { Play, SlidersHorizontal, Loader2 } from 'lucide-react'
+import { Play, Loader2 } from 'lucide-react'
 import { AnimationPanel } from '@/app/features/animation/AnimationPanel'
 import { playbackService } from '@/app/services/playback-service'
 import { useLayerStore, useSelectionStore, usePlaybackStore } from '@/app/store'
@@ -13,36 +13,27 @@ export function SettingsSidebar(): ReactElement {
   const isGenerating = playbackStatus === 'generating'
 
   const handleGenerate = () => {
-    // Generate is now asynchronous but we don't await it here.
-    // The legacy adapter will set state.generating = true which mirrors to our store.
     playbackService.generate()
   }
 
   return (
     <aside
       data-region="settings-sidebar"
-      className="flex h-full w-[292px] shrink-0 flex-col overflow-hidden rounded-[14px] border border-black/10 bg-sidebar shadow-[0_8px_24px_rgba(24,28,26,0.06)]"
+      className="flex h-full w-[292px] shrink-0 flex-col overflow-hidden bg-[#fbfaf7] border-r border-border"
     >
-      <div className="flex items-center gap-3 border-b border-border px-3 py-3">
-        <span className="flex h-8 w-8 items-center justify-center rounded-[10px] bg-[#f0e3c7] text-[#8a5c16]">
-          <SlidersHorizontal className="h-4 w-4" />
-        </span>
-        <div className="min-w-0">
-          <h2 className="text-[13px] font-semibold">{t('header.settings')}</h2>
-          <p className="truncate text-[10px] text-muted-foreground">
-            {t('settings.sheetDescription')}
-          </p>
-        </div>
-      </div>
-      <div className="border-b border-border p-2.5">
-        <div className="rounded-[10px] border border-dashed border-[#d3a13a]/40 bg-[#fbf7ed] px-3 py-2.5 text-center text-[11px] leading-4 text-muted-foreground">
-          {selectedLayerId ? t('settings.editingSelected') : t('settings.selectLayer')}
+      <div className="p-3">
+        <div className="h-[50px] flex items-center justify-center rounded-[10px] border border-dashed border-black/15 bg-black/5 px-3 text-center text-[11px] leading-snug text-muted-foreground transition-all">
+          {selectedLayerId ? (
+            <span>{t('settings.editingSelected')}</span>
+          ) : (
+            <span>Select a layer on the right to edit settings</span>
+          )}
         </div>
       </div>
       <div className="min-h-0 flex-1 overflow-y-auto">
         <AnimationPanel />
       </div>
-      <div className="border-t border-border bg-[#fbfaf7] p-2.5">
+      <div className="border-t border-black/5 bg-white p-3">
         <button
           type="button"
           onClick={handleGenerate}

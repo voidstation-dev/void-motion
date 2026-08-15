@@ -9,6 +9,7 @@ type RuntimeWindow = Window & {
 }
 
 const FUNCTION_NAMES = [
+  '_applyCanvasSizeImmediate',
   'activateCropTool',
   'applySlices',
   'applyMigrationCrop',

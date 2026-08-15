@@ -1,8 +1,13 @@
 {
   "text": {
     "add": "Thêm chữ",
+    "addLayer": "Thêm chữ lên Canvas",
+    "content": "Nội dung chữ",
+    "style": "Kiểu chữ",
     "placing": "Nhấp vào canvas để đặt chữ…",
     "editing": "Đang chỉnh sửa chữ…",
+    "done": "Xong",
+    "cancel": "Hủy",
     "font": "Phông chữ",
     "size": "Cỡ chữ",
     "bold": "Bật/tắt chữ đậm",
@@ -14,7 +19,7 @@
     "selectColor": "Chọn màu {{color}}",
     "lineHeight": "Chiều cao dòng",
     "letterSpacing": "Khoảng cách chữ",
-    "placeholder": "Nhập nội dung…",
+    "placeholder": "Nhập chữ tại đây…",
     "shortcut": "Ctrl/Cmd+Enter để lưu, Esc để hủy"
   },
   "crop": {

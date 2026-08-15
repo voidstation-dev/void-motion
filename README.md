@@ -22,12 +22,26 @@ Projects remain in the browser through IndexedDB. The editor does not require an
 ## Highlights
 
 - Image and text layers with ordering, visibility, grouping, transforms, crop, and slice tools.
+- On-canvas text creation and editing with cursive fonts, inline scaling, and real-time preview.
 - Scanner, contour, outline chunks, chunk jump, subject-aware, and drawing animation styles.
 - Hand styles, independent reveal/hand speeds, canvas backgrounds, aspect ratios, and resolutions.
 - Local project persistence with rename, autosave, undo, and redo.
 - Browser-side WebM and supported MP4 export.
 - Responsive React interface with Vietnamese and English localization.
 - Migrated React tutorial, about, and privacy pages.
+
+## Keyboard Shortcuts & Canvas Interactions
+
+| Action | Shortcut / Gesture | Description |
+| --- | --- | --- |
+| **Add / Edit Text** | `Double-click Canvas` | Opens the on-canvas dashed editor at the clicked point with font styling preview |
+| **Commit Text** | `Enter` / `Ctrl+Enter` / `✓ Done` | Commits and creates or updates the text layer |
+| **Cancel Text** | `Escape` / `✕ Cancel` | Cancels text placement or editing without saving |
+| **Delete Selected Layer** | `Delete` or `Backspace` | Deletes the currently selected layer from canvas & history |
+| **Undo** | `Ctrl+Z` / `Cmd+Z` | Undoes the last action (guarded while playing) |
+| **Redo** | `Ctrl+Y` / `Ctrl+Shift+Z` / `Cmd+Shift+Z` | Redoes the previously undone action |
+| **Play / Pause** | `Space` | Toggles animation playback |
+| **Select / Move / Resize** | `Single-click` / `Drag handle` | Selects layer, drags layer position, or resizes from 8 handles |
 
 ## Quick start
 

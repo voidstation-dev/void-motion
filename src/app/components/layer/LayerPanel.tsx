@@ -94,8 +94,8 @@ export function LayerPanel({ showHeader = true }: { readonly showHeader?: boolea
                 data-layer-id={layer.id}
                 aria-label={t('layer', { name: layer.name })}
                 className={
-                  'rounded-md border bg-surface-1 transition-colors ' +
-                  (isSelected ? 'border-primary' : 'border-border') +
+                  'rounded-xl border transition-colors overflow-hidden ' +
+                  (isSelected ? 'border-black/10 bg-white shadow-sm' : 'border-black/5 bg-[#fcfcfc] hover:bg-white') +
                   (layer.visible ? '' : ' opacity-50')
                 }
               >
@@ -136,13 +136,13 @@ export function LayerPanel({ showHeader = true }: { readonly showHeader?: boolea
                       onBlur={commitRename}
                       onKeyDown={onRenameKey}
                       onClick={(e) => e.stopPropagation()}
-                      className="min-w-0 flex-1 rounded border border-border bg-background px-1 py-0.5 text-xs text-foreground outline-none focus:border-primary"
+                      className="min-w-0 flex-1 rounded-[6px] bg-[#e9e8e3] px-1.5 py-0.5 text-xs font-medium text-foreground outline-none"
                       autoFocus
                       data-testid="layer-rename-input"
                     />
                   ) : (
                     <span
-                      className="min-w-0 flex-1 truncate text-xs text-foreground"
+                      className="min-w-0 flex-1 truncate text-xs font-medium text-foreground"
                       title={layer.name}
                       onDoubleClick={(e) => {
                         e.stopPropagation()
@@ -157,16 +157,16 @@ export function LayerPanel({ showHeader = true }: { readonly showHeader?: boolea
                     className="flex flex-col items-center gap-0.5"
                     onClick={(e) => e.stopPropagation()}
                   >
-                    <span className="text-[9px] text-muted-foreground">{t('order')}</span>
+                    <span className="text-[9px] text-muted-foreground font-medium">{t('order', 'Order')}</span>
                     <input
                       type="number"
                       min={1}
                       max={99}
                       value={orderVal}
                       placeholder="—"
-                      title={t('animationOrder')}
+                      title={t('animationOrder', 'Animation Order')}
                       onChange={(e) => layerService.setOrder(layer.id, e.target.value)}
-                      className="w-9 rounded border border-border bg-background px-1 py-0.5 text-center text-[11px] text-foreground outline-none focus:border-primary"
+                      className="w-8 rounded-[4px] bg-[#dfdeda] px-0 py-0.5 text-center text-[11px] font-semibold text-foreground outline-none"
                       data-testid={`layer-order-${layer.id}`}
                     />
                   </div>
@@ -208,13 +208,13 @@ function LayerInspector({ layer }: { readonly layer: Layer }): ReactElement {
   const transform = layer.transform
 
   return (
-    <div className="border-t border-border px-2 py-2" data-testid={`layer-inspector-${layer.id}`}>
+    <div className="border-t border-black/5 px-3 py-3 bg-[#fdfdfc]" data-testid={`layer-inspector-${layer.id}`}>
       {layer.type === 'image' && (
-        <div className="mb-2">
-          <div className="mb-1 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
-            {t('resize')}
+        <div className="mb-3">
+          <div className="mb-2 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+            {t('resize', 'RESIZE')}
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-3">
             <input
               type="range"
               min={10}
@@ -222,21 +222,21 @@ function LayerInspector({ layer }: { readonly layer: Layer }): ReactElement {
               step={1}
               value={resizePct}
               onChange={(e) => layerService.setResize(layer.id, Number(e.target.value))}
-              className="flex-1"
-              aria-label={t('resizePercent')}
+              className="flex-1 accent-[#1b62ff] h-1.5 bg-[#dfdeda] rounded-full appearance-none cursor-pointer"
+              aria-label={t('resizePercent', 'Resize Percent')}
               data-testid={`layer-resize-${layer.id}`}
             />
-            <span className="min-w-[28px] text-right text-[10px] tabular-nums text-muted-foreground">
+            <span className="min-w-[28px] text-right text-[11px] tabular-nums text-muted-foreground font-medium">
               {resizePct}%
             </span>
           </div>
         </div>
       )}
-      <div className="mb-2">
-        <div className="mb-1 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
-          {t('opacity')}
+      <div className="mb-4">
+        <div className="mb-2 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+          {t('opacity', 'OPACITY')}
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-3">
           <input
             type="range"
             min={0}
@@ -244,57 +244,57 @@ function LayerInspector({ layer }: { readonly layer: Layer }): ReactElement {
             step={1}
             value={opPct}
             onChange={(e) => layerService.setOpacity(layer.id, Number(e.target.value) / 100)}
-            className="flex-1"
-            aria-label={t('opacityPercent')}
+            className="flex-1 accent-[#1b62ff] h-1.5 bg-[#dfdeda] rounded-full appearance-none cursor-pointer"
+            aria-label={t('opacityPercent', 'Opacity Percent')}
             data-testid={`layer-opacity-${layer.id}`}
           />
-          <span className="min-w-[28px] text-right text-[10px] tabular-nums text-muted-foreground">
+          <span className="min-w-[28px] text-right text-[11px] tabular-nums text-muted-foreground font-medium">
             {opPct}%
           </span>
         </div>
       </div>
       <div>
-        <div className="mb-1 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
-          {t('positionSize')}
+        <div className="mb-2 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+          {t('positionSize', 'POSITION & SIZE')}
         </div>
-        <div className="grid grid-cols-2 gap-1 text-[10px] text-muted-foreground">
-          <label className="flex flex-col gap-0.5">
+        <div className="grid grid-cols-2 gap-x-2 gap-y-3 text-[10px] text-muted-foreground font-medium">
+          <label className="flex flex-col gap-1">
             X
             <input
               type="number"
               value={Math.round(transform.x)}
               onChange={(e) => layerService.setPosition(layer.id, 'x', Number(e.target.value))}
-              className="w-full rounded border border-border bg-background px-1 py-0.5 text-foreground outline-none focus:border-primary"
+              className="w-full rounded-[6px] bg-[#dfdeda] px-2 py-1.5 text-foreground outline-none font-medium"
               data-testid={`layer-x-${layer.id}`}
             />
           </label>
-          <label className="flex flex-col gap-0.5">
+          <label className="flex flex-col gap-1">
             Y
             <input
               type="number"
               value={Math.round(transform.y)}
               onChange={(e) => layerService.setPosition(layer.id, 'y', Number(e.target.value))}
-              className="w-full rounded border border-border bg-background px-1 py-0.5 text-foreground outline-none focus:border-primary"
+              className="w-full rounded-[6px] bg-[#dfdeda] px-2 py-1.5 text-foreground outline-none font-medium"
               data-testid={`layer-y-${layer.id}`}
             />
           </label>
-          <label className="flex flex-col gap-0.5">
+          <label className="flex flex-col gap-1">
             W
             <input
               type="number"
               value={Math.round(transform.width)}
               onChange={(e) => layerService.setPosition(layer.id, 'w', Number(e.target.value))}
-              className="w-full rounded border border-border bg-background px-1 py-0.5 text-foreground outline-none focus:border-primary"
+              className="w-full rounded-[6px] bg-[#dfdeda] px-2 py-1.5 text-foreground outline-none font-medium"
               data-testid={`layer-w-${layer.id}`}
             />
           </label>
-          <label className="flex flex-col gap-0.5">
+          <label className="flex flex-col gap-1">
             H
             <input
               type="number"
               value={Math.round(transform.height)}
               onChange={(e) => layerService.setPosition(layer.id, 'h', Number(e.target.value))}
-              className="w-full rounded border border-border bg-background px-1 py-0.5 text-foreground outline-none focus:border-primary"
+              className="w-full rounded-[6px] bg-[#dfdeda] px-2 py-1.5 text-foreground outline-none font-medium"
               data-testid={`layer-h-${layer.id}`}
             />
           </label>

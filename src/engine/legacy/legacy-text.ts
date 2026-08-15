@@ -1,5 +1,6 @@
 import { requireLegacyState } from './legacy-adapter'
 import type { LegacyInkplainerState, LegacyLayer } from './legacy-state.types'
+import { layerService } from '@/app/services/layer-service'
 
 /**
  * Renders and commits text as a legacy layer. Ported from `legacy/index.html`
@@ -75,8 +76,8 @@ export function commitLegacyTextLayer(
     lines.forEach((ln, i) => tctx.fillText(ln, tx, i * lineH + style.size * 0.1))
 
     const _editingId = sessionState.editingId
-    const _placeX = sessionState.canvasX
-    const _placeY = sessionState.canvasY
+    const _placeX = sessionState.canvasX !== 0 ? sessionState.canvasX : Math.round((state.canvasW - maxW) / 2)
+    const _placeY = sessionState.canvasY !== 0 ? sessionState.canvasY : Math.round((state.canvasH - totalH) / 2)
     const _oldLayer =
       _editingId !== null ? state.layers.find((l) => l && l.id === _editingId) || null : null
 
@@ -148,6 +149,7 @@ export function commitLegacyTextLayer(
       if ((window as any).renderLayerList) (window as any).renderLayerList()
       if (window.selectLayer) window.selectLayer(id)
       if ((window as any).redrawLayersOnCanvas) (window as any).redrawLayersOnCanvas()
+      layerService.syncLayersFromLegacy()
       if (window.scheduleAutoSave) window.scheduleAutoSave()
     }
     img.src = tc.toDataURL()

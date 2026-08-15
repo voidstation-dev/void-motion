@@ -88,7 +88,7 @@ export function Sidebar(): ReactElement {
   return (
     <aside
       data-region="sidebar"
-      className="flex h-full w-[336px] shrink-0 flex-col overflow-hidden rounded-[14px] border border-black/10 bg-sidebar shadow-[0_8px_24px_rgba(24,28,26,0.06)]"
+      className="flex h-full w-[336px] shrink-0 flex-col overflow-hidden bg-white border-l border-border"
     >
       <div className="flex items-center gap-3 border-b border-border px-3 py-3">
         <span className="flex h-8 w-8 items-center justify-center rounded-[10px] bg-[#dce8ee] text-[#183d59]">
@@ -100,13 +100,16 @@ export function Sidebar(): ReactElement {
         </div>
       </div>
 
-      <div className="min-h-0 flex-1 overflow-y-auto p-2.5">
+      <div className="min-h-0 flex-1 overflow-y-auto p-2.5 bg-[#fbfaf7]">
         <section
-          className="rounded-[12px] border border-border bg-[#fbfaf7] p-3"
+          className="rounded-[16px] border border-black/5 bg-white p-4 shadow-sm"
           aria-label={t('input.mode')}
         >
-          <div className="mb-2 text-[10px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
-            {t('input.mode')}
+          <div className="mb-3 flex items-center gap-3">
+            <div className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground">
+              {t('input.mode', 'INPUT MODE')}
+            </div>
+            <div className="flex-1 h-[1px] bg-border" />
           </div>
           <Tabs
             value={editorMode}
@@ -114,11 +117,21 @@ export function Sidebar(): ReactElement {
               (value === 'image' || value === 'text') && layerService.switchTab(value)
             }
           >
-            <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="image">{t('input.image')}</TabsTrigger>
-              <TabsTrigger value="text">{t('input.text')}</TabsTrigger>
+            <TabsList className="w-full bg-[#f4f4f5] rounded-[10px] p-1 h-auto mb-4 border border-black/5">
+              <TabsTrigger
+                value="image"
+                className="flex-1 rounded-[8px] py-1.5 text-xs font-semibold data-[state=active]:bg-[#171918] data-[state=active]:text-white data-[state=active]:shadow-sm"
+              >
+                {t('input.image', 'Image')}
+              </TabsTrigger>
+              <TabsTrigger
+                value="text"
+                className="flex-1 rounded-[8px] py-1.5 text-xs font-semibold data-[state=active]:bg-[#171918] data-[state=active]:text-white data-[state=active]:shadow-sm"
+              >
+                {t('input.text', 'Text')}
+              </TabsTrigger>
             </TabsList>
-            <TabsContent value="image" className="mt-3">
+            <TabsContent value="image" className="mt-0 outline-none">
               <input
                 ref={inputRef}
                 id="void-motion-image-upload"
@@ -149,54 +162,71 @@ export function Sidebar(): ReactElement {
                 onDragOver={(event) => event.preventDefault()}
                 onDragLeave={() => setDragging(false)}
                 onDrop={onDrop}
-                className={`flex w-full flex-col items-center rounded-[12px] border border-dashed px-4 py-5 text-center transition ${dragging ? 'border-[#d3a13a] bg-[#fbf7ed]' : 'border-border bg-background hover:border-[#d3a13a]/50 hover:bg-[#fbf7ed]'}`}
+                className={`flex w-full flex-col items-center justify-center rounded-[12px] bg-transparent border-2 border-dashed border-black/15 px-4 py-8 text-center transition ${dragging ? 'bg-surface-2 ring-2 ring-black/10' : 'hover:bg-black/5'}`}
               >
-                <span className="mb-2 flex h-9 w-9 items-center justify-center rounded-lg border border-border bg-surface-2">
-                  {dragging ? <ImagePlus className="h-4 w-4" /> : <Upload className="h-4 w-4" />}
+                <span className="mb-3 flex h-10 w-10 items-center justify-center rounded-lg bg-surface-2 text-foreground border border-black/10 shadow-sm">
+                  {dragging ? <ImagePlus className="h-5 w-5" /> : <Upload className="h-5 w-5" />}
                 </span>
-                <span className="text-xs font-semibold">{t('input.drop')}</span>
-                <span className="mt-1 text-[10px] text-muted-foreground">{t('input.formats')}</span>
+                <span className="text-[13px] font-bold text-foreground">
+                  {t('input.drop', 'Drop images or browse')}
+                </span>
+                <span className="mt-1 text-[11px] text-muted-foreground">
+                  {t('input.formats', 'PNG, JPG, GIF, SVG · Multiple files OK')}
+                </span>
               </label>
             </TabsContent>
             <TabsContent value="text" className="mt-3">
               <TextPanel />
             </TabsContent>
           </Tabs>
+        </section>
 
-          <div className="mt-4 text-[10px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
-            {t('input.background')}
+        <section
+          className="mt-3 rounded-[16px] border border-black/5 bg-white p-4 shadow-sm"
+          aria-label={t('input.background')}
+        >
+          <div className="mb-3 flex items-center gap-3">
+            <div className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground border-l-[3px] border-l-black pl-2">
+              {t('input.background', 'CANVAS BACKGROUND')}
+            </div>
           </div>
-          <div className="mt-2 flex gap-1.5">
+          <div className="mt-3 grid grid-cols-3 gap-1.5">
             {[
-              { label: t('input.white'), value: { type: 'solid', val: 'white' } as const },
-              { label: t('input.black'), value: { type: 'solid', val: '#000000' } as const },
-              { label: t('input.none'), value: { type: 'solid', val: 'transparent' } as const },
+              { label: t('input.white', 'White'), value: { type: 'solid', val: 'white' } as const },
+              {
+                label: t('input.black', 'Black'),
+                value: { type: 'solid', val: '#000000' } as const,
+              },
+              {
+                label: t('input.none', 'None'),
+                value: { type: 'solid', val: 'transparent' } as const,
+              },
             ].map((option) => (
               <button
                 key={option.label}
                 type="button"
                 onClick={() => backgroundService.setBackground(option.value)}
-                className={`rounded-full border px-3 py-1 text-[10px] transition-all ${isActiveBackground(background, option.value) ? 'border-primary bg-primary/10 text-primary font-medium' : 'border-border bg-background text-muted-foreground hover:bg-surface-1'}`}
+                className={`flex items-center justify-center rounded-[7px] border px-2 py-1.5 text-[11px] font-medium transition-all ${isActiveBackground(background, option.value) ? 'border-primary border-l-[3px] border-l-primary bg-black/5 text-foreground' : 'border-border bg-panel text-muted-foreground hover:-translate-y-[1px] hover:border-black/15 hover:text-foreground'}`}
               >
                 {option.label}
               </button>
             ))}
           </div>
-          <label className="mt-2 flex cursor-pointer items-center gap-2 text-xs text-muted-foreground">
+          <label className="mt-4 flex cursor-pointer items-center gap-3 text-xs font-medium text-foreground">
             <input
               type="color"
               value={background?.type === 'custom' ? background.val : '#ffffff'}
               onChange={(event) =>
                 backgroundService.setBackground({ type: 'custom', val: event.target.value })
               }
-              className={`h-8 w-8 cursor-pointer rounded-lg border-2 p-0.5 transition-all ${background?.type === 'custom' ? 'border-primary ring-2 ring-primary/20' : 'border-border bg-transparent'}`}
+              className={`h-7 w-7 cursor-pointer rounded-[8px] border border-black/10 p-0 transition-all outline-none ${background?.type === 'custom' ? 'ring-2 ring-foreground/20' : ''}`}
             />
-            {t('input.customColor')}
+            {t('input.customColor', 'Custom solid color')}
           </label>
-          <div className="mt-3 text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
-            {t('input.presets')}
+          <div className="mt-6 text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-3">
+            {t('input.presets', 'PRESETS')}
           </div>
-          <div className="mt-2 grid grid-cols-5 gap-1.5">
+          <div className="mt-3 grid grid-cols-5 gap-2">
             {BACKGROUNDS.map((item) => (
               <button
                 key={(item.background as { key?: GradientKey }).key ?? item.labelKey}
@@ -204,18 +234,28 @@ export function Sidebar(): ReactElement {
                 title={t(`input.backgrounds.${item.labelKey}`)}
                 aria-label={t(`input.backgrounds.${item.labelKey}`)}
                 onClick={() => backgroundService.setBackground(item.background)}
-                className={`aspect-square rounded-lg transition-all ${item.className} ${isActiveBackground(background, item.background) ? 'ring-2 ring-primary ring-offset-2 shadow-sm' : 'ring-1 ring-border hover:ring-primary/50'}`}
+                className={`aspect-square rounded-[10px] transition-all ${item.className} ${isActiveBackground(background, item.background) ? 'ring-2 ring-foreground ring-offset-1 shadow-sm' : 'border border-black/5 hover:opacity-80'}`}
               />
             ))}
           </div>
         </section>
 
-        <section className="mt-4" aria-label={t('input.layerList')}>
-          <div className="mb-2 flex items-center justify-between">
-            <h3 className="text-xs font-semibold">{t('input.title')}</h3>
-            <span className="rounded-full bg-surface-2 px-2 py-0.5 text-[10px] text-muted-foreground">
-              {t('layerCount', { ns: 'projects', count: layers.length })}
-            </span>
+        <section className="mt-6 rounded-[16px] border border-black/5 bg-white p-4 shadow-sm" aria-label={t('input.layerList')}>
+          <div className="mb-3 flex items-center justify-between px-1">
+            <h3 className="text-[13px] font-bold text-foreground">{t('input.title', 'Layers')}</h3>
+            <div className="flex gap-2">
+              <button
+                type="button"
+                className="flex items-center gap-1.5 rounded-[6px] border border-black/10 px-2.5 py-1 text-[11px] font-medium text-foreground hover:bg-surface-2 transition-colors"
+                onClick={() => layerService.createGroupFromSelected()}
+              >
+                <Layers3 className="h-3.5 w-3.5" />
+                Group
+              </button>
+              <span className="rounded-full border border-black/10 bg-[#f4f4f5] px-2.5 py-1 text-[11px] font-medium text-muted-foreground">
+                {t('layerCount', { ns: 'projects', count: layers.length })}
+              </span>
+            </div>
           </div>
           <LayerPanel showHeader={false} />
         </section>

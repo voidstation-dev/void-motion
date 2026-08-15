@@ -60,23 +60,20 @@ export function useCanvasInteraction(
     }
 
     const onPointerDown = (e: MouseEvent): void => {
+      const target = e.target as HTMLElement | null
+      if (target && target.closest('[data-text-editor]')) return
       interactionService.pointerDown(e.clientX, e.clientY, rectOf(), canvasWidth)
     }
 
-    let rafId: number | null = null
     const onPointerMove = (e: MouseEvent): void => {
-      if (rafId !== null) cancelAnimationFrame(rafId)
-      rafId = requestAnimationFrame(() => {
-        rafId = null
-        const { cursor } = interactionService.pointerMove(
-          e.clientX,
-          e.clientY,
-          rectOf(),
-          canvasWidth,
-          e.shiftKey,
-        )
-        if (overlay) overlay.style.cursor = cursor
-      })
+      const { cursor } = interactionService.pointerMove(
+        e.clientX,
+        e.clientY,
+        rectOf(),
+        canvasWidth,
+        e.shiftKey,
+      )
+      if (overlay) overlay.style.cursor = cursor
     }
 
     const onPointerUp = (): void => {
@@ -84,6 +81,8 @@ export function useCanvasInteraction(
     }
 
     const onDoubleClick = (e: MouseEvent): void => {
+      const target = e.target as HTMLElement | null
+      if (target && target.closest('[data-text-editor]')) return
       interactionService.doubleClick(e.clientX, e.clientY, rectOf(), canvasWidth)
     }
 
@@ -97,7 +96,6 @@ export function useCanvasInteraction(
       overlay.removeEventListener('mousemove', onPointerMove)
       overlay.removeEventListener('dblclick', onDoubleClick)
       document.removeEventListener('mouseup', onPointerUp)
-      if (rafId !== null) cancelAnimationFrame(rafId)
     }
-  }, [overlayRef, viewportRef, canvas?.size.width])
+  }, [overlayRef, viewportRef, canvas])
 }

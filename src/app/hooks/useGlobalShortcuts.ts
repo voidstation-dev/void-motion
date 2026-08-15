@@ -28,50 +28,64 @@ import { globalControlsService } from '@/app/services/global-controls-service'
 import { playbackService } from '@/app/services/playback-service'
 import { usePlaybackStore, useSelectionStore } from '@/app/store'
 import { layerService } from '@/app/services/layer-service'
+import { textService } from '@/app/services/text-service'
 
 export function useGlobalShortcuts(): void {
   useEffect(() => {
     const onKeyDown = (e: KeyboardEvent): void => {
-      // Legacy checks `document.activeElement` (legacy/index.html:5168),
-      // not `e.target`, because the listener is on `document` and `e.target`
-      // is the event's dispatch source (often `body`), not the focused field.
       const active = document.activeElement as Element | null
       const tag = active?.tagName ?? ''
-      const typing = tag === 'INPUT' || tag === 'TEXTAREA'
+      const isContentEditable = (active as HTMLElement | null)?.isContentEditable ?? false
+      const typing = tag === 'INPUT' || tag === 'TEXTAREA' || isContentEditable
       const mod = e.ctrlKey || e.metaKey
 
-      // Space — play / pause (no modifier, not typing). Legacy uses
-      // `e.code === 'Space'` (legacy/index.html:5174).
-      if (e.code === 'Space' && !mod && !typing) {
+      if (typing) return
+
+      // Escape — cancel text placement / editor
+      if (e.key === 'Escape') {
+        if (textService.isActive()) {
+          textService.closeEditor(false)
+          e.preventDefault()
+          return
+        }
+        if (textService.isPlacing()) {
+          textService.cancelPlacement()
+          e.preventDefault()
+          return
+        }
+      }
+
+      // Space — play / pause (no modifier, not typing)
+      if (e.code === 'Space' && !mod) {
         e.preventDefault()
         playbackService.playPause()
         return
       }
 
-      // Modifier shortcuts (Ctrl/Cmd). Legacy returns early on `!mod`.
-      if (!mod || typing) return
-
-      if (e.key === 'z' && !e.shiftKey) {
-        // Legacy blocks undo while playing and toasts "Pause playback to undo"
-        // (legacy/index.html:5199). We preserve the block; the toast is a
-        // legacy-only side-effect (no-op in the React shell).
-        if (usePlaybackStore.getState().status === 'playing') return
-        e.preventDefault()
-        globalControlsService.undo()
-        return
-      }
-      if ((e.key === 'Z' && e.shiftKey) || e.key === 'y') {
-        e.preventDefault()
-        globalControlsService.redo()
-        return
-      }
-      if ((e.key === 'Delete' || e.key === 'Backspace') && !typing) {
-        e.preventDefault()
+      // Delete / Backspace — remove selected layer (no modifier, not typing)
+      if ((e.key === 'Delete' || e.key === 'Backspace') && !mod) {
         const selectedId = useSelectionStore.getState().selectedLayerId
         if (selectedId !== null) {
+          e.preventDefault()
           layerService.removeLayer(selectedId)
         }
         return
+      }
+
+      // Modifier shortcuts (Ctrl/Cmd)
+      if (mod) {
+        const key = e.key.toLowerCase()
+        if (key === 'z' && !e.shiftKey) {
+          if (usePlaybackStore.getState().status === 'playing') return
+          e.preventDefault()
+          globalControlsService.undo()
+          return
+        }
+        if ((key === 'z' && e.shiftKey) || (key === 'y' && !e.shiftKey)) {
+          e.preventDefault()
+          globalControlsService.redo()
+          return
+        }
       }
     }
 

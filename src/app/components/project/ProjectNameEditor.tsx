@@ -94,7 +94,7 @@ export function ProjectNameEditor(): ReactElement {
     <button
       type="button"
       onClick={start}
-      className="flex-1 truncate rounded px-1 py-0.5 text-left text-sm hover:bg-surface-1 focus:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+      className="flex-1 truncate rounded px-1 py-0.5 text-left text-xs font-bold text-foreground hover:bg-black/5 focus:outline-none focus-visible:ring-1 focus-visible:ring-ring"
       aria-label={t('header.renameProject')}
       title={t('header.clickToRename')}
     >
@@ -102,3 +102,4 @@ export function ProjectNameEditor(): ReactElement {
     </button>
   )
 }
+

@@ -21,9 +21,7 @@ const HANDS: ReadonlyArray<{ value: HandStyle; label: string; image?: string }> 
 const RATIOS: ReadonlyArray<AspectRatio> = ['16:9', '9:16', '1:1']
 const RESOLUTIONS: ReadonlyArray<ResolutionPreset> = ['720p', '1080p', '1440p']
 
-function optionClass(active: boolean): string {
-  return `h-8 rounded-[9px] border px-3 text-[11px] font-medium transition ${active ? 'border-[#171918] bg-[#171918] text-white shadow-sm' : 'border-border bg-[#fbfaf7] text-muted-foreground hover:border-black/20 hover:bg-white'}`
-}
+
 
 export function BottomBar(): ReactElement {
   const { t } = useTranslation('editor')
@@ -122,48 +120,74 @@ export function BottomBar(): ReactElement {
       </section>
 
       <section
-        className="min-w-0 px-3 py-2.5 max-sm:w-[390px] max-sm:shrink-0 sm:px-4"
+        className="min-w-0 px-3 py-2.5 max-sm:w-[390px] max-sm:shrink-0 sm:px-4 flex items-center"
         aria-label={t('bottom.canvasSize')}
       >
-        <div className="mb-2 text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
-          {t('bottom.canvasSize')}
-        </div>
-        <div className="mb-2 grid grid-cols-[72px_repeat(3,minmax(0,1fr))] items-center gap-1.5">
-          <span className="text-[10px] uppercase text-muted-foreground">
-            {t('bottom.aspectRatio')}
-          </span>
-          {RATIOS.map((item) => (
-            <button
-              key={item}
-              type="button"
-              onClick={() => canvasControlsService.setAspectRatio(item)}
-              aria-pressed={ratio === item}
-              data-testid={`ratio-btn-${item}`}
-              className={optionClass(ratio === item)}
-            >
-              {item}
-            </button>
-          ))}
-        </div>
-        <div className="grid grid-cols-[72px_repeat(3,minmax(0,1fr))] items-center gap-1.5">
-          <span className="text-[10px] uppercase text-muted-foreground">
-            {t('bottom.resolution')}
-          </span>
-          {RESOLUTIONS.map((item) => (
-            <button
-              key={item}
-              type="button"
-              onClick={() => canvasControlsService.setResolutionPreset(item)}
-              aria-pressed={resolution === item}
-              data-testid={`res-btn-${item}`}
-              className={optionClass(resolution === item)}
-            >
-              {item}
-            </button>
-          ))}
-          <span className="col-span-4 text-right text-[10px] tabular-nums text-muted-foreground max-lg:hidden">
-            {size.width} × {size.height}
-          </span>
+        <div className="flex-1 rounded-[16px] border border-black/5 bg-white p-3 shadow-sm flex flex-col justify-center h-full max-h-[108px]">
+          <div className="mb-2.5 flex items-center justify-between">
+            <h3 className="text-[11px] font-bold uppercase tracking-widest text-foreground">
+              {t('bottom.canvasSize')}
+            </h3>
+            <span className="text-right text-[10px] font-medium tabular-nums text-muted-foreground">
+              {size.width} × {size.height}
+            </span>
+          </div>
+
+          <div className="grid grid-cols-[1fr_1fr] items-center gap-3">
+            <div>
+              <div className="mb-1.5 text-[9px] font-bold uppercase tracking-wider text-muted-foreground">
+                {t('bottom.aspectRatio', 'Ratio')}
+              </div>
+              <div className="flex w-full bg-[#f4f4f5] rounded-[10px] p-1 border border-black/5">
+                {RATIOS.map((item) => {
+                  const active = ratio === item;
+                  return (
+                    <button
+                      key={item}
+                      type="button"
+                      onClick={() => canvasControlsService.setAspectRatio(item)}
+                      aria-pressed={active}
+                      data-testid={`ratio-btn-${item}`}
+                      className={`flex-1 h-7 rounded-[8px] text-[10px] font-semibold transition ${
+                        active
+                          ? 'bg-[#171918] text-white shadow-sm'
+                          : 'text-muted-foreground hover:bg-black/5 hover:text-foreground'
+                      }`}
+                    >
+                      {item}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            <div>
+              <div className="mb-1.5 text-[9px] font-bold uppercase tracking-wider text-muted-foreground">
+                {t('bottom.resolution', 'Resolution')}
+              </div>
+              <div className="flex w-full bg-[#f4f4f5] rounded-[10px] p-1 border border-black/5">
+                {RESOLUTIONS.map((item) => {
+                  const active = resolution === item;
+                  return (
+                    <button
+                      key={item}
+                      type="button"
+                      onClick={() => canvasControlsService.setResolutionPreset(item)}
+                      aria-pressed={active}
+                      data-testid={`res-btn-${item}`}
+                      className={`flex-1 h-7 rounded-[8px] text-[10px] font-semibold transition ${
+                        active
+                          ? 'bg-[#171918] text-white shadow-sm'
+                          : 'text-muted-foreground hover:bg-black/5 hover:text-foreground'
+                      }`}
+                    >
+                      {item}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
         </div>
       </section>
     </footer>

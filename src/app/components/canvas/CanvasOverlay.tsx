@@ -34,13 +34,13 @@ export function CanvasOverlay({
         ref={selectionRef}
         id="select-canvas"
         data-testid="select-canvas"
-        className="absolute inset-0 !h-full !w-full"
+        className="absolute inset-0 h-full w-full"
       />
       <canvas
         ref={outlineOverlayRef}
         id="outline-overlay"
         data-testid="outline-overlay"
-        className="pointer-events-none absolute inset-0 !h-full !w-full opacity-100"
+        className="pointer-events-none absolute inset-0 h-full w-full opacity-100"
       />
     </>
   )

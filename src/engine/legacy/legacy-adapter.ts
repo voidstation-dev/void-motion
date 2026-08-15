@@ -162,33 +162,21 @@ export class LegacyEngineAdapter implements InkplainerEngine {
     renderStaticFrame(this.canvases, legacy, editingId)
   }
 
-  resize(displayWidth: number, displayHeight: number): void {
+  resize(_displayWidth: number, _displayHeight: number): void {
     this.assertAlive()
     if (!this.canvases) return
 
     const legacy = requireLegacyState()
 
-    // Extract padding/margins based on what `fitCanvas` does in legacy.
-    // The viewport container naturally handles padding, so we just use the provided
-    // content-box display dimensions (displayWidth x displayHeight) from the ResizeObserver
-    // minus the legacy safe margin (24px).
-    const safeMargin = 24
-    const availableW = Math.max(160, displayWidth - safeMargin)
-    const availableH = Math.max(160, displayHeight - safeMargin)
-
-    const s = Math.min(availableW / legacy.canvasW, availableH / legacy.canvasH, 1)
-
-    const sw = legacy.canvasW * s + 'px'
-    const sh = legacy.canvasH * s + 'px'
-
-    this.canvases.main.style.width = sw
-    this.canvases.main.style.height = sh
-    this.canvases.hand.style.width = sw
-    this.canvases.hand.style.height = sh
-    this.canvases.selection.style.width = sw
-    this.canvases.selection.style.height = sh
-    this.canvases.outlineOverlay.style.width = sw
-    this.canvases.outlineOverlay.style.height = sh
+    // Canvases fill the viewport container (which is already sized to the exact aspect ratio).
+    this.canvases.main.style.width = '100%'
+    this.canvases.main.style.height = '100%'
+    this.canvases.hand.style.width = '100%'
+    this.canvases.hand.style.height = '100%'
+    this.canvases.selection.style.width = '100%'
+    this.canvases.selection.style.height = '100%'
+    this.canvases.outlineOverlay.style.width = '100%'
+    this.canvases.outlineOverlay.style.height = '100%'
 
     // Only redraw the static scene if we aren't playing
     if (!legacy.playing) {
