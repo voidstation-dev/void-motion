@@ -22,6 +22,10 @@ export function InfoPageLayout({
 }: InfoPageLayoutProps): ReactElement {
   const { t } = useTranslation('common')
   usePageMetadata(`${t('brand')} — ${title}`, description)
+  
+  const path = typeof window !== 'undefined' ? window.location.pathname.replace(/\/+$/, '') : ''
+  const isTutorial = path === '/tutorial' || path === '/docs'
+
   return (
     <div className="h-full overflow-y-auto bg-[#f4f4f1] text-[#171717]">
       <header className="sticky top-0 z-40 border-b border-black/10 bg-[#f4f4f1]/95 backdrop-blur">
@@ -43,7 +47,7 @@ export function InfoPageLayout({
             className="ml-auto flex items-center gap-1 sm:gap-2"
             aria-label={t('nav.informationPages')}
           >
-            {window.location.pathname !== '/tutorial' && (
+            {!isTutorial && (
               <a className="whitespace-nowrap rounded-lg px-2 sm:px-3 py-2 text-sm hover:bg-black/5" href="/tutorial">
                 {t('nav.tutorial')}
               </a>
