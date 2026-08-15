@@ -27,5 +27,10 @@
   "meta": {
     "editorTitle": "Void Motion — Trình tạo hoạt ảnh bảng trắng",
     "editorDescription": "Tạo hoạt ảnh bảng trắng bằng nét vẽ từ hình ảnh và văn bản ngay trong trình duyệt."
+  },
+  "mobileWarning": {
+    "title": "{{brand}} hoạt động tốt nhất trên máy tính",
+    "description": "Đây là trình chỉnh sửa hoạt ảnh dựa trên canvas với các bảng điều khiển bên, kéo thả, quay video và lưu trữ dự án. Vui lòng mở trang trên màn hình laptop hoặc máy tính để bàn để sử dụng đầy đủ tính năng.",
+    "linksText": "Bạn vẫn có thể xem <1>tài liệu hướng dẫn</1>, <2>trang giới thiệu</2>, hoặc <3>quyền riêng tư</3> từ thiết bị này."
   }
 }

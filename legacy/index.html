@@ -3120,41 +3120,6 @@ input[type="number"]:focus { border-color: var(--accent); }
   flex-shrink: 0;
 }
 
-#desktop-only-notice {
-  display: none;
-  min-height: 100vh;
-  padding: 32px 22px;
-  background: var(--bg);
-  color: var(--text);
-  align-items: center;
-  justify-content: center;
-}
-.desktop-only-card {
-  width: 100%;
-  max-width: 420px;
-  background: var(--sidebar);
-  border: 1px solid var(--border-hi);
-  border-radius: 14px;
-  padding: 28px;
-  box-shadow: 0 12px 40px rgba(0,0,0,0.12);
-}
-.desktop-only-card h1 {
-  font-size: 22px;
-  line-height: 1.2;
-  margin-bottom: 10px;
-  letter-spacing: -0.3px;
-}
-.desktop-only-card p {
-  font-size: 14px;
-  line-height: 1.65;
-  color: var(--muted-hi);
-  margin-bottom: 16px;
-}
-.desktop-only-card a {
-  color: var(--text);
-  font-weight: 600;
-  text-underline-offset: 3px;
-}
 
 @media (max-width: 899px) {
   body {
@@ -3162,7 +3127,6 @@ input[type="number"]:focus { border-color: var(--accent); }
     min-height: 100vh;
     overflow: auto;
   }
-  #desktop-only-notice { display: flex; }
   #topbar,
   #sidebar,
   #main,
@@ -3176,13 +3140,6 @@ input[type="number"]:focus { border-color: var(--accent); }
 </style>
 <body>
 
-<div id="desktop-only-notice">
-  <div class="desktop-only-card">
-    <h1>Inkplainer works best on a desktop browser</h1>
-    <p>This is a canvas-based animation editor with side panels, drag controls, video recording, and project storage. Please open it on a laptop or desktop screen for the full app.</p>
-    <p>Please open Inkplainer on a laptop or desktop screen for the full app.</p>
-  </div>
-</div>
 
 
 

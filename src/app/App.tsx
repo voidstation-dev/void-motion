@@ -15,6 +15,7 @@ import { ExportFeature } from './features/export/ExportFeature'
 import { useProjectBoot } from './hooks/useProjectBoot'
 import { useGlobalShortcuts } from './hooks/useGlobalShortcuts'
 import { LegacyRuntimeHost } from './components/runtime/LegacyRuntimeHost'
+import { MobileWarning } from './components/MobileWarning'
 import { useMediaQuery } from './hooks/useMediaQuery'
 import {
   Sheet,
@@ -132,6 +133,7 @@ function EditorApp(): ReactElement {
       )}
       <ProjectsSheet />
       <ExportFeature />
+      <MobileWarning />
     </Providers>
   )
 }

@@ -27,5 +27,10 @@
   "meta": {
     "editorTitle": "Void Motion — Whiteboard animation editor",
     "editorDescription": "Create hand-drawn whiteboard animations from images and text directly in your browser."
+  },
+  "mobileWarning": {
+    "title": "{{brand}} works best on a desktop browser",
+    "description": "This is a canvas-based animation editor with side panels, drag controls, video recording, and project storage. Please open it on a laptop or desktop screen for the full app.",
+    "linksText": "You can still read the <1>documentation</1>, <2>about page</2>, or <3>privacy policy</3> from this device."
   }
 }
