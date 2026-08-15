@@ -17,14 +17,14 @@
  */
 import { useCallback, useEffect, useState } from 'react'
 import type { ReactElement } from 'react'
-import { Plus, Trash2 } from 'lucide-react'
+import { Plus, Trash2, Pencil } from 'lucide-react'
 import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-  SheetDescription,
-} from '@/app/components/ui/sheet'
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from '@/app/components/ui/dialog'
 import { Button } from '@/app/components/ui/button'
 import { ScrollArea } from '@/app/components/ui/scroll-area'
 import {
@@ -85,26 +85,26 @@ export function ProjectsSheet(): ReactElement {
 
   return (
     <>
-      <Sheet open={open} onOpenChange={(v) => (v ? projectService.openProjects() : close())}>
-        <SheetContent side="left" className="w-[380px] p-0 sm:max-w-[380px]">
-          <SheetHeader className="px-4 pt-4">
-            <SheetTitle>{t('title')}</SheetTitle>
-            <SheetDescription className="sr-only">{t('description')}</SheetDescription>
-          </SheetHeader>
-          <div className="px-4 py-2">
-            <Button variant="outline" size="sm" className="w-full" onClick={onCreate}>
-              <Plus className="mr-1 h-4 w-4" />
+      <Dialog open={open} onOpenChange={(v) => (v ? projectService.openProjects() : close())}>
+        <DialogContent className="sm:max-w-[480px] p-0 gap-0 overflow-hidden rounded-xl">
+          <DialogHeader className="px-6 py-4">
+            <DialogTitle className="text-xl font-semibold">{t('title')}</DialogTitle>
+            <DialogDescription className="sr-only">{t('description')}</DialogDescription>
+          </DialogHeader>
+          <div className="px-6 py-2">
+            <Button className="w-full bg-zinc-900 text-white hover:bg-zinc-800 shadow-sm" onClick={onCreate}>
+              <Plus className="mr-2 h-4 w-4" />
               {t('new')}
             </Button>
           </div>
-          <ScrollArea className="h-[calc(100vh-120px)] px-4 pb-4">
+          <ScrollArea className="max-h-[50vh] px-6 pb-6 pt-2">
             {summaries.length === 0 ? (
               <div className="py-12 text-center text-sm text-muted-foreground">
                 <p>{t('empty')}</p>
                 <small className="text-xs">{t('emptyHint')}</small>
               </div>
             ) : (
-              <ul className="space-y-1">
+              <ul className="space-y-2">
                 {summaries.map((s) => (
                   <ProjectRow
                     key={s.id}
@@ -118,8 +118,8 @@ export function ProjectsSheet(): ReactElement {
               </ul>
             )}
           </ScrollArea>
-        </SheetContent>
-      </Sheet>
+        </DialogContent>
+      </Dialog>
       <AlertDialog
         open={pendingDelete !== null}
         onOpenChange={(nextOpen) => {
@@ -160,37 +160,41 @@ function ProjectRow({ summary, active, now, onSelect, onDelete }: ProjectRowProp
   const size = formatSizeBytes(summary.sizeBytes, i18n.resolvedLanguage)
   // Legacy canvas size read: `project.state.canvasW × project.state.canvasH`
   // (legacy/index.html:4761). The summary carries no canvas dims yet, so we
-  // omit that segment until M08 populates canvas dims on summaries.
   return (
     <li
-      className={`flex items-center gap-2 rounded-md border px-2 py-2 ${
-        active ? 'border-primary bg-surface-1' : 'border-transparent hover:bg-surface-1'
+      className={`group flex items-center gap-3 rounded-lg border px-3 py-3 transition-colors ${
+        active ? 'border-foreground bg-muted/20' : 'border-border hover:bg-muted/50'
       }`}
     >
       <button
         type="button"
         onClick={() => onSelect(summary.id)}
-        className="flex-1 min-w-0 text-left"
+        className="flex flex-1 min-w-0 items-center gap-3 text-left"
         aria-label={t('open', { name: summary.name })}
       >
-        <div className="truncate text-sm font-medium">{summary.name}</div>
-        <div className="flex items-center gap-1 text-xs text-muted-foreground">
-          {ago && <span>{ago}</span>}
-          {ago && <span aria-hidden>•</span>}
-          <span>{size}</span>
+        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md border bg-muted/30 text-foreground">
+          <Pencil className="h-5 w-5" />
+        </div>
+        <div className="flex-1 min-w-0">
+          <div className="truncate text-sm font-medium">{summary.name}</div>
+          <div className="flex items-center gap-1.5 text-xs text-muted-foreground mt-0.5">
+            {ago && <span>{ago}</span>}
+            {ago && <span aria-hidden>•</span>}
+            <span>{size}</span>
+          </div>
         </div>
       </button>
       <Button
         variant="ghost"
         size="icon"
-        className="h-7 w-7 shrink-0"
+        className="h-8 w-8 shrink-0 opacity-0 transition-opacity focus-visible:opacity-100 group-hover:opacity-100"
         aria-label={t('delete', { name: summary.name })}
         onClick={(e) => {
           e.stopPropagation()
           onDelete(summary.id)
         }}
       >
-        <Trash2 className="h-4 w-4" />
+        <Trash2 className="h-4 w-4 text-muted-foreground hover:text-destructive" />
       </Button>
     </li>
   )
