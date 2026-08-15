@@ -9,6 +9,10 @@ import {
   Redo2,
   SlidersHorizontal,
   Undo2,
+  ChevronDown,
+  Info,
+  FileText,
+  ShieldCheck,
 } from 'lucide-react'
 import { Button } from '@/app/components/ui/button'
 import { ProjectNameEditor } from '@/app/components/project/ProjectNameEditor'
@@ -19,6 +23,13 @@ import { useLayerStore } from '@/app/store'
 import { useTranslation } from 'react-i18next'
 import { LanguageSwitcher } from '@/app/components/LanguageSwitcher'
 import { EXTERNAL_LINKS } from '@/app/config/external-links'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/app/components/ui/dropdown-menu'
 
 interface HeaderProps {
   readonly compact?: boolean
@@ -40,17 +51,53 @@ export function Header({
       data-region="header"
       className="motion-trace relative z-20 mx-2 mt-2 flex h-[64px] shrink-0 items-center gap-1 overflow-hidden rounded-[14px] border border-black/10 bg-sidebar px-2 shadow-[0_5px_18px_rgba(24,28,26,0.06)] sm:gap-2 sm:px-3 xl:mx-2.5 xl:mt-2.5 xl:px-4"
     >
-      <div className="flex items-center gap-2 sm:pr-2 xl:pr-3">
-        <span className="flex h-9 w-9 items-center justify-center rounded-[11px] bg-[#171918] text-[#f8f7f2] shadow-sm">
-          <Pencil className="h-4 w-4" />
-        </span>
-        <span className="hidden min-w-0 leading-none md:block">
-          <span className="block font-hand text-[23px] font-bold tracking-tight">Void Motion</span>
-          <span className="mt-0.5 hidden text-[8px] font-semibold uppercase tracking-[0.2em] text-muted-foreground xl:block">
-            by Void Station
+      <DropdownMenu>
+        <DropdownMenuTrigger className="group flex items-center gap-2 sm:pr-2 xl:pr-3 outline-none hover:opacity-80 transition-opacity text-left">
+          <span className="flex h-9 w-9 items-center justify-center rounded-[11px] bg-[#171918] text-[#f8f7f2] shadow-sm">
+            <Pencil className="h-4 w-4" />
           </span>
-        </span>
-      </div>
+          <span className="hidden min-w-0 leading-none md:block">
+            <span className="flex items-center gap-1 font-hand text-[23px] font-bold tracking-tight">
+              Void Motion
+              <ChevronDown className="h-4 w-4 opacity-40 transition-transform duration-200 group-data-[state=open]:rotate-180" />
+            </span>
+            <span className="mt-0.5 hidden text-[8px] font-semibold uppercase tracking-[0.2em] text-muted-foreground xl:block">
+              by Void Station
+            </span>
+          </span>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="start" className="w-[280px] rounded-xl p-1.5">
+          <div className="px-3 py-2.5">
+            <div className="font-hand text-2xl font-bold">Void Motion</div>
+            <div className="mt-0.5 text-xs text-muted-foreground">Free whiteboard animation maker</div>
+          </div>
+          <DropdownMenuSeparator />
+          <DropdownMenuItem asChild className="cursor-pointer gap-2.5 py-2.5 px-3">
+            <a href="/about">
+              <Info className="h-4 w-4 opacity-70" />
+              {t('nav.about', { ns: 'common' })}
+            </a>
+          </DropdownMenuItem>
+          <DropdownMenuItem asChild className="cursor-pointer gap-2.5 py-2.5 px-3">
+            <a href="/tutorial">
+              <FileText className="h-4 w-4 opacity-70" />
+              {t('nav.tutorial', { ns: 'common' })}
+            </a>
+          </DropdownMenuItem>
+          <DropdownMenuItem asChild className="cursor-pointer gap-2.5 py-2.5 px-3">
+            <a href={EXTERNAL_LINKS.repository} target="_blank" rel="noopener noreferrer">
+              <Code2 className="h-4 w-4 opacity-70" />
+              {t('nav.source', { ns: 'common' })}
+            </a>
+          </DropdownMenuItem>
+          <DropdownMenuItem asChild className="cursor-pointer gap-2.5 py-2.5 px-3">
+            <a href="/privacy">
+              <ShieldCheck className="h-4 w-4 opacity-70" />
+              {t('nav.privacy', { ns: 'common' })}
+            </a>
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
       <div className="hidden h-7 w-px bg-border sm:block" />
       <div className="sm:ml-1 xl:ml-2">
         <ProjectsButton />
