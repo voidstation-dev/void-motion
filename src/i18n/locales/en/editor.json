@@ -25,9 +25,10 @@
   },
   "settings": {
     "editingSelected": "Editing settings for the selected layer.",
-    "selectLayer": "Select a layer on the right to edit its animation settings.",
+    "selectLayer": "Select a layer to edit animation.",
     "generate": "Generate Animation",
-    "sheetDescription": "Configure the selected layer animation."
+    "generating": "Generating...",
+    "sheetDescription": "Configure animation settings."
   },
   "bottom": {
     "handStyle": "Hand style",

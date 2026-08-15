@@ -113,7 +113,7 @@ export function Header({
       )}
 
       <nav
-        className="ml-auto flex items-center gap-1 xl:gap-1.5"
+        className="ml-auto flex items-center gap-3 xl:gap-4"
         aria-label={t('header.helpExport')}
       >
         <LanguageSwitcher />

@@ -134,12 +134,13 @@ export const playbackService = {
   syncStatusFromLegacy(): void {
     if (typeof window === 'undefined' || !window.state) return
     const s = window.state
+    const generating = !!s.generating
     const playing = !!s.playing
     const done = !!s.done
     const progress = computeOverallPlaybackProgress(s)
     // Map legacy status to the domain PlaybackStatus union. Legacy has no
     // distinct "paused" state — `!playing && !done` is the idle/paused case.
-    const status = done ? 'completed' : playing ? 'playing' : 'idle'
+    const status = generating ? 'generating' : done ? 'completed' : playing ? 'playing' : 'idle'
     usePlaybackStore.getState().setSnapshot(status, progress)
   },
 }

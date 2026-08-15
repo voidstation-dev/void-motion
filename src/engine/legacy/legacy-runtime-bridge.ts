@@ -23,6 +23,7 @@ const FUNCTION_NAMES = [
   'deleteProject',
   'dissolveGroup',
   'drawHand',
+  'drawSelectionHandles',
   'finishAnim',
   'fitCanvas',
   'generate',

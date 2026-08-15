@@ -56,7 +56,7 @@ export function PresetsSection() {
   const canSaveMore = customPresets.length < MAX_CUSTOM_PRESETS
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex flex-col gap-4 p-3">
       <div className="text-sm font-semibold">{t('presets.title')}</div>
 
       {/* Built-in Presets */}

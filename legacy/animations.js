@@ -93,35 +93,72 @@ function ensureRevealCanvas() {
 }
 
 // ── SCANNER (unchanged) ──
-function setupScanner() { state.curX=0; state.curY=0; state.scanDir=1; }
+function setupScanner() { 
+  state.curX = 0; 
+  state.curY = 0; 
+  state.scanDir = 1; 
+  const cb = state.contentBounds;
+  const dir = state.textAnimDir || 'ttb';
+  if (dir === 'btt') state.curY = Math.max(0, cb.h - 48);
+  if (dir === 'rtl') state.curX = Math.max(0, cb.w - 48);
+}
 
 function tickScanner(speed) {
-  const cb=state.contentBounds, bandH=48;
-  const absX=cb.x+state.curX, absY=cb.y+state.curY;
-  const sw=Math.min(speed, cb.w-state.curX), sh=Math.min(bandH, cb.h-state.curY);
-  ctx.drawImage(offscreen, absX,absY,sw,sh, absX,absY,sw,sh);
-  state.curX += speed*state.scanDir;
-  if (state.curX>=cb.w || state.curX<0) {
-    ctx.drawImage(offscreen, cb.x,absY,cb.w,sh, cb.x,absY,cb.w,sh);
-    state.curY += bandH;
-    if (state.curY>=cb.h) { finishAnim(); return; }
-    if (state.zigzag) { state.scanDir*=-1; state.curX=state.scanDir===1?0:cb.w-speed; }
-    else { state.scanDir=1; state.curX=0; }
+  const cb = state.contentBounds;
+  const dir = state.textAnimDir || 'ttb';
+  const isHoriz = dir === 'ltr' || dir === 'rtl'; // main sweep is horizontal
+  const band = 48; // thickness of the sweep band
+  
+  if (!isHoriz) { // ttb or btt
+    const absX = cb.x + state.curX, absY = cb.y + state.curY;
+    const sw = Math.min(speed, cb.w - state.curX), sh = Math.min(band, cb.h - state.curY);
+    ctx.drawImage(offscreen, absX, absY, sw, sh, absX, absY, sw, sh);
+    state.curX += speed * state.scanDir;
+    
+    if (state.curX >= cb.w || state.curX < 0) {
+      ctx.drawImage(offscreen, cb.x, absY, cb.w, sh, cb.x, absY, cb.w, sh); // fix up row
+      state.curY += (dir === 'ttb' ? band : -band);
+      if ((dir === 'ttb' && state.curY >= cb.h) || (dir === 'btt' && state.curY < 0)) { finishAnim(); return; }
+      if (state.zigzag) { state.scanDir *= -1; state.curX = state.scanDir === 1 ? 0 : cb.w - speed; }
+      else { state.scanDir = 1; state.curX = 0; }
+    }
+    
+    const tipX = cb.x + state.curX + (state.scanDir === 1 ? 0 : speed);
+    const tipY = cb.y + state.curY + (dir === 'ttb' ? 0 : band) + (dir === 'ttb' ? band*0.5 : -band*0.5);
+    hctx.clearRect(0, 0, state.canvasW, state.canvasH);
+    drawHand(hctx, tipX, tipY, state.scanDir, state.hand);
+    
+    const rowProgress = state.scanDir === 1 ? state.curX / cb.w : (cb.w - state.curX) / cb.w;
+    const clampedRowProgress = Math.max(0, Math.min(1, rowProgress));
+    const totalRows = Math.ceil(cb.h / band);
+    const currentRow = dir === 'ttb' ? Math.floor(state.curY / band) : Math.floor((cb.h - state.curY - 1) / band);
+    setProgress((currentRow + clampedRowProgress) / totalRows);
+    
+  } else { // ltr or rtl
+    const absX = cb.x + state.curX, absY = cb.y + state.curY;
+    const sw = Math.min(band, cb.w - state.curX), sh = Math.min(speed, cb.h - state.curY);
+    ctx.drawImage(offscreen, absX, absY, sw, sh, absX, absY, sw, sh);
+    state.curY += speed * state.scanDir;
+    
+    if (state.curY >= cb.h || state.curY < 0) {
+      ctx.drawImage(offscreen, absX, cb.y, sw, cb.h, absX, cb.y, sw, cb.h); // fix up col
+      state.curX += (dir === 'ltr' ? band : -band);
+      if ((dir === 'ltr' && state.curX >= cb.w) || (dir === 'rtl' && state.curX < 0)) { finishAnim(); return; }
+      if (state.zigzag) { state.scanDir *= -1; state.curY = state.scanDir === 1 ? 0 : cb.h - speed; }
+      else { state.scanDir = 1; state.curY = 0; }
+    }
+    
+    const tipX = cb.x + state.curX + (dir === 'ltr' ? 0 : band) + (dir === 'ltr' ? band*0.5 : -band*0.5);
+    const tipY = cb.y + state.curY + (state.scanDir === 1 ? 0 : speed);
+    hctx.clearRect(0, 0, state.canvasW, state.canvasH);
+    drawHand(hctx, tipX, tipY, state.scanDir, state.hand);
+    
+    const colProgress = state.scanDir === 1 ? state.curY / cb.h : (cb.h - state.curY) / cb.h;
+    const clampedColProgress = Math.max(0, Math.min(1, colProgress));
+    const totalCols = Math.ceil(cb.w / band);
+    const currentCol = dir === 'ltr' ? Math.floor(state.curX / band) : Math.floor((cb.w - state.curX - 1) / band);
+    setProgress((currentCol + clampedColProgress) / totalCols);
   }
-  const tipX=cb.x+state.curX+(state.scanDir===1?0:speed);
-  const tipY=cb.y+state.curY+bandH*0.5;
-  hctx.clearRect(0,0,state.canvasW,state.canvasH);
-  drawHand(hctx, tipX,tipY, state.scanDir, state.hand);
-  // A zigzag row is complete when the hand reaches either edge. Using curX
-  // directly makes progress run backwards on right-to-left rows, which is
-  // especially visible in the React progress transport. Measure distance from
-  // the row's starting edge instead so progress stays monotonic in both
-  // directions.
-  const rowProgress = state.scanDir === 1
-    ? state.curX / cb.w
-    : (cb.w - state.curX) / cb.w;
-  const clampedRowProgress = Math.max(0, Math.min(1, rowProgress));
-  setProgress((state.curY + clampedRowProgress * bandH) / cb.h);
 }
 
 // ─────────────────────────────────────────────
@@ -168,28 +205,54 @@ function setupContour() {
   }
 
   // Phase 2: fill waypoints — zigzag scan respecting content shape
-  const STEP = Math.max(4, Math.round(H/55));
+  const animDir = state.textAnimDir || 'ttb';
+  const isHoriz = animDir === 'ltr' || animDir === 'rtl';
+  const mainMax = isHoriz ? W : H;
+  const crossMax = isHoriz ? H : W;
+  const STEP = Math.max(4, Math.round(mainMax/55));
+  
   const fillPts = [];
-  let dir = 1;
-  for (let ry = 0; ry < H; ry += STEP) {
-    let lx = W, rx = 0;
-    for (let y2 = ry; y2 < Math.min(ry+STEP,H); y2++)
-      for (let x = 0; x < W; x++)
-        if (map[y2*W+x]) { lx=Math.min(lx,x); rx=Math.max(rx,x); }
-    if (lx > rx) { dir*=-1; continue; }
-    const ay = cb.y + ry + STEP*0.5;
-    const x1 = cb.x + (dir>0 ? lx : rx);
-    const x2 = cb.x + (dir>0 ? rx : lx);
-    const segs = Math.max(3, Math.floor((rx-lx)/28));
+  let zigzagDir = 1;
+  const start_r = (animDir === 'btt' || animDir === 'rtl') ? mainMax - 1 : 0;
+  const end_r = (animDir === 'btt' || animDir === 'rtl') ? -1 : mainMax;
+  const step_r = (animDir === 'btt' || animDir === 'rtl') ? -STEP : STEP;
+
+  for (let r = start_r; (step_r > 0 ? r < end_r : r > end_r); r += step_r) {
+    let minCross = crossMax, maxCross = 0;
+    
+    // Scan band
+    const rStart = (step_r > 0) ? r : Math.max(0, r + step_r + 1);
+    const rEnd = (step_r > 0) ? Math.min(r + step_r, mainMax) : r + 1;
+    
+    for (let r2 = rStart; r2 < rEnd; r2++) {
+      for (let cross = 0; cross < crossMax; cross++) {
+        const x = isHoriz ? r2 : cross;
+        const y = isHoriz ? cross : r2;
+        if (map[y*W+x]) {
+          minCross = Math.min(minCross, cross);
+          maxCross = Math.max(maxCross, cross);
+        }
+      }
+    }
+    
+    if (minCross > maxCross) { zigzagDir *= -1; continue; }
+    
+    const center_r = cb[isHoriz ? 'x' : 'y'] + r + step_r * 0.5;
+    const c1 = cb[isHoriz ? 'y' : 'x'] + (zigzagDir > 0 ? minCross : maxCross);
+    const c2 = cb[isHoriz ? 'y' : 'x'] + (zigzagDir > 0 ? maxCross : minCross);
+    const segs = Math.max(3, Math.floor((maxCross - minCross)/28));
+    
     for (let s = 0; s <= segs; s++) {
       const t = s/segs;
+      const crossPos = c1 + (c2 - c1)*t + (Math.random()-0.5)*4;
+      const mainPos = center_r + (Math.random()-0.5)*3;
       fillPts.push({
-        x: x1+(x2-x1)*t + (Math.random()-0.5)*4,
-        y: ay + (Math.random()-0.5)*3,
-        reveal_y: ay
+        x: isHoriz ? mainPos : crossPos,
+        y: isHoriz ? crossPos : mainPos,
+        reveal_pos: center_r
       });
     }
-    dir *= -1;
+    zigzagDir *= -1;
   }
 
   state.contourEdgePts  = edgePts;
@@ -269,9 +332,26 @@ function tickContour(speed) {
     ctx.save(); fillBg(ctx);
     // Draw the completed edge outline first
     ctx.drawImage(state.edgeCanvas, 0, 0);
-    // Reveal fill row-by-row only up to where the hand currently is
-    const revealH = Math.min(tip.reveal_y + Math.round(cb.h / state.contourFillPts.length * step * 6), cb.y+cb.h) - cb.y;
-    if (revealH > 0) ctx.drawImage(offscreen, cb.x, cb.y, cb.w, revealH, cb.x, cb.y, cb.w, revealH);
+    // Reveal fill based on direction
+    const animDir = state.textAnimDir || 'ttb';
+    const padding = Math.round(cb.h / state.contourFillPts.length * step * 6);
+    if (animDir === 'ttb') {
+      const revealH = Math.min(tip.reveal_pos + padding, cb.y + cb.h) - cb.y;
+      if (revealH > 0) ctx.drawImage(offscreen, cb.x, cb.y, cb.w, revealH, cb.x, cb.y, cb.w, revealH);
+    } else if (animDir === 'btt') {
+      const revealTop = Math.max(cb.y, tip.reveal_pos - padding);
+      const revealH = (cb.y + cb.h) - revealTop;
+      if (revealH > 0) ctx.drawImage(offscreen, cb.x, revealTop, cb.w, revealH, cb.x, revealTop, cb.w, revealH);
+    } else if (animDir === 'ltr') {
+      const pW = Math.round(cb.w / state.contourFillPts.length * step * 6);
+      const revealW = Math.min(tip.reveal_pos + pW, cb.x + cb.w) - cb.x;
+      if (revealW > 0) ctx.drawImage(offscreen, cb.x, cb.y, revealW, cb.h, cb.x, cb.y, revealW, cb.h);
+    } else if (animDir === 'rtl') {
+      const pW = Math.round(cb.w / state.contourFillPts.length * step * 6);
+      const revealLeft = Math.max(cb.x, tip.reveal_pos - pW);
+      const revealW = (cb.x + cb.w) - revealLeft;
+      if (revealW > 0) ctx.drawImage(offscreen, revealLeft, cb.y, revealW, cb.h, revealLeft, cb.y, revealW, cb.h);
+    }
     ctx.restore();
 
     if (idx >= pts.length-1) { finishAnim(); return; }
@@ -343,16 +423,34 @@ function setupOutlineChunks() {
 
   // Setup for Phase 2 (chunk filling) - prepare but don't start yet
   const numTiles = parseInt(document.getElementById('tile-slider').value) || 30;
+  const animDir = state.textAnimDir || 'ttb';
+  
   const { pts } = buildTileWaypoints(numTiles, (tiles) => {
-    // Nearest-neighbour walk from random starting tile
     const ordered = [], rem = [...tiles];
     if (!rem.length) return ordered;
-    let cur = rem.splice(Math.floor(Math.random()*rem.length), 1)[0];
+    
+    let startIdx = 0;
+    if (animDir === 'ltr') {
+      let minX = Infinity; rem.forEach((t, i) => { if (t.cx < minX) { minX = t.cx; startIdx = i; } });
+    } else if (animDir === 'rtl') {
+      let maxX = -Infinity; rem.forEach((t, i) => { if (t.cx > maxX) { maxX = t.cx; startIdx = i; } });
+    } else if (animDir === 'ttb') {
+      let minY = Infinity; rem.forEach((t, i) => { if (t.cy < minY) { minY = t.cy; startIdx = i; } });
+    } else if (animDir === 'btt') {
+      let maxY = -Infinity; rem.forEach((t, i) => { if (t.cy > maxY) { maxY = t.cy; startIdx = i; } });
+    }
+    
+    let cur = rem.splice(startIdx, 1)[0];
     ordered.push(cur);
+    
     while (rem.length) {
       let best = Infinity, bi = 0;
       rem.forEach((t, i) => {
-        const d = Math.hypot(t.cx - cur.cx, t.cy - cur.cy);
+        let d = Math.hypot(t.cx - cur.cx, t.cy - cur.cy);
+        if (animDir === 'ltr') d -= (t.cx - cur.cx) * 0.5;
+        if (animDir === 'rtl') d += (t.cx - cur.cx) * 0.5;
+        if (animDir === 'ttb') d -= (t.cy - cur.cy) * 0.5;
+        if (animDir === 'btt') d += (t.cy - cur.cy) * 0.5;
         if (d < best) { best = d; bi = i; }
       });
       cur = rem.splice(bi, 1)[0]; ordered.push(cur);
@@ -471,7 +569,8 @@ function tickOutlineChunks(speed) {
 //    across the canvas with the hand, keeping the
 //    outline composited on top at all times.
 // ─────────────────────────────────────────────
-function setupOutlineFill() {
+async function setupOutlineFill() {
+  await yieldToMain();
   const cb  = state.contentBounds;
   const map = buildPresenceMap();
   const W = cb.w, H = cb.h;
@@ -532,10 +631,24 @@ function setupOutlineFill() {
     .sort((a,b)=>(0.299*b.r+0.587*b.g+0.114*b.b)-(0.299*a.r+0.587*a.g+0.114*a.b)); // lightest first
 
   // For each group, sort pixels in zigzag scan order for natural brush feel
+  const animDir = state.textAnimDir || 'ttb';
+  const isHoriz = animDir === 'ltr' || animDir === 'rtl';
+
   colorGroups.forEach((grp,gi) => {
     grp.pixels.sort((a,b)=>{
-      if (a.y!==b.y) return a.y-b.y;
-      return (Math.floor((a.y-cb.y)/2)%2===0) ? a.x-b.x : b.x-a.x;
+      if (animDir === 'ltr') {
+        if (a.x!==b.x) return a.x-b.x;
+        return (Math.floor((a.x-cb.x)/2)%2===0) ? a.y-b.y : b.y-a.y;
+      } else if (animDir === 'rtl') {
+        if (a.x!==b.x) return b.x-a.x;
+        return (Math.floor((a.x-cb.x)/2)%2===0) ? a.y-b.y : b.y-a.y;
+      } else if (animDir === 'btt') {
+        if (a.y!==b.y) return b.y-a.y;
+        return (Math.floor((a.y-cb.y)/2)%2===0) ? a.x-b.x : b.x-a.x;
+      } else { // ttb
+        if (a.y!==b.y) return a.y-b.y;
+        return (Math.floor((a.y-cb.y)/2)%2===0) ? a.x-b.x : b.x-a.x;
+      }
     });
     // Build a pre-rendered canvas for this color group (exact pixel colors from offscreen)
     const c = document.createElement('canvas');
@@ -553,16 +666,33 @@ function setupOutlineFill() {
     const cstyle = state.colorStyle || 'sparse';
     if (cstyle === 'watercolor') grp.preCanvas = _watercolorizeCanvas(c);
     else if (cstyle === 'filled') grp.preCanvas = _fillGapsCanvas(c);
-    // Precompute hand waypoints: center-X of colored pixels per row
-    const rows=new Map();
-    grp.pixels.forEach(p=>{ if(!rows.has(p.y)) rows.set(p.y,{minX:p.x,maxX:p.x}); else { const r=rows.get(p.y); r.minX=Math.min(r.minX,p.x); r.maxX=Math.max(r.maxX,p.x); } });
-    const waypoints=[];
-    let wdir=1;
-    [...rows.entries()].sort((a,b)=>a[0]-b[0]).forEach(([y,r])=>{
-      waypoints.push({x: wdir>0 ? r.maxX : r.minX, y});
-      wdir*=-1;
+    // Precompute hand waypoints
+    const lines = new Map();
+    grp.pixels.forEach(p => { 
+      const linePos = isHoriz ? p.x : p.y;
+      const crossPos = isHoriz ? p.y : p.x;
+      if (!lines.has(linePos)) lines.set(linePos, {min:crossPos, max:crossPos}); 
+      else { 
+        const r = lines.get(linePos); 
+        r.min = Math.min(r.min, crossPos); 
+        r.max = Math.max(r.max, crossPos); 
+      } 
     });
-    grp.waypoints=waypoints;
+    
+    const waypoints = [];
+    let wdir = 1;
+    let entries = [...lines.entries()].sort((a,b) => a[0] - b[0]);
+    if (animDir === 'rtl' || animDir === 'btt') entries.reverse();
+    
+    entries.forEach(([linePos, r]) => {
+      waypoints.push({
+        x: isHoriz ? linePos : (wdir > 0 ? r.max : r.min),
+        y: isHoriz ? (wdir > 0 ? r.max : r.min) : linePos,
+        reveal_pos: linePos
+      });
+      wdir *= -1;
+    });
+    grp.waypoints = waypoints;
   });
 
   // ── Canvases ──
@@ -623,7 +753,11 @@ function tickOutlineFill(speed) {
       state.ofPhase     = 2;
       state.ofColorIdx  = 0;
       state.ofWaypointIdx = 0;
-      state.ofRevealY   = cb.y;
+      const animDir = state.textAnimDir || 'ttb';
+      if (animDir === 'ltr') state.ofRevealPos = cb.x;
+      else if (animDir === 'rtl') state.ofRevealPos = cb.x + cb.w;
+      else if (animDir === 'ttb') state.ofRevealPos = cb.y;
+      else if (animDir === 'btt') state.ofRevealPos = cb.y + cb.h;
     }
 
   } else {
@@ -632,17 +766,31 @@ function tickOutlineFill(speed) {
     if (!state.ofColorGroups || grpIdx >= state.ofColorGroups.length) { finishAnim(); return; }
 
     const grp = state.ofColorGroups[grpIdx];
-    const maxY = cb.y + cb.h;
+    const animDir = state.textAnimDir || 'ttb';
+    const isHoriz = animDir === 'ltr' || animDir === 'rtl';
 
-    // Advance reveal scanline by speed pixels per tick
     const advance = Math.max(1, Math.round(speed * 0.7));
-    state.ofRevealY = Math.min(state.ofRevealY + advance, maxY);
+    if (animDir === 'ltr' || animDir === 'ttb') {
+      state.ofRevealPos = Math.min(state.ofRevealPos + advance, isHoriz ? cb.x + cb.w : cb.y + cb.h);
+    } else {
+      state.ofRevealPos = Math.max(state.ofRevealPos - advance, isHoriz ? cb.x : cb.y);
+    }
 
-    // Blit the portion of this group's pre-rendered canvas revealed so far
-    const revealH = state.ofRevealY - cb.y;
-    if (revealH > 0) {
-      const cc = state.ofColorCanvas.getContext('2d');
-      _wcFill(cc, grp.preCanvas, cb, revealH);
+    const cc = state.ofColorCanvas.getContext('2d');
+    if (animDir === 'ttb') {
+      const revealH = state.ofRevealPos - cb.y;
+      if (revealH > 0) _wcFillRect(cc, grp.preCanvas, cb.x, cb.y, cb.w, revealH);
+    } else if (animDir === 'btt') {
+      const revealTop = state.ofRevealPos;
+      const revealH = (cb.y + cb.h) - revealTop;
+      if (revealH > 0) _wcFillRect(cc, grp.preCanvas, cb.x, revealTop, cb.w, revealH);
+    } else if (animDir === 'ltr') {
+      const revealW = state.ofRevealPos - cb.x;
+      if (revealW > 0) _wcFillRect(cc, grp.preCanvas, cb.x, cb.y, revealW, cb.h);
+    } else if (animDir === 'rtl') {
+      const revealLeft = state.ofRevealPos;
+      const revealW = (cb.x + cb.w) - revealLeft;
+      if (revealW > 0) _wcFillRect(cc, grp.preCanvas, revealLeft, cb.y, revealW, cb.h);
     }
 
     // Composite: bg + all filled colors so far + outline on top
@@ -655,9 +803,14 @@ function tickOutlineFill(speed) {
     // Hand follows waypoints for this color group
     const wpts = grp.waypoints;
     if (wpts && wpts.length > 0) {
-      // Find waypoint closest to current revealY
       let wi = state.ofWaypointIdx;
-      while (wi < wpts.length-1 && wpts[wi].y < state.ofRevealY) wi++;
+      while (wi < wpts.length-1) {
+        const wpt = wpts[wi];
+        const val = isHoriz ? wpt.x : wpt.y;
+        if ((animDir === 'ttb' || animDir === 'ltr') && val < state.ofRevealPos) wi++;
+        else if ((animDir === 'btt' || animDir === 'rtl') && val > state.ofRevealPos) wi++;
+        else break;
+      }
       state.ofWaypointIdx = wi;
       const tip  = wpts[Math.min(wi, wpts.length-1)];
       const prev2 = wpts[Math.max(0, wi-1)];
@@ -667,13 +820,26 @@ function tickOutlineFill(speed) {
 
     const phaseBase = (1 + grpIdx) / totalPhases;
     const phaseSpan = 1 / totalPhases;
-    setProgress(phaseBase + (state.ofRevealY-cb.y)/cb.h * phaseSpan);
+    let progressRatio = 0;
+    if (animDir === 'ttb') progressRatio = (state.ofRevealPos - cb.y) / cb.h;
+    if (animDir === 'btt') progressRatio = ((cb.y + cb.h) - state.ofRevealPos) / cb.h;
+    if (animDir === 'ltr') progressRatio = (state.ofRevealPos - cb.x) / cb.w;
+    if (animDir === 'rtl') progressRatio = ((cb.x + cb.w) - state.ofRevealPos) / cb.w;
+    setProgress(phaseBase + Math.max(0, Math.min(1, progressRatio)) * phaseSpan);
 
-    if (state.ofRevealY >= maxY) {
-      // This color group done — move to next
+    const isDone = (animDir === 'ttb' && state.ofRevealPos >= cb.y + cb.h) ||
+                   (animDir === 'btt' && state.ofRevealPos <= cb.y) ||
+                   (animDir === 'ltr' && state.ofRevealPos >= cb.x + cb.w) ||
+                   (animDir === 'rtl' && state.ofRevealPos <= cb.x);
+
+    if (isDone) {
       state.ofColorIdx++;
       state.ofWaypointIdx = 0;
-      state.ofRevealY = cb.y;
+      if (animDir === 'ltr') state.ofRevealPos = cb.x;
+      else if (animDir === 'rtl') state.ofRevealPos = cb.x + cb.w;
+      else if (animDir === 'ttb') state.ofRevealPos = cb.y;
+      else if (animDir === 'btt') state.ofRevealPos = cb.y + cb.h;
+
       if (state.ofColorIdx >= state.ofColorGroups.length) {
         finishAnim();
       }
@@ -694,7 +860,8 @@ function tickOutlineFill(speed) {
 //    a human artist rather than a printer.
 //    Phase 3+: color regions lightest-first.
 // ─────────────────────────────────────────────
-function setupIllustFill() {
+async function setupIllustFill() {
+  await yieldToMain();
   const cb  = state.contentBounds;
   const map = buildPresenceMap();
   const W = cb.w, H = cb.h;
@@ -879,14 +1046,32 @@ function setupIllustFill() {
     if (cstyle === 'watercolor') grp.preCanvas = _watercolorizeCanvas(c);
     else if (cstyle === 'filled') grp.preCanvas = _fillGapsCanvas(c);
     else grp.preCanvas = c;
-    const rows = new Map();
+    const animDir = state.textAnimDir || 'ttb';
+    const isHoriz = animDir === 'ltr' || animDir === 'rtl';
+
+    const lines = new Map();
     grp.pixels.forEach(p => {
-      if (!rows.has(p.y)) rows.set(p.y,{minX:p.x,maxX:p.x});
-      else { const r=rows.get(p.y); r.minX=Math.min(r.minX,p.x); r.maxX=Math.max(r.maxX,p.x); }
+      const linePos = isHoriz ? p.x : p.y;
+      const crossPos = isHoriz ? p.y : p.x;
+      if (!lines.has(linePos)) lines.set(linePos, {min:crossPos, max:crossPos});
+      else { 
+        const r = lines.get(linePos); 
+        r.min = Math.min(r.min, crossPos); 
+        r.max = Math.max(r.max, crossPos); 
+      }
     });
-    const waypoints=[]; let wdir=1;
-    [...rows.entries()].sort((a,b)=>a[0]-b[0]).forEach(([y,r]) => {
-      waypoints.push({x:wdir>0?r.maxX:r.minX, y}); wdir*=-1;
+    const waypoints = []; 
+    let wdir = 1;
+    let entries = [...lines.entries()].sort((a,b) => a[0] - b[0]);
+    if (animDir === 'rtl' || animDir === 'btt') entries.reverse();
+    
+    entries.forEach(([linePos, r]) => {
+      waypoints.push({
+        x: isHoriz ? linePos : (wdir > 0 ? r.max : r.min),
+        y: isHoriz ? (wdir > 0 ? r.max : r.min) : linePos,
+        reveal_pos: linePos
+      });
+      wdir *= -1;
     });
     grp.waypoints = waypoints;
   });
@@ -978,41 +1163,96 @@ function tickIllustFill(speed) {
     drawHand(hctx,tip.x,tip.y,tip.x>=prev.x?1:-1,state.hand);
     setProgress((1/totalPhases)+(newIdx/wps.length)*(1/totalPhases));
 
-    if (newIdx >= wps.length-1) { state.ifPhase=3; state.ifColorIdx=0; state.ifWaypointIdx=0; state.ifRevealY=cb.y; }
+    if (newIdx >= wps.length-1) { 
+      state.ifPhase = 3; 
+      state.ifColorIdx = 0; 
+      state.ifWaypointIdx = 0; 
+      const animDir = state.textAnimDir || 'ttb';
+      if (animDir === 'ltr') state.ifRevealPos = cb.x;
+      else if (animDir === 'rtl') state.ifRevealPos = cb.x + cb.w;
+      else if (animDir === 'ttb') state.ifRevealPos = cb.y;
+      else if (animDir === 'btt') state.ifRevealPos = cb.y + cb.h;
+    }
     return;
   }
 
   // ── Phase 3+: fill each color group by scanline ──
   const grpIdx = state.ifColorIdx;
   if (!state.ifColorGroups || grpIdx >= state.ifColorGroups.length) { finishAnim(); return; }
-  const grp   = state.ifColorGroups[grpIdx];
-  const maxY  = cb.y + cb.h;
+  const grp = state.ifColorGroups[grpIdx];
+  const animDir = state.textAnimDir || 'ttb';
+  const isHoriz = animDir === 'ltr' || animDir === 'rtl';
+
   const advance = Math.max(1, Math.round(speed * 0.7));
-  state.ifRevealY = Math.min(state.ifRevealY + advance, maxY);
-  const revealH = state.ifRevealY - cb.y;
-  if (revealH > 0) {
-    _wcFill(state.ifColorCanvas.getContext('2d'), grp.preCanvas, cb, revealH);
+  if (animDir === 'ltr' || animDir === 'ttb') {
+    state.ifRevealPos = Math.min(state.ifRevealPos + advance, isHoriz ? cb.x + cb.w : cb.y + cb.h);
+  } else {
+    state.ifRevealPos = Math.max(state.ifRevealPos - advance, isHoriz ? cb.x : cb.y);
   }
+
+  const cc = state.ifColorCanvas.getContext('2d');
+  if (animDir === 'ttb') {
+    const revealH = state.ifRevealPos - cb.y;
+    if (revealH > 0) _wcFillRect(cc, grp.preCanvas, cb.x, cb.y, cb.w, revealH);
+  } else if (animDir === 'btt') {
+    const revealTop = state.ifRevealPos;
+    const revealH = (cb.y + cb.h) - revealTop;
+    if (revealH > 0) _wcFillRect(cc, grp.preCanvas, cb.x, revealTop, cb.w, revealH);
+  } else if (animDir === 'ltr') {
+    const revealW = state.ifRevealPos - cb.x;
+    if (revealW > 0) _wcFillRect(cc, grp.preCanvas, cb.x, cb.y, revealW, cb.h);
+  } else if (animDir === 'rtl') {
+    const revealLeft = state.ifRevealPos;
+    const revealW = (cb.x + cb.w) - revealLeft;
+    if (revealW > 0) _wcFillRect(cc, grp.preCanvas, revealLeft, cb.y, revealW, cb.h);
+  }
+
   ctx.save(); fillBg(ctx);
   ctx.drawImage(state.ifColorCanvas, 0, 0);
   ctx.drawImage(state.ifOutlineCanvas, 0, 0);
   ctx.drawImage(state.ifInkCanvas, 0, 0);
   ctx.restore();
 
-  const wpts=grp.waypoints;
-  if (wpts && wpts.length>0) {
-    let wi=state.ifWaypointIdx;
-    while (wi<wpts.length-1 && wpts[wi].y<state.ifRevealY) wi++;
-    state.ifWaypointIdx=wi;
-    const tip=wpts[Math.min(wi,wpts.length-1)], prev2=wpts[Math.max(0,wi-1)];
+  const wpts = grp.waypoints;
+  if (wpts && wpts.length > 0) {
+    let wi = state.ifWaypointIdx;
+    while (wi < wpts.length-1) {
+      const wpt = wpts[wi];
+      const val = isHoriz ? wpt.x : wpt.y;
+      if ((animDir === 'ttb' || animDir === 'ltr') && val < state.ifRevealPos) wi++;
+      else if ((animDir === 'btt' || animDir === 'rtl') && val > state.ifRevealPos) wi++;
+      else break;
+    }
+    state.ifWaypointIdx = wi;
+    const tip = wpts[Math.min(wi, wpts.length-1)];
+    const prev2 = wpts[Math.max(0, wi-1)];
     hctx.clearRect(0,0,state.canvasW,state.canvasH);
-    drawHand(hctx,tip.x,tip.y,tip.x>=prev2.x?1:-1,state.hand);
+    drawHand(hctx, tip.x, tip.y, tip.x >= prev2.x ? 1 : -1, state.hand);
   }
-  const phaseBase=(2+grpIdx)/totalPhases;
-  setProgress(phaseBase+(state.ifRevealY-cb.y)/cb.h*(1/totalPhases));
-  if (state.ifRevealY>=maxY) {
-    state.ifColorIdx++; state.ifWaypointIdx=0; state.ifRevealY=cb.y;
-    if (state.ifColorIdx>=state.ifColorGroups.length) finishAnim();
+
+  const phaseBase = (2 + grpIdx) / totalPhases;
+  const phaseSpan = 1 / totalPhases;
+  let progressRatio = 0;
+  if (animDir === 'ttb') progressRatio = (state.ifRevealPos - cb.y) / cb.h;
+  if (animDir === 'btt') progressRatio = ((cb.y + cb.h) - state.ifRevealPos) / cb.h;
+  if (animDir === 'ltr') progressRatio = (state.ifRevealPos - cb.x) / cb.w;
+  if (animDir === 'rtl') progressRatio = ((cb.x + cb.w) - state.ifRevealPos) / cb.w;
+  setProgress(phaseBase + Math.max(0, Math.min(1, progressRatio)) * phaseSpan);
+
+  const isDone = (animDir === 'ttb' && state.ifRevealPos >= cb.y + cb.h) ||
+                 (animDir === 'btt' && state.ifRevealPos <= cb.y) ||
+                 (animDir === 'ltr' && state.ifRevealPos >= cb.x + cb.w) ||
+                 (animDir === 'rtl' && state.ifRevealPos <= cb.x);
+
+  if (isDone) {
+    state.ifColorIdx++;
+    state.ifWaypointIdx = 0;
+    if (animDir === 'ltr') state.ifRevealPos = cb.x;
+    else if (animDir === 'rtl') state.ifRevealPos = cb.x + cb.w;
+    else if (animDir === 'ttb') state.ifRevealPos = cb.y;
+    else if (animDir === 'btt') state.ifRevealPos = cb.y + cb.h;
+
+    if (state.ifColorIdx >= state.ifColorGroups.length) finishAnim();
   }
 }
 
@@ -1095,40 +1335,66 @@ function setupNervous() {
   const map = buildPresenceMap();
   const W = cb.w, H = cb.h;
 
-  const STEP = Math.max(4, Math.round(H/70));
+  const animDir = state.textAnimDir || 'ttb';
+  const isHoriz = animDir === 'ltr' || animDir === 'rtl';
+  const mainMax = isHoriz ? W : H;
+  const crossMax = isHoriz ? H : W;
+  const STEP = Math.max(4, Math.round(mainMax/70));
   const pts  = [];
 
-  for (let ry = 0; ry < H; ry += STEP) {
-    let lx = W, rx = 0;
-    for (let y2 = ry; y2 < Math.min(ry+STEP,H); y2++)
-      for (let x = 0; x < W; x++)
-        if (map[y2*W+x]) { lx=Math.min(lx,x); rx=Math.max(rx,x); }
-    if (lx > rx) continue;
+  const start_r = (animDir === 'btt' || animDir === 'rtl') ? mainMax - 1 : 0;
+  const end_r = (animDir === 'btt' || animDir === 'rtl') ? -1 : mainMax;
+  const step_r = (animDir === 'btt' || animDir === 'rtl') ? -STEP : STEP;
 
-    const ay     = cb.y + ry + STEP*0.4;
+  for (let r = start_r; (step_r > 0 ? r < end_r : r > end_r); r += step_r) {
+    let minCross = crossMax, maxCross = 0;
+    
+    // Scan band
+    const rStart = (step_r > 0) ? r : Math.max(0, r + step_r + 1);
+    const rEnd = (step_r > 0) ? Math.min(r + step_r, mainMax) : r + 1;
+    
+    for (let r2 = rStart; r2 < rEnd; r2++) {
+      for (let cross = 0; cross < crossMax; cross++) {
+        const x = isHoriz ? r2 : cross;
+        const y = isHoriz ? cross : r2;
+        if (map[y*W+x]) { minCross = Math.min(minCross, cross); maxCross = Math.max(maxCross, cross); }
+      }
+    }
+    if (minCross > maxCross) continue;
+
+    const center_r = cb[isHoriz ? 'x' : 'y'] + r + step_r * 0.4;
     const passes = 2 + Math.floor(Math.random()*2);
-    let dir      = Math.random() < 0.5 ? 1 : -1;
+    let dir = Math.random() < 0.5 ? 1 : -1;
 
     for (let p = 0; p < passes; p++) {
       const inset = Math.random()*12;
-      const x1 = cb.x + (dir>0 ? lx+inset : rx-inset);
-      const x2 = cb.x + (dir>0 ? rx-inset  : lx+inset);
-      const yoff = (Math.random()-0.5)*STEP*0.5;
-      const dist = Math.abs(x2-x1);
+      const cross1 = cb[isHoriz ? 'y' : 'x'] + (dir>0 ? minCross+inset : maxCross-inset);
+      const cross2 = cb[isHoriz ? 'y' : 'x'] + (dir>0 ? maxCross-inset : minCross+inset);
+      const main_off = (Math.random()-0.5)*STEP*0.5;
+      const dist = Math.abs(cross2-cross1);
 
       // HIGH density: 1 pt per ~4px so hand moves visibly slowly
       const segs = Math.max(4, Math.floor(dist/4));
       for (let s = 0; s <= segs; s++) {
         const t = s/segs;
+        const crossPos = cross1 + (cross2-cross1)*t + (Math.random()-0.5)*3;
+        const mainPos = center_r + main_off + Math.sin(t*Math.PI*6)*2;
         pts.push({
-          x: x1+(x2-x1)*t + (Math.random()-0.5)*3,
-          y: ay + yoff + Math.sin(t*Math.PI*6)*2,
-          reveal_y: ay + STEP*(p/passes)
+          x: isHoriz ? mainPos : crossPos,
+          y: isHoriz ? crossPos : mainPos,
+          reveal_pos: center_r + step_r*(p/passes)
         });
       }
       // Hesitation: 6 stationary points at end of stroke
-      for (let h2 = 0; h2 < 6; h2++)
-        pts.push({x: x2+(Math.random()-0.5)*2, y: ay+yoff+(Math.random()-0.5)*2, reveal_y: ay+STEP*(p/passes)});
+      for (let h2 = 0; h2 < 6; h2++) {
+        const cp = cross2+(Math.random()-0.5)*2;
+        const mp = center_r+main_off+(Math.random()-0.5)*2;
+        pts.push({
+          x: isHoriz ? mp : cp,
+          y: isHoriz ? cp : mp,
+          reveal_pos: center_r + step_r*(p/passes)
+        });
+      }
 
       dir *= -1;
     }
@@ -1151,8 +1417,23 @@ function tickNervous(speed) {
 
   ctx.save(); fillBg(ctx);
   const cb = state.contentBounds;
-  const h  = Math.min(tip.reveal_y + 16, cb.y+cb.h) - cb.y;
-  if (h > 0) ctx.drawImage(offscreen, cb.x,cb.y, cb.w,h, cb.x,cb.y, cb.w,h);
+  const animDir = state.textAnimDir || 'ttb';
+  
+  if (animDir === 'ttb') {
+    const h = Math.min(tip.reveal_pos + 16, cb.y+cb.h) - cb.y;
+    if (h > 0) ctx.drawImage(offscreen, cb.x, cb.y, cb.w, h, cb.x, cb.y, cb.w, h);
+  } else if (animDir === 'btt') {
+    const rTop = Math.max(cb.y, tip.reveal_pos - 16);
+    const h = (cb.y + cb.h) - rTop;
+    if (h > 0) ctx.drawImage(offscreen, cb.x, rTop, cb.w, h, cb.x, rTop, cb.w, h);
+  } else if (animDir === 'ltr') {
+    const w = Math.min(tip.reveal_pos + 16, cb.x+cb.w) - cb.x;
+    if (w > 0) ctx.drawImage(offscreen, cb.x, cb.y, w, cb.h, cb.x, cb.y, w, cb.h);
+  } else if (animDir === 'rtl') {
+    const rLeft = Math.max(cb.x, tip.reveal_pos - 16);
+    const w = (cb.x + cb.w) - rLeft;
+    if (w > 0) ctx.drawImage(offscreen, rLeft, cb.y, w, cb.h, rLeft, cb.y, w, cb.h);
+  }
   ctx.restore();
 
   if (idx >= pts.length-1) { finishAnim(); return; }
@@ -1174,47 +1455,76 @@ function setupTopAnchor() {
   const map = buildPresenceMap();
   const W = cb.w, H = cb.h;
 
-  const COL_W = Math.max(18, Math.round(W/28));
+  const animDir = state.textAnimDir || 'ttb';
+  const isHoriz = animDir === 'ltr' || animDir === 'rtl';
+  const mainMax = isHoriz ? W : H;
+  const crossMax = isHoriz ? H : W;
+
+  const BAND_W = Math.max(18, Math.round(crossMax/28));
   const pts   = [];
 
-  // Build column list then do a partial shuffle
-  const colOrder = [];
-  for (let cx = 0; cx < W; cx += COL_W) colOrder.push(cx);
-  for (let i = colOrder.length-1; i > 0; i--) {
+  // Build band list then do a partial shuffle
+  const bandOrder = [];
+  for (let c = 0; c < crossMax; c += BAND_W) bandOrder.push(c);
+  for (let i = bandOrder.length-1; i > 0; i--) {
     if (Math.random() < 0.5) {
       const j = Math.max(0, i - 1 - Math.floor(Math.random()*4));
-      [colOrder[i], colOrder[j]] = [colOrder[j], colOrder[i]];
+      [bandOrder[i], bandOrder[j]] = [bandOrder[j], bandOrder[i]];
     }
   }
 
-  for (const cx of colOrder) {
-    let topY = -1, botY = -1;
-    for (let y = 0; y < H; y++)
-      for (let x = cx; x < Math.min(cx+COL_W,W); x++)
-        if (map[y*W+x]) { if(topY<0) topY=y; botY=y; }
-    if (topY < 0) continue;
+  for (const c of bandOrder) {
+    let minMain = -1, maxMain = -1;
+    for (let m = 0; m < mainMax; m++) {
+      for (let cross = c; cross < Math.min(c+BAND_W, crossMax); cross++) {
+        const x = isHoriz ? m : cross;
+        const y = isHoriz ? cross : m;
+        if (map[y*W+x]) { if (minMain<0) minMain=m; maxMain=m; }
+      }
+    }
+    if (minMain < 0) continue;
 
-    const midX = cb.x + cx + COL_W*0.5 + (Math.random()-0.5)*COL_W*0.3;
-    // HIGH density: 1 pt per 3px vertically
-    const dist  = botY - topY;
+    const midCross = cb[isHoriz ? 'y' : 'x'] + c + BAND_W*0.5 + (Math.random()-0.5)*BAND_W*0.3;
+    const dist  = maxMain - minMain;
     const steps = Math.max(4, Math.floor(dist/3));
 
-    // Air-travel jump (isJump pts are consumed fast)
-    pts.push({x:midX, y:cb.y+topY-8, isJump:true,
-              revealColX:cb.x+cx, revealColW:COL_W, revealColY1:cb.y+topY, revealColY2:cb.y+botY});
+    const startMain = (animDir === 'btt' || animDir === 'rtl') ? maxMain : minMain;
+    const endMain = (animDir === 'btt' || animDir === 'rtl') ? minMain : maxMain;
+    
+    // Air-travel jump
+    pts.push({
+      x: isHoriz ? cb.x + startMain - (animDir==='rtl'?-8:8) : midCross, 
+      y: isHoriz ? midCross : cb.y + startMain - (animDir==='btt'?-8:8), 
+      isJump: true,
+      revealBandCross: cb[isHoriz ? 'y' : 'x']+c, revealBandW: BAND_W, 
+      revealBandMain1: cb[isHoriz ? 'x' : 'y']+minMain, revealBandMain2: cb[isHoriz ? 'x' : 'y']+maxMain
+    });
 
     for (let r = 0; r <= steps; r++) {
       const t  = r/steps;
-      const ry = topY + dist*t;
+      const rm = startMain + (endMain - startMain)*t;
+      
+      let rev1 = cb[isHoriz ? 'x' : 'y'] + startMain;
+      let rev2 = cb[isHoriz ? 'x' : 'y'] + rm;
+      if (animDir === 'btt' || animDir === 'rtl') {
+        rev1 = cb[isHoriz ? 'x' : 'y'] + rm;
+        rev2 = cb[isHoriz ? 'x' : 'y'] + startMain;
+      }
+
       pts.push({
-        x: midX + (Math.random()-0.5)*5,
-        y: cb.y + ry,
-        revealColX: cb.x+cx, revealColW: COL_W,
-        revealColY1: cb.y+topY, revealColY2: cb.y+ry  // only reveal up to here
+        x: isHoriz ? cb.x + rm : midCross + (Math.random()-0.5)*5,
+        y: isHoriz ? midCross + (Math.random()-0.5)*5 : cb.y + rm,
+        revealBandCross: cb[isHoriz ? 'y' : 'x']+c, revealBandW: BAND_W,
+        revealBandMain1: rev1, revealBandMain2: rev2
       });
     }
-    pts.push({x:midX, y:cb.y+botY+8, isJump:true,
-              revealColX:cb.x+cx, revealColW:COL_W, revealColY1:cb.y+topY, revealColY2:cb.y+botY});
+    pts.push({
+      x: isHoriz ? cb.x + endMain + (animDir==='rtl'?-8:8) : midCross, 
+      y: isHoriz ? midCross : cb.y + endMain + (animDir==='btt'?-8:8), 
+      isJump: true,
+      revealBandCross: cb[isHoriz ? 'y' : 'x']+c, revealBandW: BAND_W, 
+      revealBandMain1: cb[isHoriz ? 'x' : 'y']+minMain, revealBandMain2: cb[isHoriz ? 'x' : 'y']+maxMain
+    });
   }
 
   state.strokeList  = pts;
@@ -1227,6 +1537,8 @@ function tickTopAnchor(speed) {
   const pts       = state.strokeList;
   if (!pts.length) { finishAnim(); return; }
   const handSpeed = parseInt(document.getElementById('hand-speed-slider').value);
+  const animDir = state.textAnimDir || 'ttb';
+  const isHoriz = animDir === 'ltr' || animDir === 'rtl';
 
   // Consume handSpeed drawing-points per frame; skip jump pts instantly
   let budget = handSpeed;
@@ -1235,14 +1547,19 @@ function tickTopAnchor(speed) {
     state.strokeIdx++;
     if (!p.isJump) budget--;
 
-    // As each drawing pt is consumed, paint ONLY that column up to revealColY2
-    if (!p.isJump && p.revealColX !== undefined) {
+    // As each drawing pt is consumed, paint ONLY that column/row up to reveal
+    if (!p.isJump && p.revealBandCross !== undefined) {
       const rc = state.revealCanvas.getContext('2d');
-      const rh = p.revealColY2 - p.revealColY1 + 1;
-      if (rh > 0)
+      const r_x = isHoriz ? p.revealBandMain1 : p.revealBandCross;
+      const r_y = isHoriz ? p.revealBandCross : p.revealBandMain1;
+      const r_w = isHoriz ? (p.revealBandMain2 - p.revealBandMain1 + 1) : p.revealBandW;
+      const r_h = isHoriz ? p.revealBandW : (p.revealBandMain2 - p.revealBandMain1 + 1);
+      
+      if (r_w > 0 && r_h > 0) {
         rc.drawImage(offscreen,
-          p.revealColX, p.revealColY1, p.revealColW, rh,
-          p.revealColX, p.revealColY1, p.revealColW, rh);
+          r_x, r_y, r_w, r_h,
+          r_x, r_y, r_w, r_h);
+      }
     }
   }
 
@@ -1252,7 +1569,16 @@ function tickTopAnchor(speed) {
 
   const tip = pts[Math.min(state.strokeIdx, pts.length-1)];
   const prev = pts[Math.max(0, state.strokeIdx-1)];
-  const dir = tip.isJump ? 1 : (tip.y >= prev.y ? 1 : -1);
+  
+  let dir = tip.isJump ? 1 : 1;
+  if (!tip.isJump) {
+    if (isHoriz) {
+      dir = tip.x >= prev.x ? 1 : -1;
+    } else {
+      dir = tip.y >= prev.y ? 1 : -1;
+    }
+  }
+  
   hctx.clearRect(0,0,state.canvasW,state.canvasH);
   drawHand(hctx, tip.x, tip.y, dir, state.hand);
   setProgress(state.strokeIdx / pts.length);
@@ -1369,17 +1695,34 @@ function buildTileWaypoints(numTiles, orderFn) {
 // ─────────────────────────────────────────────
 function setupChunkJump() {
   const numTiles = parseInt(document.getElementById('tile-slider').value) || 30;
+  const animDir = state.textAnimDir || 'ttb';
 
   const { pts } = buildTileWaypoints(numTiles, (tiles) => {
-    // Nearest-neighbour walk from a random starting tile
     const ordered = [], rem = [...tiles];
     if (!rem.length) return ordered;
-    let cur = rem.splice(Math.floor(Math.random()*rem.length), 1)[0];
+    
+    let startIdx = 0;
+    if (animDir === 'ltr') {
+      let minX = Infinity; rem.forEach((t, i) => { if (t.cx < minX) { minX = t.cx; startIdx = i; } });
+    } else if (animDir === 'rtl') {
+      let maxX = -Infinity; rem.forEach((t, i) => { if (t.cx > maxX) { maxX = t.cx; startIdx = i; } });
+    } else if (animDir === 'ttb') {
+      let minY = Infinity; rem.forEach((t, i) => { if (t.cy < minY) { minY = t.cy; startIdx = i; } });
+    } else if (animDir === 'btt') {
+      let maxY = -Infinity; rem.forEach((t, i) => { if (t.cy > maxY) { maxY = t.cy; startIdx = i; } });
+    }
+    
+    let cur = rem.splice(startIdx, 1)[0];
     ordered.push(cur);
+    
     while (rem.length) {
       let best = Infinity, bi = 0;
       rem.forEach((t, i) => {
-        const d = Math.hypot(t.cx - cur.cx, t.cy - cur.cy);
+        let d = Math.hypot(t.cx - cur.cx, t.cy - cur.cy);
+        if (animDir === 'ltr') d -= (t.cx - cur.cx) * 0.5;
+        if (animDir === 'rtl') d += (t.cx - cur.cx) * 0.5;
+        if (animDir === 'ttb') d -= (t.cy - cur.cy) * 0.5;
+        if (animDir === 'btt') d += (t.cy - cur.cy) * 0.5;
         if (d < best) { best = d; bi = i; }
       });
       cur = rem.splice(bi, 1)[0]; ordered.push(cur);
@@ -2375,7 +2718,8 @@ function _waypointsFromInkMap(inkMap, W, H, cb, perimLastPt) {
 //    of a surrounding window — handles uneven lighting and embossed styles
 //    where a global threshold would miss light ink on light paper.
 // ─────────────────────────────────────────────────────────────────────────────
-function _buildInkMap_Adaptive(ocd, W, H, map) {
+async function _buildInkMap_Adaptive(ocd, W, H, map) {
+  await yieldToMain();
   const sens = getDetectionSensitivity();
   // Larger radius → more global comparison (coarser edges)
   // Smaller radius → more local (finer, noisy)
@@ -2440,7 +2784,8 @@ function _buildInkMap_Adaptive(ocd, W, H, map) {
 //    colored outlines (red on pink, blue on cyan) that luma-only methods miss.
 //    Non-maximum suppression thins multi-pixel ridges to single-pixel edges.
 // ─────────────────────────────────────────────────────────────────────────────
-function _buildInkMap_Chroma(ocd, W, H, map) {
+async function _buildInkMap_Chroma(ocd, W, H, map) {
+  await yieldToMain();
   const sens = getDetectionSensitivity();
   const THRESH = Math.round(180 - sens * 140); // 180→40 — color distance threshold
 
@@ -2485,7 +2830,8 @@ function _buildInkMap_Chroma(ocd, W, H, map) {
 //    of stroke weight.  Excels at finding faint/thin outlines that gradient
 //    methods smooth over.
 // ─────────────────────────────────────────────────────────────────────────────
-function _buildInkMap_LoG(ocd, W, H, map) {
+async function _buildInkMap_LoG(ocd, W, H, map) {
+  await yieldToMain();
   const sens = getDetectionSensitivity();
   const SIGMA    = 0.8 + sens * 2.2;          // 0.8→3.0
   const ZC_FLOOR = 8 + (1 - sens) * 30;       // minimum sign-change magnitude to reject noise
@@ -2555,7 +2901,8 @@ function _buildInkMap_LoG(ocd, W, H, map) {
 //    around every dark region.  Purely geometric — works on any image that
 //    has dark strokes, regardless of whether they're ink, pencil, or shadow.
 // ─────────────────────────────────────────────────────────────────────────────
-function _buildInkMap_MorphShell(ocd, W, H, map) {
+async function _buildInkMap_MorphShell(ocd, W, H, map) {
+  await yieldToMain();
   const sens = getDetectionSensitivity();
   const LUM_THRESH = Math.round(30 + sens * 130); // 30→160 luma cutoff for "dark"
   const ERODE_R    = Math.max(1, Math.round(4 - sens * 2.5)); // 4→2px erosion
@@ -2606,7 +2953,8 @@ function _buildInkMap_MorphShell(ocd, W, H, map) {
 //    stroke segments that single-threshold Canny (or the Real Image algorithm)
 //    would discard as noise — giving continuous outlines even on sketchy art.
 // ─────────────────────────────────────────────────────────────────────────────
-function _buildInkMap_Canny2(ocd, W, H, map) {
+async function _buildInkMap_Canny2(ocd, W, H, map) {
+  await yieldToMain();
   const sens = getDetectionSensitivity();
 
   // Luma + small Gaussian blur (5-tap σ≈1.4)
@@ -2690,7 +3038,7 @@ function _buildInkMap_Canny2(ocd, W, H, map) {
 // ─────────────────────────────────────────────────────────────────────────────
 // ── DISPATCH: run the selected algorithm and return waypoints
 // ─────────────────────────────────────────────────────────────────────────────
-function _buildInkWaypointsByAlgorithm(perimLastPt) {
+async function _buildInkWaypointsByAlgorithm(perimLastPt) {
   const alg = state.outlineAlgorithm || 'classic';
   if (alg === 'classic') return null; // use existing classic pipeline
   const cb  = state.contentBounds;
@@ -2699,11 +3047,11 @@ function _buildInkWaypointsByAlgorithm(perimLastPt) {
   const map = buildPresenceMap();
   let inkMap;
   switch (alg) {
-    case 'adaptive':    inkMap = _buildInkMap_Adaptive(ocd, W, H, map);    break;
-    case 'chroma':      inkMap = _buildInkMap_Chroma(ocd, W, H, map);      break;
-    case 'log':         inkMap = _buildInkMap_LoG(ocd, W, H, map);         break;
-    case 'morph-shell': inkMap = _buildInkMap_MorphShell(ocd, W, H, map);  break;
-    case 'canny2':      inkMap = _buildInkMap_Canny2(ocd, W, H, map);      break;
+    case 'adaptive':    inkMap = await _buildInkMap_Adaptive(ocd, W, H, map);    break;
+    case 'chroma':      inkMap = await _buildInkMap_Chroma(ocd, W, H, map);      break;
+    case 'log':         inkMap = await _buildInkMap_LoG(ocd, W, H, map);         break;
+    case 'morph-shell': inkMap = await _buildInkMap_MorphShell(ocd, W, H, map);  break;
+    case 'canny2':      inkMap = await _buildInkMap_Canny2(ocd, W, H, map);      break;
     default:            return null;
   }
   return _waypointsFromInkMap(inkMap, W, H, cb, perimLastPt);
@@ -2724,7 +3072,8 @@ function _buildInkWaypointsByAlgorithm(perimLastPt) {
 //   Both passes share the same thickness filter so
 //   filled dark regions are still excluded.
 // ─────────────────────────────────────────────
-function buildColorRegionInkWaypoints(perimLastPt) {
+async function buildColorRegionInkWaypoints(perimLastPt) {
+  await yieldToMain(); // Yield at start of heavy work
   const cb = state.contentBounds;
   const W = cb.w, H = cb.h;
   const ocd = offscreen.getContext('2d').getImageData(cb.x, cb.y, W, H).data;
@@ -2854,7 +3203,8 @@ function buildColorRegionInkWaypoints(perimLastPt) {
   return waypoints;
 }
 
-function buildRealImageInkWaypoints(perimLastPt) {
+async function buildRealImageInkWaypoints(perimLastPt) {
+  await yieldToMain(); // Yield at start of heavy work
   const cb = state.contentBounds;
   const W = cb.w, H = cb.h;
   const ocd = offscreen.getContext('2d').getImageData(cb.x, cb.y, W, H).data;
@@ -3337,21 +3687,21 @@ function tickSpecText(speed) {
   }
 }
 
-function setupStyle() {
+async function setupStyle() {
   switch(state.animStyle) {
     case 'contour':         setupContour();                  break;
     case 'outlinechunks':   setupOutlineChunks();            break;
-    case 'outlinefill':     setupOutlineFill();              break;
+    case 'outlinefill':     await setupOutlineFill();        break;
     case 'illustfill':
-      setupIllustFill();
+      await setupIllustFill();
       if (state.outlineAlgorithm && state.outlineAlgorithm !== 'classic') {
         const lastPt1 = state.ifPerimPts?.length > 0 ? state.ifPerimPts[state.ifPerimPts.length-1] : null;
-        const wpts1 = _buildInkWaypointsByAlgorithm(lastPt1);
+        const wpts1 = await _buildInkWaypointsByAlgorithm(lastPt1);
         if (wpts1) state.ifInkWaypoints = wpts1;
       }
       break;
     case 'outlineonly':
-      setupIllustFill();
+      await setupIllustFill();
       // Override auto-detected color with user's choice if not auto
       if (!document.getElementById('outlineonly-autocolor')?.checked) {
         const col = document.getElementById('outlineonly-color')?.value || '#000000';
@@ -3361,20 +3711,20 @@ function setupStyle() {
       if (state.outlineAlgorithm && state.outlineAlgorithm !== 'classic') {
         // New algorithm takes priority over Color Region / Real Image checkboxes
         const lastPt2 = state.ifPerimPts?.length > 0 ? state.ifPerimPts[state.ifPerimPts.length-1] : null;
-        const wpts2 = _buildInkWaypointsByAlgorithm(lastPt2);
+        const wpts2 = await _buildInkWaypointsByAlgorithm(lastPt2);
         if (wpts2) state.ifInkWaypoints = wpts2;
       } else {
         // Color Region Outlines: swap ink waypoints with color-boundary waypoints
         if (document.getElementById('outlineonly-colorregion')?.checked) {
           const lastPt = state.ifPerimPts && state.ifPerimPts.length > 0
             ? state.ifPerimPts[state.ifPerimPts.length - 1] : null;
-          state.ifInkWaypoints = buildColorRegionInkWaypoints(lastPt);
+          state.ifInkWaypoints = await buildColorRegionInkWaypoints(lastPt);
         }
         // Real Image Edges: swap ink waypoints with Sobel-NMS edge waypoints
         if (document.getElementById('outlineonly-realimage')?.checked) {
           const lastPt = state.ifPerimPts && state.ifPerimPts.length > 0
             ? state.ifPerimPts[state.ifPerimPts.length - 1] : null;
-          state.ifInkWaypoints = buildRealImageInkWaypoints(lastPt);
+          state.ifInkWaypoints = await buildRealImageInkWaypoints(lastPt);
         }
       }
       break;

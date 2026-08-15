@@ -26,7 +26,8 @@
 import { useEffect } from 'react'
 import { globalControlsService } from '@/app/services/global-controls-service'
 import { playbackService } from '@/app/services/playback-service'
-import { usePlaybackStore } from '@/app/store'
+import { usePlaybackStore, useSelectionStore } from '@/app/store'
+import { layerService } from '@/app/services/layer-service'
 
 export function useGlobalShortcuts(): void {
   useEffect(() => {
@@ -64,8 +65,14 @@ export function useGlobalShortcuts(): void {
         globalControlsService.redo()
         return
       }
-      // Intentionally no-op for other keys here — Delete/Backspace (remove
-      // layer) lands in M10. Keep the branch structure to ease that migration.
+      if ((e.key === 'Delete' || e.key === 'Backspace') && !typing) {
+        e.preventDefault()
+        const selectedId = useSelectionStore.getState().selectedLayerId
+        if (selectedId !== null) {
+          layerService.removeLayer(selectedId)
+        }
+        return
+      }
     }
 
     window.addEventListener('keydown', onKeyDown)

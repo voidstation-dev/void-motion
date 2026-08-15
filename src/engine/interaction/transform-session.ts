@@ -47,6 +47,7 @@ export interface PointerSession {
   readonly startX: number
   readonly startY: number
   readonly orig: SessionGeometry
+  readonly snapshotPushed?: boolean
 }
 
 /**

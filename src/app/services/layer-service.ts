@@ -98,6 +98,7 @@ export const layerService = {
    */
   removeLayer(id: LayerId): void {
     if (legacyReady()) {
+      useLayerStore.getState().pushUndo()
       window.removeLayer?.(layerIdToLegacyNum(id))
     } else {
       // Store-only fallback (tests / pre-cohost): mirror the legacy

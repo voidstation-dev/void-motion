@@ -55,12 +55,7 @@ import {
   type SessionGeometry,
 } from '@/engine/interaction/transform-session'
 
-/** Guarded legacy `setLayerPos` (redraw + autosave). */
-function legacySetLayerPos(id: number, prop: 'x' | 'y' | 'w' | 'h', val: number): void {
-  if (typeof window !== 'undefined' && typeof window.setLayerPos === 'function') {
-    window.setLayerPos(id, prop, val)
-  }
-}
+
 
 /** Guarded legacy `scheduleAutoSave`. */
 function legacyScheduleAutoSave(): void {
@@ -82,7 +77,6 @@ function captureGeometry(layer: Layer): SessionGeometry {
   return { x: t.x, y: t.y, w: t.width, h: t.height }
 }
 
-/** Apply a computed geometry to the typed store + legacy adapter. */
 function applyGeometry(id: LayerId, next: SessionGeometry): void {
   const transform: LayerTransform = {
     x: next.x,
@@ -92,14 +86,20 @@ function applyGeometry(id: LayerId, next: SessionGeometry): void {
     rotation: 0,
   }
   useLayerStore.getState().updateLayer(id, { transform })
-  // Delegate the redraw + autosave to the legacy `setLayerPos` (legacy 6401),
-  // which also clamps w/h to >=20. We pass the raw value; the legacy fn is the
-  // authority for the actual bitmap until the renderer is migrated (M19).
-  const legacyId = layerIdToLegacyNum(id)
-  legacySetLayerPos(legacyId, 'x', next.x)
-  legacySetLayerPos(legacyId, 'y', next.y)
-  legacySetLayerPos(legacyId, 'w', next.w)
-  legacySetLayerPos(legacyId, 'h', next.h)
+  // Delegate the redraw without pushing undo snapshots on every frame
+  // (which legacy setLayerPos would do). We mutate the legacy layer directly.
+  if (typeof window !== 'undefined' && window.state) {
+    const legacyId = layerIdToLegacyNum(id)
+    const legacyLayer = window.state.layers?.find((l: any) => l.id === legacyId)
+    if (legacyLayer) {
+      legacyLayer.x = next.x
+      legacyLayer.y = next.y
+      legacyLayer.w = next.w
+      legacyLayer.h = next.h
+      if (typeof (window as any).redrawLayersOnCanvas === 'function') (window as any).redrawLayersOnCanvas()
+      if (typeof (window as any).drawSelectionHandles === 'function') (window as any).drawSelectionHandles()
+    }
+  }
 }
 
 /**
@@ -111,6 +111,8 @@ function applyGeometry(id: LayerId, next: SessionGeometry): void {
 export const interactionService = {
   /** The in-flight session (null when idle). */
   session: null as PointerSession | null,
+  /** Tracks if the BEFORE snapshot was pushed for the current session. */
+  snapshotPushed: false,
 
   /**
    * Pointer-down on the canvas overlay. Mirrors the legacy mousedown handler
@@ -151,15 +153,16 @@ export const interactionService = {
     const selectedId = useSelectionStore.getState().selectedLayerId
     const selected = selectedId !== null ? (layers.find((l) => l.id === selectedId) ?? null) : null
 
-    // Handle-hit on the selected layer takes precedence (legacy 6712-6718).
     if (selected) {
       const handle = hitTestHandle(x, y, layerHitRect(selected))
       if (handle) {
+        this.snapshotPushed = false
         this.session = startResizeSession(handle, x, y, captureGeometry(selected))
         return { type: 'resize' }
       }
       // Body-hit on the selected layer starts a move (legacy 6719-6722).
       if (pointInRect(x, y, layerHitRect(selected))) {
+        this.snapshotPushed = false
         this.session = startMoveSession(x, y, captureGeometry(selected))
         return { type: 'move' }
       }
@@ -200,7 +203,7 @@ export const interactionService = {
     rect: { readonly width: number; readonly left: number; readonly top: number },
     canvasWidth: number,
     shiftKey: boolean,
-  ): { readonly cursor: 'nwse-resize' | 'move' | 'default' | 'text' } {
+  ): { readonly cursor: string } {
     if (usePlaybackStore.getState().status === 'playing') {
       return { cursor: 'default' }
     }
@@ -220,7 +223,12 @@ export const interactionService = {
         selectedId !== null ? (layers.find((l) => l.id === selectedId) ?? null) : null
       if (selected) {
         const handle = hitTestHandle(x, y, layerHitRect(selected))
-        if (handle) return { cursor: 'nwse-resize' }
+        if (handle) {
+          if (handle === 'n' || handle === 's') return { cursor: 'ns-resize' }
+          if (handle === 'e' || handle === 'w') return { cursor: 'ew-resize' }
+          if (handle === 'ne' || handle === 'sw') return { cursor: 'nesw-resize' }
+          return { cursor: 'nwse-resize' }
+        }
         if (pointInRect(x, y, layerHitRect(selected))) return { cursor: 'move' }
       }
       return { cursor: 'default' }
@@ -231,8 +239,23 @@ export const interactionService = {
     if (selectedId === null) return { cursor: 'default' }
     const next =
       session.type === 'move' ? applyMove(session, x, y) : applyResize(session, x, y, shiftKey)
+      
+    if (sessionChanged(session, next) && !this.snapshotPushed) {
+      useLayerStore.getState().pushUndo()
+      if (typeof window !== 'undefined' && typeof (window as any).pushUndoSnapshot === 'function') {
+        (window as any).pushUndoSnapshot()
+      }
+      this.snapshotPushed = true
+    }
+    
     applyGeometry(selectedId, next)
-    return { cursor: session.type === 'resize' ? 'nwse-resize' : 'move' }
+    if (session.type === 'resize') {
+      if (session.handle === 'n' || session.handle === 's') return { cursor: 'ns-resize' }
+      if (session.handle === 'e' || session.handle === 'w') return { cursor: 'ew-resize' }
+      if (session.handle === 'ne' || session.handle === 'sw') return { cursor: 'nesw-resize' }
+      return { cursor: 'nwse-resize' }
+    }
+    return { cursor: 'move' }
   },
 
   /**
@@ -254,8 +277,7 @@ export const interactionService = {
     if (!layer) return
     const next = captureGeometry(layer)
     if (!sessionChanged(session, next)) return
-    // Legacy pushes a snapshot on mouseup only when geometry changed.
-    useLayerStore.getState().pushUndo()
+    
     if (session.type === 'resize') {
       // Rebaseline resizePct to 100 (legacy `syncLayerResizeFromCurrentSize`,
       // legacy/index.html:6409). Delegate to the legacy resize fn when present
@@ -315,13 +337,19 @@ export function cursorForPoint(
   clientY: number,
   rect: { readonly width: number; readonly left: number; readonly top: number },
   canvasWidth: number,
-): 'nwse-resize' | 'move' | 'default' {
+): string {
   const { x, y } = toCanvasCoords(clientX, clientY, rect, canvasWidth)
   const layers = useLayerStore.getState().layers
   const selectedId = useSelectionStore.getState().selectedLayerId
   const selected = selectedId !== null ? (layers.find((l) => l.id === selectedId) ?? null) : null
   if (selected) {
-    if (hitTestHandle(x, y, layerHitRect(selected))) return 'nwse-resize'
+    const handle = hitTestHandle(x, y, layerHitRect(selected))
+    if (handle) {
+      if (handle === 'n' || handle === 's') return 'ns-resize'
+      if (handle === 'e' || handle === 'w') return 'ew-resize'
+      if (handle === 'ne' || handle === 'sw') return 'nesw-resize'
+      return 'nwse-resize'
+    }
     if (pointInRect(x, y, layerHitRect(selected))) return 'move'
   }
   return 'default'

@@ -84,7 +84,7 @@ function EditorApp(): ReactElement {
   return (
     <Providers>
       <LegacyRuntimeHost />
-      <div className="editor-shell flex h-full min-w-0 flex-col overflow-hidden bg-background text-foreground">
+      <div className="editor-shell flex h-full min-w-0 flex-col overflow-hidden bg-background text-foreground gap-2">
         <Header
           compact={!desktopPanels}
           onOpenSettings={() => setMobilePanel('settings')}

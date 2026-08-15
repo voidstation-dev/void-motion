@@ -5820,14 +5820,13 @@ let _layerIdCounter = 0;
 function addLayer(img, name) {
   pushUndoSnapshot();
   const id = ++_layerIdCounter;
-  // Default size: fit within canvas keeping aspect ratio, at 80% of canvas
-  const scale = Math.min(state.canvasW / img.width, state.canvasH / img.height) * 0.8;
+  // Fit within canvas keeping aspect ratio, at 100% of canvas
+  const scale = Math.min(state.canvasW / img.width, state.canvasH / img.height);
   const w = Math.round(img.width * scale);
   const h = Math.round(img.height * scale);
-  // Stagger position slightly for each layer
-  const offset = (state.layers.length % 5) * 20;
-  const x = Math.round((state.canvasW - w) / 2) + offset;
-  const y = Math.round((state.canvasH - h) / 2) + offset;
+  // Center exactly
+  const x = Math.round((state.canvasW - w) / 2);
+  const y = Math.round((state.canvasH - h) / 2);
 
   // Detect alpha
   let hasPngAlpha = false;
@@ -5852,6 +5851,7 @@ function addLayer(img, name) {
     handSpeed: 6,
     chunks: 30,
     specChunks: 35,
+    textAnimDir: state.textAnimDir || 'ltr',
     hasPngAlpha };
   state.layers.push(layer);
   
@@ -6001,11 +6001,20 @@ function getAnimOrder() {
   return [...ordered, ...unordered];
 }
 
-function generate() {
+function yieldToMain() {
+  return new Promise(resolve => setTimeout(resolve, 0));
+}
+
+let currentGenerateId = 0;
+
+async function generate() {
   if (state.layers.length === 0) { showToast('Upload at least one image first'); return; }
   // Commit any open text edit before generating
   closeTextEditor(true);
   deactivateTextPlacement();
+  
+  const genId = ++currentGenerateId;
+  
   state.bgCanvas       = null;
   state._activeSlots   = [];
   state._currentSlot   = null;
@@ -6013,6 +6022,7 @@ function generate() {
   state._revealFinalCanvas = null;
   state._dissolveMap   = null;
   state._animProgress  = 0;
+  state.generating     = true; // Add generating flag
   ctx = _mainCtx;
 
   // Build ordered list then group by animOrder (same number → run simultaneously)
@@ -6029,10 +6039,11 @@ function generate() {
   state._animGroups = [...groupMap.values()];
   state._groupPos   = 0;
 
-  _runGroupAt(0);
+  await _runGroupAt(0, genId);
 }
 
-function _runGroupAt(gpos) {
+async function _runGroupAt(gpos, genId) {
+  if (currentGenerateId !== genId) return; // aborted
   if (!state._animGroups || gpos >= state._animGroups.length) { _allLayersDone(); return; }
   state._groupPos = gpos;
   const group     = state._animGroups[gpos];
@@ -6098,7 +6109,8 @@ function _runGroupAt(gpos) {
   });
 
   // Pre-render and setup each slot individually
-  state._activeSlots.forEach(slot => {
+  for (let i = 0; i < state._activeSlots.length; i++) {
+    const slot = state._activeSlots[i];
     const _prevStyle = state.animStyle;
     state.animStyle  = slot._state.animStyle;
     state.activeLayerIndex = state.layers.indexOf(slot.layer);
@@ -6141,9 +6153,16 @@ function _runGroupAt(gpos) {
     // Push per-layer stroke style so setup functions read it correctly
     state.outlineStrokeStyle = slot.layer.outlineStrokeStyle || state.outlineStrokeStyle || 'default';
 
-    setupStyle(); // writes all the tick-state into state.* from offscreen
+    await setupStyle(); // writes all the tick-state into state.* from offscreen
+    if (currentGenerateId !== genId) {
+      AnimationEngine._slotOut(slot);
+      return; // aborted
+    }
+    
     AnimationEngine._slotOut(slot);
-  });
+    await yieldToMain(); // Yield after processing each layer to keep UI responsive
+    if (currentGenerateId !== genId) return; // aborted
+  }
 
   // Restore offscreen to something valid for legacy checks
   offscreen = state._activeSlots[state._activeSlots.length - 1]?.offscreen ?? offscreen;
@@ -6152,6 +6171,7 @@ function _runGroupAt(gpos) {
   document.getElementById('play-pause-btn').disabled = false;
   document.getElementById('done-badge').classList.remove('show');
   setProgress(0);
+  state.generating = false; // done generating
   startAnim();
 }
 
@@ -7543,19 +7563,19 @@ function _strokePencil(oc, pts, fromIdx, toIdx, color, thickness, JUMP) {
 }
 
 // Watercolor fill: bleed + translucent overlay of a pre-rendered color canvas
-function _wcFill(cc, srcCanvas, cb, revealH) {
-  if (revealH <= 0) return;
+function _wcFillRect(cc, srcCanvas, rx, ry, rw, rh) {
+  if (rw <= 0 || rh <= 0) return;
   if ((state.colorStyle || 'sparse') !== 'watercolor') {
-    cc.drawImage(srcCanvas, cb.x, cb.y, cb.w, revealH, cb.x, cb.y, cb.w, revealH);
+    cc.drawImage(srcCanvas, rx, ry, rw, rh, rx, ry, rw, rh);
     return;
   }
   cc.save();
   cc.filter = 'blur(7px)';
   cc.globalAlpha = 0.42;
-  cc.drawImage(srcCanvas, cb.x-5, cb.y-5, cb.w+10, revealH+10, cb.x-5, cb.y-5, cb.w+10, revealH+10);
+  cc.drawImage(srcCanvas, rx-5, ry-5, rw+10, rh+10, rx-5, ry-5, rw+10, rh+10);
   cc.filter = 'none';
   cc.globalAlpha = 0.52;
-  cc.drawImage(srcCanvas, cb.x, cb.y, cb.w, revealH, cb.x, cb.y, cb.w, revealH);
+  cc.drawImage(srcCanvas, rx, ry, rw, rh, rx, ry, rw, rh);
   cc.restore();
 }
 
@@ -8520,21 +8540,21 @@ function _flattenOffscreenColors(canvas, maxColors) {
 
 // ─── ANIMATION SETUP DISPATCHER ───
 // Calls the appropriate setup function from AnimationEngine based on current style
-function setupStyle() {
+async function setupStyle() {
   switch(state.animStyle) {
     case 'contour':         AnimationEngine.setupContour();                  break;
     case 'outlinechunks':   AnimationEngine.setupOutlineChunks();            break;
-    case 'outlinefill':     AnimationEngine.setupOutlineFill();              break;
+    case 'outlinefill':     await AnimationEngine.setupOutlineFill();        break;
     case 'illustfill':
-      AnimationEngine.setupIllustFill();
+      await AnimationEngine.setupIllustFill();
       if (state.outlineAlgorithm && state.outlineAlgorithm !== 'classic') {
         const lastPt1 = state.ifPerimPts?.length > 0 ? state.ifPerimPts[state.ifPerimPts.length-1] : null;
-        const wpts1 = AnimationEngine._buildInkWaypointsByAlgorithm(lastPt1);
+        const wpts1 = await AnimationEngine._buildInkWaypointsByAlgorithm(lastPt1);
         if (wpts1) state.ifInkWaypoints = wpts1;
       }
       break;
     case 'outlineonly':
-      AnimationEngine.setupIllustFill();
+      await AnimationEngine.setupIllustFill();
       // Override auto-detected color with user's choice if not auto
       if (!document.getElementById('outlineonly-autocolor')?.checked) {
         const col = document.getElementById('outlineonly-color')?.value || '#000000';
@@ -8544,20 +8564,20 @@ function setupStyle() {
       if (state.outlineAlgorithm && state.outlineAlgorithm !== 'classic') {
         // New algorithm takes priority over Color Region / Real Image checkboxes
         const lastPt2 = state.ifPerimPts?.length > 0 ? state.ifPerimPts[state.ifPerimPts.length-1] : null;
-        const wpts2 = AnimationEngine._buildInkWaypointsByAlgorithm(lastPt2);
+        const wpts2 = await AnimationEngine._buildInkWaypointsByAlgorithm(lastPt2);
         if (wpts2) state.ifInkWaypoints = wpts2;
       } else {
         // Color Region Outlines: swap ink waypoints with color-boundary waypoints
         if (document.getElementById('outlineonly-colorregion')?.checked) {
           const lastPt = state.ifPerimPts && state.ifPerimPts.length > 0
             ? state.ifPerimPts[state.ifPerimPts.length - 1] : null;
-          state.ifInkWaypoints = AnimationEngine.buildColorRegionInkWaypoints(lastPt);
+          state.ifInkWaypoints = await AnimationEngine.buildColorRegionInkWaypoints(lastPt);
         }
         // Real Image Edges: swap ink waypoints with Sobel-NMS edge waypoints
         if (document.getElementById('outlineonly-realimage')?.checked) {
           const lastPt = state.ifPerimPts && state.ifPerimPts.length > 0
             ? state.ifPerimPts[state.ifPerimPts.length - 1] : null;
-          state.ifInkWaypoints = AnimationEngine.buildRealImageInkWaypoints(lastPt);
+          state.ifInkWaypoints = await AnimationEngine.buildRealImageInkWaypoints(lastPt);
         }
       }
       break;
@@ -8653,10 +8673,10 @@ function resetAnim() {
   if (ov) { ov.style.display='none'; ov.style.opacity=1; }
 }
 
-function restartAnim() {
-  if (state.layers.length > 0) { generate(); return; }
+async function restartAnim() {
+  if (state.layers.length > 0) { await generate(); return; }
   if (!offscreen) return;
-  resetAnim(); setupStyle(); startAnim();
+  resetAnim(); await setupStyle(); startAnim();
 }
 
 function startAnim()  { state.playing=true; updatePlayIcons(); animate(); }

@@ -11,12 +11,12 @@ import type { HandStyle } from '@/types/animation'
 import type { AspectRatio, ResolutionPreset } from '@/types/canvas'
 import { useTranslation } from 'react-i18next'
 
-const HANDS: ReadonlyArray<{ value: HandStyle; label: string }> = [
+const HANDS: ReadonlyArray<{ value: HandStyle; label: string; image?: string }> = [
   { value: 'ghost', label: 'bottom.ghost' },
-  { value: 'hand-1', label: 'bottom.hand1' },
-  { value: 'hand-2', label: 'bottom.hand2' },
-  { value: 'hand-3', label: 'bottom.hand3' },
-  { value: 'pen', label: 'bottom.pen' },
+  { value: 'hand-1', label: 'bottom.hand1', image: '/legacy/images/hand1-720p.png' },
+  { value: 'hand-2', label: 'bottom.hand2', image: '/legacy/images/hand2-720p.png' },
+  { value: 'hand-3', label: 'bottom.hand3', image: '/legacy/images/hand3-720p.png' },
+  { value: 'pen', label: 'bottom.pen', image: '/legacy/images/hand4-720p.png' },
 ]
 const RATIOS: ReadonlyArray<AspectRatio> = ['16:9', '9:16', '1:1']
 const RESOLUTIONS: ReadonlyArray<ResolutionPreset> = ['720p', '1080p', '1440p']
@@ -47,19 +47,38 @@ export function BottomBar(): ReactElement {
         <div className="mb-2 text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
           {t('bottom.handStyle')}
         </div>
-        <div className="grid grid-cols-3 gap-1.5">
-          {HANDS.map((option) => (
-            <button
-              key={option.value}
-              type="button"
-              onClick={() => canvasControlsService.setHand(option.value)}
-              aria-pressed={hand === option.value}
-              data-testid={`hand-pill-${option.value}`}
-              className={optionClass(hand === option.value)}
-            >
-              {t(option.label)}
-            </button>
-          ))}
+        <div className="grid grid-cols-5 gap-1.5 h-[56px]">
+          {HANDS.map((option) => {
+            const active = hand === option.value;
+            return (
+              <button
+                key={option.value}
+                type="button"
+                title={t(option.label)}
+                onClick={() => canvasControlsService.setHand(option.value)}
+                aria-pressed={active}
+                data-testid={`hand-pill-${option.value}`}
+                className={`relative flex items-center justify-center overflow-hidden rounded-[8px] border transition ${
+                  active
+                    ? 'border-[#171918] ring-1 ring-[#171918] bg-white shadow-sm'
+                    : 'border-border bg-[#fbfaf7] hover:border-black/20 hover:bg-white'
+                }`}
+              >
+                {option.image ? (
+                  <img 
+                    src={option.image} 
+                    alt={t(option.label)} 
+                    className={`h-[200%] w-full object-cover object-top transition-transform ${active ? 'scale-110' : ''}`} 
+                    style={{ objectPosition: 'center top' }}
+                  />
+                ) : (
+                  <span className={`text-[9px] font-medium ${active ? 'text-[#171918]' : 'text-muted-foreground'}`}>
+                    {t(option.label)}
+                  </span>
+                )}
+              </button>
+            )
+          })}
         </div>
       </section>
 

@@ -4,7 +4,7 @@ import type { LegacyLayer } from '../legacy/legacy-state.types'
  * Shared selection handle rendering ported from M19.
  */
 
-const HANDLE_R = 6
+const HANDLE_R = 12
 
 /**
  * Draws the selection box and 8 resize handles for the currently selected layer.
@@ -61,7 +61,7 @@ export function renderSelection(
   mids.forEach(([cx, cy]) => {
     sctx.fillStyle = '#fff'
     sctx.beginPath()
-    sctx.arc(cx, cy, 4, 0, Math.PI * 2)
+    sctx.arc(cx, cy, 8, 0, Math.PI * 2)
     sctx.fill()
     sctx.strokeStyle = '#6c63ff'
     sctx.lineWidth = 1.5

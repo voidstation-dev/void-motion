@@ -30,8 +30,18 @@ export function ExportFeature() {
     status !== 'idle' && status !== 'done' && status !== 'failed' && status !== 'cancelled'
 
   return (
-    <Dialog open={open} onOpenChange={(val) => !val && exportService.closeDialog()}>
-      <DialogContent className="sm:max-w-[320px] p-0 overflow-hidden gap-0 bg-surface-1 border-border">
+    <Dialog 
+      open={open} 
+      onOpenChange={(val) => {
+        if (isExporting) return
+        if (!val) exportService.closeDialog()
+      }}
+    >
+      <DialogContent 
+        className="sm:max-w-[320px] p-0 overflow-hidden gap-0 bg-surface-1 border-border"
+        onPointerDownOutside={(e) => isExporting && e.preventDefault()}
+        onEscapeKeyDown={(e) => isExporting && e.preventDefault()}
+      >
         <DialogHeader className="p-4 border-b border-border">
           <DialogTitle className="text-base font-semibold">{t('title')}</DialogTitle>
         </DialogHeader>
@@ -113,9 +123,9 @@ export function ExportFeature() {
                 checked={config.includeFinalPng}
                 onChange={(e) => exportService.setIncludePng(e.target.checked)}
                 disabled={isExporting}
-                className="peer h-4 w-4 shrink-0 rounded-sm border border-primary ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 checked:bg-accent checked:border-accent"
+                className="peer h-4 w-4 shrink-0 rounded-sm border border-primary ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 checked:bg-primary checked:border-primary"
               />
-              <span className="text-sm font-medium group-hover:text-accent transition-colors">
+              <span className="text-sm font-medium group-hover:text-primary transition-colors">
                 {t('includePng')}
               </span>
             </label>
@@ -125,9 +135,9 @@ export function ExportFeature() {
           <div className="pt-2">
             {!isExporting && status !== 'done' && (
               <Button
-                className="w-full relative group overflow-hidden bg-accent hover:bg-accent/90 text-white font-medium shadow-sm transition-all h-10"
+                className="w-full relative group overflow-hidden bg-primary hover:bg-primary/90 text-primary-foreground font-medium shadow-sm transition-all h-10"
                 onClick={() => exportService.startExport()}
-                disabled={status === 'failed'} // Can close and reopen to try again, but let's just keep it simple. Actually, let's allow retry.
+                disabled={status === 'failed'}
               >
                 <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform ease-out duration-300" />
                 <span className="relative flex items-center justify-center gap-2">
@@ -215,21 +225,21 @@ function FormatPill({
       className={cn(
         'flex-1 flex flex-col items-start p-2.5 rounded-lg border text-left transition-all',
         selected
-          ? 'border-accent bg-accent/5 ring-1 ring-accent/20'
+          ? 'border-primary bg-primary/5 ring-1 ring-primary/20'
           : 'border-border bg-panel hover:bg-surface-2 hover:border-border/80',
         disabled && 'opacity-50 pointer-events-none',
       )}
       onClick={onClick}
       disabled={disabled}
     >
-      <div className="flex items-center justify-between w-full mb-1">
-        <span className={cn('text-sm font-semibold', selected ? 'text-accent' : 'text-foreground')}>
+      <div className="flex flex-wrap items-center justify-between w-full mb-1 gap-1">
+        <span className={cn('text-sm font-semibold', selected ? 'text-primary' : 'text-foreground')}>
           {label}
         </span>
         <span
           className={cn(
-            'text-[9px] uppercase tracking-wider font-bold px-1.5 py-0.5 rounded-full',
-            badgeColor || 'bg-muted text-muted-foreground',
+            'text-[9px] uppercase tracking-wider font-bold px-1.5 py-0.5 rounded-full shrink-0',
+            badgeColor || 'bg-muted border border-border text-muted-foreground',
           )}
         >
           {badge}
@@ -258,7 +268,7 @@ function QualityPill({
       className={cn(
         'flex flex-col items-center justify-center p-2 rounded-lg border transition-all',
         selected
-          ? 'border-accent bg-accent/5 text-accent ring-1 ring-accent/20'
+          ? 'border-primary bg-primary/5 text-primary ring-1 ring-primary/20'
           : 'border-border bg-panel text-foreground hover:bg-surface-2 hover:border-border/80',
         disabled && 'opacity-50 pointer-events-none',
       )}
@@ -266,7 +276,7 @@ function QualityPill({
       disabled={disabled}
     >
       <span className="text-sm font-medium">{label}</span>
-      <span className={cn('text-[10px]', selected ? 'text-accent/80' : 'text-muted-foreground')}>
+      <span className={cn('text-[10px]', selected ? 'text-primary/80' : 'text-muted-foreground')}>
         {desc}
       </span>
     </button>

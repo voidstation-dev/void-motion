@@ -27,6 +27,7 @@
     "editingSelected": "Đang chỉnh thiết lập cho lớp được chọn.",
     "selectLayer": "Chọn một lớp ở bên phải để chỉnh chuyển động.",
     "generate": "Tạo chuyển động",
+    "generating": "Đang tính toán...",
     "sheetDescription": "Cấu hình chuyển động cho lớp được chọn."
   },
   "bottom": {

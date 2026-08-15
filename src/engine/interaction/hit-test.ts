@@ -22,7 +22,7 @@ import type { Layer, LayerTransform } from '@/types/layer'
 import type { LayerId } from '@/types/brand'
 
 /** Selection-handle radius in logical canvas pixels. Legacy `HANDLE_R = 6`. */
-export const HANDLE_R = 6
+export const HANDLE_R = 12
 
 /** The eight selection-handle positions. Legacy order: corners then edges. */
 export type ResizeHandle = 'nw' | 'ne' | 'se' | 'sw' | 'n' | 'e' | 's' | 'w'
@@ -88,25 +88,18 @@ export function toCanvasCoords(
  */
 export function hitTestHandle(px: number, py: number, rect: HitRect): ResizeHandle | null {
   const { x, y, w, h } = rect
-  const handles: ReadonlyArray<{
-    readonly type: ResizeHandle
-    readonly cx: number
-    readonly cy: number
-  }> = [
-    { type: 'nw', cx: x, cy: y },
-    { type: 'ne', cx: x + w, cy: y },
-    { type: 'se', cx: x + w, cy: y + h },
-    { type: 'sw', cx: x, cy: y + h },
-    { type: 'n', cx: x + w / 2, cy: y },
-    { type: 'e', cx: x + w, cy: y + h / 2 },
-    { type: 's', cx: x + w / 2, cy: y + h },
-    { type: 'w', cx: x, cy: y + h / 2 },
-  ]
-  for (const handle of handles) {
-    if (Math.hypot(px - handle.cx, py - handle.cy) <= HANDLE_R * 2) {
-      return handle.type
-    }
-  }
+  const hr = HANDLE_R * 2
+  
+  if (Math.hypot(px - x, py - y) <= hr) return 'nw'
+  if (Math.hypot(px - (x + w), py - y) <= hr) return 'ne'
+  if (Math.hypot(px - (x + w), py - (y + h)) <= hr) return 'se'
+  if (Math.hypot(px - x, py - (y + h)) <= hr) return 'sw'
+  
+  if (py >= y - hr && py <= y + hr && px >= x && px <= x + w) return 'n'
+  if (py >= y + h - hr && py <= y + h + hr && px >= x && px <= x + w) return 's'
+  if (px >= x - hr && px <= x + hr && py >= y && py <= y + h) return 'w'
+  if (px >= x + w - hr && px <= x + w + hr && py >= y && py <= y + h) return 'e'
+
   return null
 }
 

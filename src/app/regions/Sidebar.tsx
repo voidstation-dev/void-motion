@@ -176,7 +176,7 @@ export function Sidebar(): ReactElement {
                 key={option.label}
                 type="button"
                 onClick={() => backgroundService.setBackground(option.value)}
-                className={`rounded-full border px-3 py-1 text-[10px] ${isActiveBackground(background, option.value) ? 'border-primary bg-primary text-primary-foreground' : 'border-border bg-background'}`}
+                className={`rounded-full border px-3 py-1 text-[10px] transition-all ${isActiveBackground(background, option.value) ? 'border-primary bg-primary/10 text-primary font-medium' : 'border-border bg-background text-muted-foreground hover:bg-surface-1'}`}
               >
                 {option.label}
               </button>
@@ -189,7 +189,7 @@ export function Sidebar(): ReactElement {
               onChange={(event) =>
                 backgroundService.setBackground({ type: 'custom', val: event.target.value })
               }
-              className="h-8 w-8 cursor-pointer rounded-lg border border-border bg-transparent p-0.5"
+              className={`h-8 w-8 cursor-pointer rounded-lg border-2 p-0.5 transition-all ${background?.type === 'custom' ? 'border-primary ring-2 ring-primary/20' : 'border-border bg-transparent'}`}
             />
             {t('input.customColor')}
           </label>
@@ -204,7 +204,7 @@ export function Sidebar(): ReactElement {
                 title={t(`input.backgrounds.${item.labelKey}`)}
                 aria-label={t(`input.backgrounds.${item.labelKey}`)}
                 onClick={() => backgroundService.setBackground(item.background)}
-                className={`aspect-square rounded-lg border-2 ${item.className} ${isActiveBackground(background, item.background) ? 'border-primary shadow-sm' : 'border-transparent ring-1 ring-border'}`}
+                className={`aspect-square rounded-lg transition-all ${item.className} ${isActiveBackground(background, item.background) ? 'ring-2 ring-primary ring-offset-2 shadow-sm' : 'ring-1 ring-border hover:ring-primary/50'}`}
               />
             ))}
           </div>

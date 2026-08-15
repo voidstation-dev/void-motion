@@ -18,7 +18,7 @@ export async function runLegacyExport(
   state: LegacyInkplainerState,
   config: VideoExportConfig,
   callbacks: ExportCallbacks,
-  restartAnim: () => void,
+  restartAnim: () => void | Promise<void>,
 ): Promise<void> {
   const { onProgress, onComplete, onError } = callbacks
 
@@ -75,7 +75,7 @@ function recordWebM(
   restartAnim: () => void,
   onProgress: (p: number, label: string) => void,
 ): Promise<void> {
-  return new Promise((resolve, reject) => {
+  return new Promise(async (resolve, reject) => {
     try {
       const qualityMap: Record<string, number> = {
         high: 8000000,
@@ -116,6 +116,9 @@ function recordWebM(
         resolve()
       }
 
+      onProgress(0, 'Preparing animation...')
+      await restartAnim()
+
       ;(function syncLoop() {
         if (!state.recording) return
         rctx.clearRect(0, 0, state.canvasW, state.canvasH)
@@ -128,8 +131,6 @@ function recordWebM(
       state.mediaRecorder = mr
 
       onProgress(0, 'Recording animation...')
-
-      restartAnim()
 
       const checkComplete = setInterval(() => {
         if (!state.recording) {
@@ -250,9 +251,10 @@ function recordMP4(
       let rafId: number | null = null
       let encodingDone = false
 
-      onProgress(0, 'Encoding MP4…')
+      onProgress(0, 'Preparing MP4…')
+      await restartAnim()
 
-      restartAnim()
+      onProgress(0, 'Encoding MP4…')
 
       function captureFrame() {
         if (!state.recording || encodingDone) return

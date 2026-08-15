@@ -3,8 +3,15 @@ import { useAnimationStore } from '@/app/store'
 import { animationService } from '@/app/services/animation-service'
 import { Label } from '@/app/components/ui/label'
 import { Slider } from '@/app/components/ui/slider'
-import type { AnimationStyle } from '@/types/animation'
+import type { AnimationStyle, DrawDirection } from '@/types/animation'
 import { useTranslation } from 'react-i18next'
+
+const DRAW_DIRECTIONS: { id: DrawDirection; labelKey: string }[] = [
+  { id: 'left-to-right', labelKey: 'ltr' },
+  { id: 'right-to-left', labelKey: 'rtl' },
+  { id: 'top-to-bottom', labelKey: 'ttb' },
+  { id: 'bottom-to-top', labelKey: 'btt' },
+]
 
 const BASIC_STYLES: { id: AnimationStyle; label: string }[] = [
   { id: 'scanner', label: 'styles.scanner' },
@@ -57,6 +64,25 @@ export function AnimationTab() {
               {t(style.label)}
             </button>
           ))}
+        </div>
+
+        <div className="flex flex-col gap-2 p-3 border rounded-md mt-2">
+          <Label className="text-[11px] uppercase tracking-wider text-muted-foreground">{t('drawing.startDirection', { defaultValue: 'Start Direction' })}</Label>
+          <div className="grid grid-cols-2 gap-2">
+            {DRAW_DIRECTIONS.map((dir) => (
+              <button
+                key={dir.id}
+                className={`py-1.5 text-xs border rounded transition-colors ${
+                  defaults.drawDirection === dir.id
+                    ? 'bg-foreground text-background border-foreground'
+                    : 'bg-background hover:bg-muted border-border'
+                }`}
+                onClick={() => animationService.setDrawDirection(dir.id)}
+              >
+                {t(`drawing.options.${dir.labelKey}`, { defaultValue: dir.labelKey.toUpperCase() })}
+              </button>
+            ))}
+          </div>
         </div>
 
         {isScanner && (

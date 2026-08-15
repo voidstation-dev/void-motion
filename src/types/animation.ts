@@ -192,7 +192,7 @@ export const DEFAULT_OUTLINE_DETECT: OutlineDetect = 50
  * (`legacy/index.html:5575`). The new model collapses them into a single
  * status enum; the adapter derives the two booleans from it when needed.
  */
-export type PlaybackStatus = 'idle' | 'playing' | 'paused' | 'completed'
+export type PlaybackStatus = 'idle' | 'playing' | 'paused' | 'completed' | 'generating'
 
 /** Playback state — serializable projection of the runtime playback loop. */
 export interface PlaybackState {

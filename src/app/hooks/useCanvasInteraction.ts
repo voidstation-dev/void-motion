@@ -63,15 +63,20 @@ export function useCanvasInteraction(
       interactionService.pointerDown(e.clientX, e.clientY, rectOf(), canvasWidth)
     }
 
+    let rafId: number | null = null
     const onPointerMove = (e: MouseEvent): void => {
-      const { cursor } = interactionService.pointerMove(
-        e.clientX,
-        e.clientY,
-        rectOf(),
-        canvasWidth,
-        e.shiftKey,
-      )
-      overlay.style.cursor = cursor
+      if (rafId !== null) cancelAnimationFrame(rafId)
+      rafId = requestAnimationFrame(() => {
+        rafId = null
+        const { cursor } = interactionService.pointerMove(
+          e.clientX,
+          e.clientY,
+          rectOf(),
+          canvasWidth,
+          e.shiftKey,
+        )
+        if (overlay) overlay.style.cursor = cursor
+      })
     }
 
     const onPointerUp = (): void => {
@@ -92,6 +97,7 @@ export function useCanvasInteraction(
       overlay.removeEventListener('mousemove', onPointerMove)
       overlay.removeEventListener('dblclick', onDoubleClick)
       document.removeEventListener('mouseup', onPointerUp)
+      if (rafId !== null) cancelAnimationFrame(rafId)
     }
   }, [overlayRef, viewportRef, canvas?.size.width])
 }

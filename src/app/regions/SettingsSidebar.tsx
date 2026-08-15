@@ -1,14 +1,22 @@
 import type { ReactElement } from 'react'
-import { Play, SlidersHorizontal } from 'lucide-react'
+import { Play, SlidersHorizontal, Loader2 } from 'lucide-react'
 import { AnimationPanel } from '@/app/features/animation/AnimationPanel'
 import { playbackService } from '@/app/services/playback-service'
-import { useLayerStore, useSelectionStore } from '@/app/store'
+import { useLayerStore, useSelectionStore, usePlaybackStore } from '@/app/store'
 import { useTranslation } from 'react-i18next'
 
 export function SettingsSidebar(): ReactElement {
   const { t } = useTranslation('editor')
   const hasLayers = useLayerStore((state) => state.layers.length > 0)
   const selectedLayerId = useSelectionStore((state) => state.selectedLayerId)
+  const playbackStatus = usePlaybackStore((state) => state.status)
+  const isGenerating = playbackStatus === 'generating'
+
+  const handleGenerate = () => {
+    // Generate is now asynchronous but we don't await it here.
+    // The legacy adapter will set state.generating = true which mirrors to our store.
+    playbackService.generate()
+  }
 
   return (
     <aside
@@ -37,12 +45,16 @@ export function SettingsSidebar(): ReactElement {
       <div className="border-t border-border bg-[#fbfaf7] p-2.5">
         <button
           type="button"
-          onClick={() => playbackService.generate()}
-          disabled={!hasLayers}
+          onClick={handleGenerate}
+          disabled={!hasLayers || isGenerating}
           className="flex h-11 w-full items-center justify-center gap-2 rounded-[11px] bg-[#171918] px-4 text-sm font-semibold text-white shadow-sm transition hover:-translate-y-px hover:bg-[#252826] disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:translate-y-0"
         >
-          <Play className="h-4 w-4 fill-current" />
-          {t('settings.generate')}
+          {isGenerating ? (
+            <Loader2 className="h-4 w-4 animate-spin" />
+          ) : (
+            <Play className="h-4 w-4 fill-current" />
+          )}
+          {isGenerating ? t('settings.generating') : t('settings.generate')}
         </button>
       </div>
     </aside>
