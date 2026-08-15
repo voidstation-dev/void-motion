@@ -25,25 +25,25 @@ export function InfoPageLayout({
   return (
     <div className="h-full overflow-y-auto bg-[#f4f4f1] text-[#171717]">
       <header className="sticky top-0 z-40 border-b border-black/10 bg-[#f4f4f1]/95 backdrop-blur">
-        <div className="mx-auto flex h-16 max-w-[1440px] items-center gap-3 px-4 sm:px-6 lg:px-10">
+        <div className="mx-auto flex h-16 max-w-[1440px] items-center gap-2 px-3 sm:gap-3 sm:px-6 lg:px-10">
           <a
             href="/"
-            className="inline-flex h-9 items-center gap-2 rounded-full border border-black/10 bg-white px-3 text-sm font-medium transition hover:border-black/30"
+            className="inline-flex h-9 shrink-0 items-center gap-2 rounded-full border border-black/10 bg-white px-2.5 sm:px-3 text-sm font-medium transition hover:border-black/30"
           >
-            <ArrowLeft className="h-4 w-4" />
+            <ArrowLeft className="h-4 w-4 shrink-0" />
             <span className="hidden sm:inline">{t('nav.backToEditor')}</span>
           </a>
-          <a href="/" className="ml-1 flex items-center gap-2">
-            <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#171717] text-white">
+          <a href="/" className="ml-0.5 sm:ml-1 flex shrink-0 items-center gap-1.5 sm:gap-2">
+            <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-[#171717] text-white">
               <Pencil className="h-4 w-4" />
             </span>
-            <span className="font-hand text-2xl font-bold">Void Motion</span>
+            <span className="font-hand text-xl sm:text-2xl font-bold whitespace-nowrap">Void Motion</span>
           </a>
           <nav
             className="ml-auto flex items-center gap-1 sm:gap-2"
             aria-label={t('nav.informationPages')}
           >
-            <a className="rounded-lg px-3 py-2 text-sm hover:bg-black/5" href="/tutorial">
+            <a className="whitespace-nowrap rounded-lg px-2 sm:px-3 py-2 text-sm hover:bg-black/5" href="/tutorial">
               {t('nav.tutorial')}
             </a>
             <a
@@ -59,12 +59,12 @@ export function InfoPageLayout({
               <ShieldCheck className="h-4 w-4" /> {t('nav.privacy')}
             </a>
             <a
-              className="inline-flex h-9 items-center gap-2 rounded-lg border border-black/10 bg-white px-3 text-sm hover:border-black/30"
+              className="inline-flex h-9 shrink-0 items-center gap-2 rounded-lg border border-black/10 bg-white px-2.5 sm:px-3 text-sm hover:border-black/30"
               href={EXTERNAL_LINKS.repository}
               target="_blank"
               rel="noopener noreferrer"
             >
-              <Code2 className="h-4 w-4" />
+              <Code2 className="h-4 w-4 shrink-0" />
               <span className="hidden lg:inline">{t('nav.source')}</span>
             </a>
             <LanguageSwitcher />
