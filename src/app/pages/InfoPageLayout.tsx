@@ -43,9 +43,11 @@ export function InfoPageLayout({
             className="ml-auto flex items-center gap-1 sm:gap-2"
             aria-label={t('nav.informationPages')}
           >
-            <a className="whitespace-nowrap rounded-lg px-2 sm:px-3 py-2 text-sm hover:bg-black/5" href="/tutorial">
-              {t('nav.tutorial')}
-            </a>
+            {window.location.pathname !== '/tutorial' && (
+              <a className="whitespace-nowrap rounded-lg px-2 sm:px-3 py-2 text-sm hover:bg-black/5" href="/tutorial">
+                {t('nav.tutorial')}
+              </a>
+            )}
             <a
               className="hidden rounded-lg px-3 py-2 text-sm hover:bg-black/5 sm:block"
               href="/about"
